@@ -1,30 +1,11 @@
+// Copyright(C) 2016 Chris Liebert
 extern crate rusqlite;
 extern crate time;
 
 use self::rusqlite::Connection;
 use std::path::Path;
 
-#[derive(Debug)]
-pub struct SceneNode {
-    pub name: String,
-    material_id: i32,
-    start_position: i32,
-    end_position: i32,
-}
-
-#[derive(Debug)]
-pub struct Material {
-    pub name: String,
-    diffuse_texname: String,
-}
-
-#[derive(Debug)]
-#[derive(Copy, Clone)]
-pub struct Vertex8f32 {
-    pub position: [f32; 3],
-    pub normal: [f32; 3],
-    pub texcoord: [f32; 2],
-}
+use common::{Material, SceneNode, Scene, Shader, Vertex8f32};
 
 fn create_vertex8f32(px: f64,
                      py: f64,
@@ -43,13 +24,6 @@ fn create_vertex8f32(px: f64,
         normal: normal,
         texcoord: texcoord,
     }
-}
-
-#[derive(Debug)]
-pub struct Scene {
-    pub materials: Vec<Material>,
-    pub scene_nodes: Vec<SceneNode>,
-    pub vertices: Vec<Vertex8f32>,
 }
 
 pub fn load_db(filename: &str) -> Scene {
@@ -116,9 +90,28 @@ pub fn load_db(filename: &str) -> Scene {
         scene_nodes.push(scene_node.unwrap());
     }
 
+    let mut shader_stmt =
+        conn.prepare("SELECT name, vertex_source_140, fragment_source_140 FROM shader")
+            .unwrap();
+    let shader_iter = shader_stmt.query_map(&[], |row| {
+            Shader {
+                name: row.get(0),
+                vertex_source_140: row.get(1),
+                fragment_source_140: row.get(2),
+            }
+        })
+        .unwrap();
+
+    let mut shaders: Vec<Shader> = Vec::new();
+
+    for shader in shader_iter {
+        shaders.push(shader.unwrap());
+    }
+
     return Scene {
         materials: materials,
         scene_nodes: scene_nodes,
         vertices: vertices,
+        shaders: shaders,
     };
 }

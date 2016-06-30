@@ -1,15 +1,19 @@
+# Copyright(C) 2016 Chris Liebert
 [package]
 name = "quick-3d"
 version = "0.1.0"
 authors = ["chrisliebert <liebert@pdx.edu>"]
 
+[lib]
+name = "quick_3d"
+path = "src/lib.rs"
+
+[[bin]]
+name = "example"
+path = "src/main.rs"
+
 [dependencies]
-glium_sdl2 = "0.12"
 glium = "*"
 nalgebra = "0.8.2"
-sdl2-sys = "0.19.0"
-sdl2 = "0.19.0"
-bitflags = "0.5"
-#sdl2_image = "0.19"
 rusqlite = "0.7.3"
 time = "0.1.35"
