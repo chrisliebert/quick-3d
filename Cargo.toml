@@ -1,4 +1,5 @@
-# Copyright(C) 2016 Chris Liebert
+# Copyright (c) 2016 Chris Liebert
+# This software is availible under the "MIT License" see LICENSE
 [package]
 name = "quick-3d"
 version = "0.1.0"
