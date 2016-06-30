@@ -16,3 +16,6 @@ Nice To Have:
   -Configurable shadows
   -Example usage of the API
   -Example for Android JNI
+
+  License:
+  This program and it's source are availible under the "MIT License" please see LICENSE
