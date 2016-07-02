@@ -3,9 +3,10 @@ extern crate rusqlite;
 extern crate time;
 
 use self::rusqlite::Connection;
+
 use std::path::Path;
 
-use common::{Material, Mesh, SceneNode, Scene, Shader, Vertex8f32};
+use common::{ImageBlob, Material, Mesh, SceneNode, Scene, Shader, Vertex8f32};
 
 fn create_vertex8f32(px: f64,
                      py: f64,
@@ -74,7 +75,7 @@ pub fn load_db(filename: &str) -> Scene {
         let sn = scene_node.unwrap();
         let mut new_vertices: Vec<Vertex8f32> = Vec::new();
 
-        for i in sn.start_position as usize..(sn.end_position - 1) as usize {
+        for i in sn.start_position as usize..(sn.end_position) as usize {
             new_vertices.push(vertices[i]);
 
         }
@@ -115,6 +116,24 @@ pub fn load_db(filename: &str) -> Scene {
         materials.push(material.unwrap());
     }
 
+    // Load textures
+    let mut texture_stmt = conn.prepare("SELECT name, image FROM texture")
+        .unwrap();
+    let texture_iter = texture_stmt.query_map(&[], |row| {
+            ImageBlob {
+                name: row.get(0),
+                image: row.get(1),
+            }
+        })
+        .unwrap();
+
+    let mut textures: Vec<ImageBlob> = Vec::new();
+
+    for texture in texture_iter {
+        textures.push(texture.unwrap());
+    }
+
+    // Load shaders
     let mut shader_stmt =
         conn.prepare("SELECT name, vertex_source_140, fragment_source_140 FROM shader")
             .unwrap();
@@ -139,5 +158,6 @@ pub fn load_db(filename: &str) -> Scene {
         // vertices: vertices,
         meshes: meshes,
         shaders: shaders,
+        images: textures,
     };
 }
