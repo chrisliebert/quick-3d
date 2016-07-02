@@ -1,8 +1,8 @@
 // Copyright(C) 2016 Chris Liebert
 #[macro_use]
 extern crate glium;
-extern crate quick_3d;
 extern crate nalgebra;
+extern crate quick_3d;
 
 use glium::glutin;
 use glium::glutin::Event;
@@ -35,8 +35,8 @@ fn main() {
 
     let mut vertex_buffers: Vec<glium::vertex::VertexBuffer<common::Vertex8f32>> = Vec::new();
 
-    for mesh in scene.meshes {
-        vertex_buffers.push(glium::vertex::VertexBuffer::new(&display, &mesh.vertices).unwrap());
+    for i in 0..scene.meshes.len() {
+        vertex_buffers.push(glium::vertex::VertexBuffer::new(&display, &scene.meshes[i].vertices).unwrap());
     }
 
     let index_buffer: glium::index::NoIndices =
@@ -131,8 +131,6 @@ fn main() {
                                   [-5.0f32, -3.0f32, -12.0f32, 1.0f32]];
 
 
-
-
     let mut running = true;
 
     // Show the window once the data is loaded
@@ -146,18 +144,13 @@ fn main() {
 
     while running {
 
-
-
-
-
-
-
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
 
         for i in 0..vertex_buffers.len() {
-
-            let material = &scene.materials[i];
+            let mesh: common::Mesh = scene.meshes[i as usize].clone();
+            let material_id: i32 = mesh.material_id;
+            let material: common::Material = scene.materials[material_id as usize].clone();
 
             let uniforms = uniform! {
 		        projection: *perspective_matrix.as_ref(),
@@ -165,7 +158,6 @@ fn main() {
 		        light_position_worldspace: [2.0, 10.0, 1.0f32],
 		        diffuse: material.diffuse,
 		    };
-
 
             target.draw(&vertex_buffers[i],
                       &index_buffer,
