@@ -8,8 +8,10 @@ use glium::glutin;
 use glium::glutin::Event;
 use glium::glutin::ElementState;
 use glium::glutin::VirtualKeyCode;
+use glium::Program;
 use glium::Surface;
 use glium::DisplayBuild;
+use quick_3d::common;
 use quick_3d::loader;
 
 use nalgebra::{Matrix4, PerspectiveMatrix3};
@@ -21,7 +23,6 @@ fn main() {
     let db_file: &str = "test.db";
 
     let scene = loader::load_db(db_file);
-    println!("Loaded {} vertices", scene.vertices.len());
 
     let display = glutin::WindowBuilder::new()
         //.resizable()
@@ -32,9 +33,14 @@ fn main() {
         .build_glium()
         .unwrap();
 
+    let mut vertex_buffers: Vec<glium::vertex::VertexBuffer<common::Vertex8f32>> = Vec::new();
 
-    let vertex_buffer = glium::vertex::VertexBuffer::new(&display, &scene.vertices).unwrap();
-    let index_buffer = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
+    for mesh in scene.meshes {
+        vertex_buffers.push(glium::vertex::VertexBuffer::new(&display, &mesh.vertices).unwrap());
+    }
+
+    let index_buffer: glium::index::NoIndices =
+        glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
     if scene.shaders.len() == 0 {
         println!("No shaders loaded");
@@ -49,7 +55,7 @@ fn main() {
 
     // TODO: wrap program! macro in another macros
 
-    let program = program!(&display,
+    let program: Program = program!(&display,
     	/*
 			110 => {
 				vertex: &scene.shaders[shader_index].vertex_source_110,
@@ -131,6 +137,7 @@ fn main() {
 	        diffuse: [0.5f32, 0.5, 0.5]
 	    };
 
+
     let mut running = true;
 
     // Show the window once the data is loaded
@@ -145,12 +152,17 @@ fn main() {
     while running {
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
-        target.draw(&vertex_buffer,
-                  &index_buffer,
-                  &program,
-                  &uniforms,
-                  &Default::default())
-            .unwrap();
+
+        for i in 0..vertex_buffers.len() {
+
+            target.draw(&vertex_buffers[i],
+                      &index_buffer,
+                      &program,
+                      &uniforms,
+                      &Default::default())
+                .unwrap();
+        }
+
         target.finish().unwrap();
 
         for event in display.poll_events() {

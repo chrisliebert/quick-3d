@@ -50,9 +50,15 @@ pub struct Vertex8f32 {
 }
 
 #[derive(Debug)]
+pub struct Mesh {
+    pub name: String,
+    pub vertices: Vec<Vertex8f32>,
+    pub material_id: i32,
+}
+
+#[derive(Debug)]
 pub struct Scene {
     pub materials: Vec<Material>,
-    pub scene_nodes: Vec<SceneNode>,
-    pub vertices: Vec<Vertex8f32>,
+    pub meshes: Vec<Mesh>,
     pub shaders: Vec<Shader>,
 }

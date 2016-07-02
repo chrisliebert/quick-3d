@@ -5,7 +5,7 @@ extern crate time;
 use self::rusqlite::Connection;
 use std::path::Path;
 
-use common::{Material, SceneNode, Scene, Shader, Vertex8f32};
+use common::{Material, Mesh, SceneNode, Scene, Shader, Vertex8f32};
 
 fn create_vertex8f32(px: f64,
                      py: f64,
@@ -53,22 +53,7 @@ pub fn load_db(filename: &str) -> Scene {
         vertices.push(vertex.unwrap());
     }
 
-    // Load materials
-    let mut material_stmt = conn.prepare("SELECT name, diffuse_texname FROM material")
-        .unwrap();
-    let material_iter = material_stmt.query_map(&[], |row| {
-            Material {
-                name: row.get(0),
-                diffuse_texname: row.get(1),
-            }
-        })
-        .unwrap();
-
-    let mut materials: Vec<Material> = Vec::new();
-
-    for material in material_iter {
-        materials.push(material.unwrap());
-    }
+    let mut meshes: Vec<Mesh> = Vec::new();
 
     // Load scene nodes
     let mut scene_node_stmt =
@@ -84,10 +69,42 @@ pub fn load_db(filename: &str) -> Scene {
         })
         .unwrap();
 
-    let mut scene_nodes: Vec<SceneNode> = Vec::new();
-
     for scene_node in scene_node_iter {
-        scene_nodes.push(scene_node.unwrap());
+        let sn = scene_node.unwrap();
+        let mut new_vertices: Vec<Vertex8f32> = Vec::new();
+
+        for i in sn.start_position as usize..sn.end_position as usize {
+            new_vertices.push(vertices[i]);
+
+        }
+        let mesh = Mesh {
+            name: sn.name,
+            material_id: sn.material_id,
+            vertices: new_vertices,
+        };
+        meshes.push(mesh);
+    }
+
+    println!("Loaded {} vertices", vertices.len());
+
+    // Free up some memory
+    vertices.clear();
+
+    // Load materials
+    let mut material_stmt = conn.prepare("SELECT name, diffuse_texname FROM material")
+        .unwrap();
+    let material_iter = material_stmt.query_map(&[], |row| {
+            Material {
+                name: row.get(0),
+                diffuse_texname: row.get(1),
+            }
+        })
+        .unwrap();
+
+    let mut materials: Vec<Material> = Vec::new();
+
+    for material in material_iter {
+        materials.push(material.unwrap());
     }
 
     let mut shader_stmt =
@@ -110,8 +127,9 @@ pub fn load_db(filename: &str) -> Scene {
 
     return Scene {
         materials: materials,
-        scene_nodes: scene_nodes,
-        vertices: vertices,
+        // scene_nodes: scene_nodes,
+        // vertices: vertices,
+        meshes: meshes,
         shaders: shaders,
     };
 }
