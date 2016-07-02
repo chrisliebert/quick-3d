@@ -9,6 +9,7 @@ pub struct SceneNode {
 #[derive(Debug)]
 pub struct Material {
     pub name: String,
+    pub diffuse: [f32; 3],
     pub diffuse_texname: String,
 }
 

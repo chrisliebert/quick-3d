@@ -91,12 +91,17 @@ pub fn load_db(filename: &str) -> Scene {
     vertices.clear();
 
     // Load materials
-    let mut material_stmt = conn.prepare("SELECT name, diffuse_texname FROM material")
-        .unwrap();
+    let mut material_stmt =
+        conn.prepare("SELECT name, diffuse_r, diffuse_g, diffuse_b, diffuse_texname FROM material")
+            .unwrap();
     let material_iter = material_stmt.query_map(&[], |row| {
+            let diffuse_r: f64 = row.get(1);
+            let diffuse_g: f64 = row.get(2);
+            let diffuse_b: f64 = row.get(3);
             Material {
                 name: row.get(0),
-                diffuse_texname: row.get(1),
+                diffuse: [diffuse_r as f32, diffuse_g as f32, diffuse_b as f32],
+                diffuse_texname: row.get(4),
             }
         })
         .unwrap();

@@ -130,12 +130,7 @@ fn main() {
                                   [0.0f32, 0.0f32, 1.0f32, 0.0f32],
                                   [-5.0f32, -3.0f32, -12.0f32, 1.0f32]];
 
-    let uniforms = uniform! {
-	        projection: *perspective_matrix.as_ref(),
-	        modelview: modelview_matrix_array,
-	        light_position_worldspace: [2.0, 10.0, 1.0f32],
-	        diffuse: [0.5f32, 0.5, 0.5]
-	    };
+
 
 
     let mut running = true;
@@ -150,10 +145,27 @@ fn main() {
     }
 
     while running {
+
+
+
+
+
+
+
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
 
         for i in 0..vertex_buffers.len() {
+
+            let material = &scene.materials[i];
+
+            let uniforms = uniform! {
+		        projection: *perspective_matrix.as_ref(),
+		        modelview: modelview_matrix_array,
+		        light_position_worldspace: [2.0, 10.0, 1.0f32],
+		        diffuse: material.diffuse,
+		    };
+
 
             target.draw(&vertex_buffers[i],
                       &index_buffer,
