@@ -60,9 +60,10 @@ pub fn load_db(filename: &str) -> Scene {
         conn.prepare("SELECT name, material_id, start_position, end_position FROM scene_node")
             .unwrap();
     let scene_node_iter = scene_node_stmt.query_map(&[], |row| {
+            let material_id: i32 = row.get(1);
             SceneNode {
                 name: row.get(0),
-                material_id: row.get(1),
+                material_id: material_id - 1, // index starts at 1 in database, not 0
                 start_position: row.get(2),
                 end_position: row.get(3),
             }
@@ -73,7 +74,7 @@ pub fn load_db(filename: &str) -> Scene {
         let sn = scene_node.unwrap();
         let mut new_vertices: Vec<Vertex8f32> = Vec::new();
 
-        for i in sn.start_position as usize..sn.end_position as usize {
+        for i in sn.start_position as usize..(sn.end_position - 1) as usize {
             new_vertices.push(vertices[i]);
 
         }
@@ -85,7 +86,9 @@ pub fn load_db(filename: &str) -> Scene {
         meshes.push(mesh);
     }
 
-    println!("Loaded {} vertices", vertices.len());
+    println!("Loaded {} vertices in {} meshes",
+             vertices.len(),
+             meshes.len());
 
     // Free up some memory
     vertices.clear();
