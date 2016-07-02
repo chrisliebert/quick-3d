@@ -1,4 +1,3 @@
-#[derive(Debug)]
 pub struct SceneNode {
     pub name: String,
     pub material_id: i32,
@@ -43,7 +42,6 @@ pub struct Shader {
                                       * */
 }
 
-#[derive(Debug)]
 #[derive(Copy, Clone)]
 pub struct Vertex8f32 {
     pub position: [f32; 3],
@@ -51,7 +49,6 @@ pub struct Vertex8f32 {
     pub texcoord: [f32; 2],
 }
 
-#[derive(Debug)]
 #[derive(Clone)]
 pub struct Mesh {
     pub name: String,
@@ -59,9 +56,14 @@ pub struct Mesh {
     pub material_id: i32,
 }
 
-#[derive(Debug)]
+pub struct ImageBlob {
+    pub name: String,
+    pub image: Vec<u8>,
+}
+
 pub struct Scene {
     pub materials: Vec<Material>,
     pub meshes: Vec<Mesh>,
     pub shaders: Vec<Shader>,
+    pub images: Vec<ImageBlob>,
 }
