@@ -7,6 +7,7 @@ pub struct SceneNode {
 }
 
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct Material {
     pub name: String,
     pub diffuse: [f32; 3],
@@ -51,6 +52,7 @@ pub struct Vertex8f32 {
 }
 
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct Mesh {
     pub name: String,
     pub vertices: Vec<Vertex8f32>,
