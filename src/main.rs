@@ -1,6 +1,5 @@
 // Copyright(C) 2016 Chris Liebert
 extern crate glium;
-extern crate image;
 extern crate nalgebra;
 extern crate quick_3d;
 
