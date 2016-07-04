@@ -154,11 +154,11 @@ impl Renderer {
 	 	// TODO: generate this texture instead of loading from sqlite
 		let default_blank_texture = &self.textures["DEFAULT_BLANK_TEXTURE.png"];
         target.clear_color(0.0, 0.0, 0.0, 1.0);
-        for i in 0..self.vertex_buffers.len() {
-            let material_id: i32 = self.scene.meshes[i as usize].material_id.clone();
-            let diffuse = self.scene.materials[material_id as usize].diffuse.clone();
+        for i in 0..self.vertex_buffers.len() as usize {
+            let material_index: usize = self.scene.meshes[i].material_index.clone();
+            let diffuse = self.scene.materials[material_index].diffuse.clone();
             let diffuse_texname: String =
-                self.scene.materials[material_id as usize].diffuse_texname.clone();
+                self.scene.materials[material_index as usize].diffuse_texname.clone();
             let opengl_texture: &glium::texture::CompressedSrgbTexture2d;
             if diffuse_texname.len() == 0 {
                 opengl_texture = &default_blank_texture;
