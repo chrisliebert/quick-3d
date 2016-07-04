@@ -103,7 +103,7 @@ pub fn load_db(filename: &str) -> Scene {
 
         }
 
-        if sn.material_index >= materials.len() || sn.material_index < 0 {
+        if sn.material_index >= materials.len() {
             panic!("Material index {} out of bounds", sn.material_index);
         }
 
