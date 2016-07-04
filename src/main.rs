@@ -8,7 +8,9 @@ use glium::glutin::Event;
 use glium::glutin::ElementState;
 use glium::glutin::VirtualKeyCode;
 use glium::DisplayBuild;
-use quick_3d::loader;
+
+use quick_3d::common::Scene;
+use quick_3d::loader::DBLoader;
 use quick_3d::renderer;
 
 fn main() {
@@ -16,7 +18,8 @@ fn main() {
     let screen_height = 300;
     let db_file: &str = "test.db";
 
-    let scene = loader::load_db(db_file);
+    let dbloader: DBLoader = DBLoader::new(db_file);
+    let scene: Scene = dbloader.load_scene();
 
     let display = glutin::WindowBuilder::new()
         //.resizable()
@@ -28,6 +31,7 @@ fn main() {
         .unwrap();
 
     let renderer = renderer::Renderer::new(&display, scene);
+    let shader_program = renderer.create_shader_program("default", &dbloader, &display);
 
     let mut running = true;
 
@@ -41,7 +45,7 @@ fn main() {
     }
 
     while running {
-        renderer.render(&display);
+        renderer.render(&display, &shader_program);
 
         // Check for close events
         for event in display.poll_events() {
