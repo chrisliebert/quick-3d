@@ -163,15 +163,12 @@ impl DBLoader {
         let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
         let glsl_version = 110;
 
-        // Load the first shader in the database by default
-        // TODO: load from config settings table?
-        let shader_index = 0;
+        let mut id_sql: String = "SELECT id FROM shader WHERE name = '".to_owned();
+        id_sql.push_str(name);
+        id_sql.push('\'');
 
-        let mut shader_id: i32 = conn.query_row("SELECT id FROM shader WHERE name = 'default'", //
-                       &[],
-                       |row| row.get(0))
+        let mut shader_id: i32 = conn.query_row(&id_sql /*  */, &[], |row| row.get(0))
             .unwrap();
-
         println!("Default shader id={}", shader_id);
 
         let mut vertex_source: String =
