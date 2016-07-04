@@ -161,28 +161,36 @@ impl DBLoader {
     pub fn load_shader(&self, name: &str, glsl_version_string: &str) -> Shader {
         let conn = Connection::open(Path::new(&self.filename)).unwrap();
         let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
+
+        //
         let glsl_version = 110;
 
         let mut id_sql: String = "SELECT id FROM shader WHERE name = '".to_owned();
         id_sql.push_str(name);
         id_sql.push('\'');
 
-        let mut shader_id: i32 = conn.query_row(&id_sql /*  */, &[], |row| row.get(0))
+        let mut shader_id: i32 = conn.query_row(&id_sql, &[], |row| row.get(0))
             .unwrap();
-        println!("Default shader id={}", shader_id);
 
-        let mut vertex_source: String =
-            conn.query_row("SELECT source FROM shader_version WHERE shader_id=1 AND version = \
-                            110 AND type = 'vertex'", //
-                           &[],
-                           |row| row.get(0))
-                .unwrap();
+        let mut base_query: String = "SELECT source FROM shader_version WHERE shader_id="
+            .to_owned();
+        let shader_id_str: String = shader_id.to_string();
+        base_query.push_str(&shader_id_str);
+        base_query.push_str(" AND version = ");
+        base_query.push_str(&glsl_version_string);
+        base_query.push_str(" AND type = '");
+
+        let mut vertex_source_sql: String = base_query.clone();
+        let mut fragment_source_sql: String = base_query;
+
+        vertex_source_sql.push_str("vertex';");
+        fragment_source_sql.push_str("fragment';");
+
+        let mut vertex_source: String = conn.query_row(&vertex_source_sql, &[], |row| row.get(0))
+            .unwrap();
 
         let mut fragment_source: String =
-            conn.query_row("SELECT source FROM shader_version WHERE shader_id=1 AND version = \
-                            110 AND type = 'fragment'",
-                           &[],
-                           |row| row.get(0))
+            conn.query_row(&fragment_source_sql, &[], |row| row.get(0))
                 .unwrap();
 
         Shader {
