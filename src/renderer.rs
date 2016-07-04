@@ -158,12 +158,20 @@ impl Renderer {
             let material_index: usize = self.scene.meshes[i].material_index.clone();
             let diffuse = self.scene.materials[material_index].diffuse.clone();
             let diffuse_texname: String =
-                self.scene.materials[material_index as usize].diffuse_texname.clone();
+                self.scene.materials[material_index].diffuse_texname.clone();
             let opengl_texture: &glium::texture::CompressedSrgbTexture2d;
             if diffuse_texname.len() == 0 {
                 opengl_texture = &default_blank_texture;
             } else {
-                opengl_texture = &self.textures[&diffuse_texname];
+                match self.textures.get(&diffuse_texname) {
+                	Some(t) => {
+                		 opengl_texture = &t;
+                	},
+                	None => {
+                		println!("Unable to load {}, using blank texture instead.", diffuse_texname);
+                		opengl_texture = &default_blank_texture;
+                	},
+                }
             }
             let uniforms: glium::uniforms::UniformsStorage<_, _> = uniform! {
 		        projection: *self.projection_matrix.as_ref(),
