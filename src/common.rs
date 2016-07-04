@@ -1,6 +1,6 @@
 pub struct SceneNode {
     pub name: String,
-    pub material_id: i32,
+    pub material_index: usize,
     pub start_position: i32,
     pub end_position: i32,
 }
@@ -53,7 +53,7 @@ pub struct Vertex8f32 {
 pub struct Mesh {
     pub name: String,
     pub vertices: Vec<Vertex8f32>,
-    pub material_id: i32,
+    pub material_index: usize,
 }
 
 pub struct ImageBlob {
