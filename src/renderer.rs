@@ -122,9 +122,19 @@ impl Renderer {
     // Shader compilation no longer required
     display.release_shader_compiler();
     
-    //TODO get width and height from display
-    let screen_width = 400;
-    let screen_height = 300;
+    // Get the screen width and height in pixels
+    let screen_width: u32;
+    let screen_height: u32;
+    match display.get_window() {
+        Some(window) =>  {
+        	let pixel_dimensions: (u32,u32) = window.get_inner_size_pixels().unwrap();
+        	screen_width = pixel_dimensions.0;
+        	screen_height = pixel_dimensions.1;
+	    },
+        None => {
+            panic!("Error retrieving window when querying display size.");
+        }
+    }
 
     // Set up camera
     let projection_matrix = PerspectiveMatrix3::new(screen_width as f32 / screen_height as f32,
