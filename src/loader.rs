@@ -54,46 +54,6 @@ pub fn load_db(filename: &str) -> Scene {
         vertices.push(vertex.unwrap());
     }
 
-    let mut meshes: Vec<Mesh> = Vec::new();
-
-    // Load scene nodes
-    let mut scene_node_stmt =
-        conn.prepare("SELECT name, material_id, start_position, end_position FROM scene_node")
-            .unwrap();
-    let scene_node_iter = scene_node_stmt.query_map(&[], |row| {
-            let material_id: i32 = row.get(1);
-            SceneNode {
-                name: row.get(0),
-                material_id: material_id - 1, // index starts at 1 in database, not 0
-                start_position: row.get(2),
-                end_position: row.get(3),
-            }
-        })
-        .unwrap();
-
-    for scene_node in scene_node_iter {
-        let sn = scene_node.unwrap();
-        let mut new_vertices: Vec<Vertex8f32> = Vec::new();
-
-        for i in sn.start_position as usize..(sn.end_position) as usize {
-            new_vertices.push(vertices[i]);
-
-        }
-        let mesh = Mesh {
-            name: sn.name,
-            material_id: sn.material_id,
-            vertices: new_vertices,
-        };
-        meshes.push(mesh);
-    }
-
-    println!("Loaded {} vertices in {} meshes",
-             vertices.len(),
-             meshes.len());
-
-    // Free up some memory
-    vertices.clear();
-
     // Load materials
     let mut material_stmt =
         conn.prepare("SELECT name, diffuse_r, diffuse_g, diffuse_b, diffuse_texname FROM material")
@@ -115,6 +75,53 @@ pub fn load_db(filename: &str) -> Scene {
     for material in material_iter {
         materials.push(material.unwrap());
     }
+
+    let mut meshes: Vec<Mesh> = Vec::new();
+
+    // Load scene nodes
+    let mut scene_node_stmt =
+        conn.prepare("SELECT name, material_id, start_position, end_position FROM scene_node")
+            .unwrap();
+    let scene_node_iter = scene_node_stmt.query_map(&[], |row| {
+            let material_id: i32 = row.get(1);
+            let material_index: usize = material_id as usize - 1 as usize;
+            SceneNode {
+                name: row.get(0),
+                material_index: material_index, // index starts at 1 in database, not 0
+                start_position: row.get(2),
+                end_position: row.get(3),
+            }
+        })
+        .unwrap();
+
+    for scene_node in scene_node_iter {
+        let sn = scene_node.unwrap();
+        let mut new_vertices: Vec<Vertex8f32> = Vec::new();
+
+        for i in sn.start_position as usize..(sn.end_position) as usize {
+            new_vertices.push(vertices[i]);
+
+        }
+
+        if sn.material_index >= materials.len() || sn.material_index < 0 {
+            panic!("Material index {} out of bounds", sn.material_index);
+        }
+
+        let mesh = Mesh {
+            name: sn.name,
+            material_index: sn.material_index,
+            vertices: new_vertices,
+        };
+        meshes.push(mesh);
+    }
+
+    println!("Loaded {} vertices in {} meshes",
+             vertices.len(),
+             meshes.len());
+
+    // Free up some memory
+    vertices.clear();
+
 
     // Load textures
     let mut texture_stmt = conn.prepare("SELECT name, image FROM texture")
