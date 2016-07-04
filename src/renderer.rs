@@ -6,18 +6,19 @@ extern crate nalgebra;
 use std::collections::HashMap;
 
 use common;
+use common::{Material, Scene, Shader, Vertex8f32};
+use loader::DBLoader;
+
 use glium::backend::glutin_backend::GlutinFacade;
 use glium::Program;
 use glium::Surface;
 use self::nalgebra::{Matrix4, PerspectiveMatrix3};
 
-use common::{Scene, Vertex8f32};
 implement_vertex!(Vertex8f32, position, normal, texcoord);
 
 pub struct Renderer {
 	pub index_buffer: glium::index::NoIndices,
 	pub modelview_matrix_array: [[f32; 4]; 4],
-	pub program: Program,
 	pub projection_matrix: Matrix4<f32>,
 	pub scene: Scene,
 	pub textures: HashMap<String, glium::texture::CompressedSrgbTexture2d>,
@@ -37,9 +38,11 @@ impl Renderer {
 		let index_buffer: glium::index::NoIndices =
 			glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 	
+	/*
 		if scene.shaders.len() == 0 {
 			panic!("No shaders loaded");
 		}
+	*/
 	
 		let mut textures: HashMap<String, glium::texture::CompressedSrgbTexture2d> = HashMap::new();
 	
@@ -55,74 +58,6 @@ impl Renderer {
 				glium::texture::CompressedSrgbTexture2d::new(display, image).unwrap();
 			textures.insert(scene.images[i].name.clone(), opengl_texture);		
 		}
-	
-		// Load the first shader in the database by default
-		// TODO: load from config settings table?
-		let shader_index = 0;
-	
-		// println!("Using glsl version {}", glsl_version);
-	
-		let program: Program = program!(display,
-			/*
-				110 => {
-					vertex: &scene.shaders[shader_index].vertex_source_110,
-					fragment: &scene.shaders[shader_index].fragment_source_110,
-				},
-				120 => {
-					vertex: &scene.shaders[shader_index].vertex_source_120,
-					fragment: &scene.shaders[shader_index].fragment_source_120,
-				},
-				130 => {
-					vertex: &scene.shaders[shader_index].vertex_source_130,
-					fragment: &scene.shaders[shader_index].fragment_source_130,
-				},
-				*/
-				140 => {
-					vertex: &scene.shaders[shader_index].vertex_source_140,
-					fragment: &scene.shaders[shader_index].fragment_source_140,
-				},
-				/*
-				150 => {
-					vertex: &scene.shaders[shader_index].vertex_source_150,
-					fragment: &scene.shaders[shader_index].fragment_source_150,
-				},
-				300 => {
-					vertex: &scene.shaders[shader_index].vertex_source_300,
-					fragment: &scene.shaders[shader_index].fragment_source_300,
-				},
-				330 => {
-					vertex: &scene.shaders[shader_index].vertex_source_330,
-					fragment: &scene.shaders[shader_index].fragment_source_330,
-				},
-				400 => {
-					vertex: &scene.shaders[shader_index].vertex_source_400,
-					fragment: &scene.shaders[shader_index].fragment_source_400,
-				},
-				410 => {
-					vertex: &scene.shaders[shader_index].vertex_source_410,
-					fragment: &scene.shaders[shader_index].fragment_source_410,
-				},
-				420 => {
-					vertex: &scene.shaders[shader_index].vertex_source_420,
-					fragment: &scene.shaders[shader_index].fragment_source_420,
-				},
-				430 => {
-					vertex: &scene.shaders[shader_index].vertex_source_430,
-					fragment: &scene.shaders[shader_index].fragment_source_430,
-				},
-				100 es => {
-					vertex: &scene.shaders[shader_index].vertex_source_100es,
-					fragment: &scene.shaders[shader_index].fragment_source_100es,
-				},
-				300 es => {
-					vertex: &scene.shaders[shader_index].vertex_source_300es,
-					fragment: &scene.shaders[shader_index].fragment_source_300es,
-				}, */
-			)
-			.unwrap();
-	
-		// Shader compilation no longer required
-		display.release_shader_compiler();
 		
 		// Get the screen width and height in pixels
 		let screen_width: u32;
@@ -153,7 +88,6 @@ impl Renderer {
 		Renderer { 
 			index_buffer: index_buffer,
 			modelview_matrix_array: modelview_matrix_array,
-			program: program,
 			projection_matrix: projection_matrix_array,
 			scene: scene,
 			textures: textures,
@@ -161,7 +95,36 @@ impl Renderer {
 		}
 	}
 	
-	pub fn render(&self, display: &GlutinFacade) {
+	pub fn create_shader_program(&self, shader_name: &str, dbloader: &DBLoader, display: &GlutinFacade) -> glium::program::Program {
+		
+		//todo: determine with glium
+		let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
+		let glsl_version = 110;
+		let glsl_version_string = "110";//for GLES, use 300 es
+		
+		// Load the first shader in the database by default
+		// TODO: load from config settings table?
+		let shader_index = 0;
+	
+		// println!("Using glsl version {}", glsl_version);
+	
+		let shader: Shader = dbloader.load_shader(shader_name, glsl_version_string);
+	
+		//todo add support for Es after glsl_version in macro for GLES
+		let program: Program = program!(display,
+				glsl_version => {
+					vertex: &shader.vertex_source,
+					fragment: &shader.fragment_source,
+				},
+			)
+			.unwrap();
+	
+		// Shader compilation no longer required
+		display.release_shader_compiler();
+		return program;
+	}
+	
+	pub fn render(&self, display: &GlutinFacade, program: &glium::program::Program) {
 		let mut target = display.draw();
 		// TODO: generate this texture instead of loading from sqlite
 		let default_blank_texture = &self.textures["DEFAULT_BLANK_TEXTURE.png"];
@@ -195,7 +158,7 @@ impl Renderer {
 			
 			target.draw(&self.vertex_buffers[i],
 				&self.index_buffer,
-				&self.program,
+				program,
 				&uniforms,
 				&Default::default())
 				.unwrap();
