@@ -27,7 +27,8 @@ pub struct Renderer {
 impl Renderer {
 	pub fn new(display: &GlutinFacade, scene: Scene) -> Renderer {
 	
-		let mut vertex_buffers: Vec<glium::vertex::VertexBuffer<common::Vertex8f32>> = Vec::with_capacity(scene.meshes.len());
+		let mut vertex_buffers: Vec<glium::vertex::VertexBuffer<common::Vertex8f32>> =
+			Vec::with_capacity(scene.meshes.len());
 	
 		for i in 0..scene.meshes.len() {
 			vertex_buffers.push(glium::vertex::VertexBuffer::new(display, &scene.meshes[i].vertices).unwrap());
@@ -50,7 +51,8 @@ impl Renderer {
 			let image_dimensions = image.dimensions();
 			let image = glium::texture::RawImage2d::from_raw_rgba_reversed(image.into_raw(),
 			                                                               image_dimensions);
-			let opengl_texture: glium::texture::CompressedSrgbTexture2d = glium::texture::CompressedSrgbTexture2d::new(display, image).unwrap();
+			let opengl_texture: glium::texture::CompressedSrgbTexture2d =
+				glium::texture::CompressedSrgbTexture2d::new(display, image).unwrap();
 			textures.insert(scene.images[i].name.clone(), opengl_texture);		
 		}
 	
