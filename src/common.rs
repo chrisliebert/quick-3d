@@ -1,3 +1,4 @@
+// Copyright(C) 2016 Chris Liebert
 pub struct SceneNode {
     pub name: String,
     pub material_index: usize,
