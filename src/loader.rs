@@ -160,10 +160,9 @@ impl DBLoader {
 
     pub fn load_shader(&self, name: &str, glsl_version_string: &str) -> Shader {
         let conn = Connection::open(Path::new(&self.filename)).unwrap();
-        let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
 
-        //
-        let glsl_version = 110;
+        // TODO: if string ends with " es", the use_gles should be true
+        let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
 
         let mut id_sql: String = "SELECT id FROM shader WHERE name = '".to_owned();
         id_sql.push_str(name);

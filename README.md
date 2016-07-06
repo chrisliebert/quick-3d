@@ -8,7 +8,7 @@ The goal of quick-3d is to replace the need for C++ in hardware-accelerated 3D g
 | :------- | :----: | :---- |
 | Load Data from SQLite | Supported | Graphics data is loaded from an SQLite database. (obj2sqlite is a tool that can be used to generate databases from wavefront .obj files) |
 | Update and Render Geometry | Render only |  *Currently the update feature is missing which would allow access to uniforms |
-| Diffuse Texture Maps | Supported | Diffuse textures map are loaded from image blobs stored SQLite |
+| Diffuse Texture Maps | Supported | Diffuse textures map are loaded from image blobs stored in SQLite |
 | Multiple Hardware Profiles | *In-Progress | Multiple GLSL hardware profiles to support different shader versions on multiple platforms. Different versions of the shader programs are stored in the SQLite database.|
 | LUA Scripting | Planned | Lua scripting integration, preferrably the entire API will be exposed to LUA and LuaJIT or SWIG.|
 | Tests | *In-Progress | Unit test, benchmark and integration tests |

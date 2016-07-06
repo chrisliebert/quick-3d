@@ -10,8 +10,8 @@ use common::{Material, Scene, Shader, Vertex8f32};
 use loader::DBLoader;
 
 use glium::backend::glutin_backend::GlutinFacade;
-use glium::Program;
-use glium::Surface;
+use glium::{Program, Surface, Version};
+
 use self::nalgebra::{Matrix4, PerspectiveMatrix3};
 
 implement_vertex!(Vertex8f32, position, normal, texcoord);
@@ -96,29 +96,57 @@ impl Renderer {
 	}
 	
 	pub fn create_shader_program(&self, shader_name: &str, dbloader: &DBLoader, display: &GlutinFacade) -> glium::program::Program {
+		let supported_glsl_version: Version = display.get_supported_glsl_version();
+		let api: glium::Api = supported_glsl_version.0;
+		let major_version : u8 = supported_glsl_version.1;
+		let minor_version : u8 = supported_glsl_version.2;
+		let mut glsl_version_string: String = major_version.to_string();
+		glsl_version_string.push_str(&minor_version.to_string());
+		glsl_version_string.push('0');
+		let mut use_gles: bool = false;// Use OpenGLES instead of OpenGL (for mobile devices)
 		
-		//todo: determine with glium
-		let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
-		let glsl_version = 110;
-		let glsl_version_string = "110";//for GLES, use 300 es
+		match api {
+				glium::Api::Gl => {
+					use_gles = false;
+				},
+				glium::Api::GlEs => {
+					use_gles = true;
+					glsl_version_string.push_str(" es");
+				},
+		};
 		
-		// Load the first shader in the database by default
-		// TODO: load from config settings table?
-		let shader_index = 0;
+		let glsl_version_number: u32 = match glsl_version_string.parse() {
+			Ok(s) => s,
+			Err(e) =>  {
+				// This is not likely to happen
+				panic!("Unable to parse supported glsl version string");
+			},
+		};
+		
+		println!("Using glsl version {}", &glsl_version_string);
 	
-		// println!("Using glsl version {}", glsl_version);
+		let shader: Shader = dbloader.load_shader(shader_name, &glsl_version_string);
 	
-		let shader: Shader = dbloader.load_shader(shader_name, glsl_version_string);
-	
-		//todo add support for Es after glsl_version in macro for GLES
-		let program: Program = program!(display,
-				glsl_version => {
+		let program: Program;
+		
+		if use_gles {
+			program = program!(display,
+				glsl_version_number es => {
 					vertex: &shader.vertex_source,
 					fragment: &shader.fragment_source,
 				},
 			)
 			.unwrap();
-	
+		} else {
+			program = program!(display,
+				glsl_version_number => {
+					vertex: &shader.vertex_source,
+					fragment: &shader.fragment_source,
+				},
+			)
+			.unwrap();
+		}
+			
 		// Shader compilation no longer required
 		display.release_shader_compiler();
 		return program;
