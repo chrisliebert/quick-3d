@@ -1,13 +1,14 @@
 # Copyright (c) 2016 Chris Liebert
 # This software is available under the "MIT License" see LICENSE
 [package]
-name = "quick-3d"
+name = "quick3d"
 version = "0.1.0"
 authors = ["chrisliebert <liebert@pdx.edu>"]
 
 [lib]
-name = "quick_3d"
+name = "quick3d"
 path = "src/lib.rs"
+crate-type = ["dylib", "rlib"]
 
 [[bin]]
 name = "example"
@@ -19,3 +20,4 @@ nalgebra = "0.8.2"
 rusqlite = "0.7.3"
 time = "0.1.35"
 image = "0.10.1"
+libc = "0.2.14"

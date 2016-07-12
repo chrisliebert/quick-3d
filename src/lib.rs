@@ -1,6 +1,6 @@
 // Copyright(C) 2016 Chris Liebert
-#![crate_type = "lib"]
-#![crate_name = "quick_3d"]
+#![crate_type = "dylib"]
+#![crate_name = "quick3d"]
 #[macro_use]
 extern crate glium;
 

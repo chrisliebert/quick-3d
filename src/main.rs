@@ -1,7 +1,7 @@
 // Copyright(C) 2016 Chris Liebert
 extern crate glium;
 extern crate nalgebra;
-extern crate quick_3d;
+extern crate quick3d;
 
 use glium::glutin;
 use glium::glutin::Event;
@@ -9,9 +9,9 @@ use glium::glutin::ElementState;
 use glium::glutin::VirtualKeyCode;
 use glium::DisplayBuild;
 
-use quick_3d::common::Scene;
-use quick_3d::loader::DBLoader;
-use quick_3d::renderer;
+use quick3d::common::Scene;
+use quick3d::loader::DBLoader;
+use quick3d::renderer;
 
 fn main() {
     let screen_width = 400;
