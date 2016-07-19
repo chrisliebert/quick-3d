@@ -162,13 +162,13 @@ impl DBLoader {
         let conn = Connection::open(Path::new(&self.filename)).unwrap();
 
         // TODO: if string ends with " es", the use_gles should be true
-        let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
+        //let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
 
         let mut id_sql: String = "SELECT id FROM shader WHERE name = '".to_owned();
         id_sql.push_str(name);
         id_sql.push('\'');
 
-        let mut shader_id: i32 = conn.query_row(&id_sql, &[], |row| row.get(0))
+        let shader_id: i32 = conn.query_row(&id_sql, &[], |row| row.get(0))
             .unwrap();
 
         let mut base_query: String = "SELECT source FROM shader_version WHERE shader_id="
@@ -185,10 +185,10 @@ impl DBLoader {
         vertex_source_sql.push_str("vertex';");
         fragment_source_sql.push_str("fragment';");
 
-        let mut vertex_source: String = conn.query_row(&vertex_source_sql, &[], |row| row.get(0))
+        let vertex_source: String = conn.query_row(&vertex_source_sql, &[], |row| row.get(0))
             .unwrap();
 
-        let mut fragment_source: String =
+        let fragment_source: String =
             conn.query_row(&fragment_source_sql, &[], |row| row.get(0))
                 .unwrap();
 

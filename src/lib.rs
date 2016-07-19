@@ -10,18 +10,76 @@ pub mod loader;
 #[macro_use]
 pub mod renderer;
 
+extern crate nalgebra;
+extern crate libc;
+
+use std::ffi::CStr;
+use std::os::raw::c_char;
+
+use glium::glutin;
+use glium::glutin::Event;
+use glium::glutin::ElementState;
+use glium::glutin::VirtualKeyCode;
+use glium::DisplayBuild;
+
+use glium::backend::glutin_backend::GlutinFacade;
+
+use common::Scene;
+use loader::DBLoader;
+
+#[no_mangle]
+pub extern "C" fn create_window(screen_width: libc::int32_t , screen_height: libc::int32_t, title: *const c_char) -> GlutinFacade {		
+	let w: u32 = screen_width as u32;
+	let h: u32 = screen_height as u32;
+	let window_title: String;
+	
+	unsafe {
+		window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
+	}
+	
+	let display : GlutinFacade = glutin::WindowBuilder::new()
+        //.resizable()
+        //.with_vsync()
+        //with_gl_debug_flag(true)
+        .with_title(window_title)
+        .with_visibility(true) // Window is shown when scene finishes loading.
+        .with_dimensions(w, h)
+        .build_glium()
+        .unwrap();
+    return display;
+}
+
+#[no_mangle]
+pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> *const DBLoader {		
+	unsafe {
+		let filename: String = CStr::from_ptr(filename_cstr).to_string_lossy().into_owned();	
+		let dbloader: DBLoader = DBLoader::new(&filename);
+		println!("Loaded {}", &filename);
+		return &dbloader;
+	}
+}
+
+#[no_mangle]
+pub extern "C" fn poll_quit_event(display: &GlutinFacade) -> libc::int32_t {		
+	let mut quit : libc::int32_t = 0;
+	for event in display.poll_events() {
+            match event {
+                Event::Closed => quit = 1,
+                Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Escape)) => {
+                    quit = 1
+                }
+                _ => (),
+            }
+        }
+	if quit.clone() > 0 {
+		println!("Polling quit event returned {}", quit.clone());
+	}
+	
+	return quit;
+}
+
 #[no_mangle]
 pub extern fn hello() {
-    extern crate glium;
-    extern crate nalgebra;
-
-    use glium::glutin;
-    use glium::glutin::Event;
-    use glium::glutin::ElementState;
-    use glium::glutin::VirtualKeyCode;
-    use glium::DisplayBuild;
-
-    use common::Scene;
     use loader::DBLoader;
     use renderer;
     let screen_width = 400;

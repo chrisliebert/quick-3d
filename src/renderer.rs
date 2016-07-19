@@ -6,7 +6,7 @@ extern crate nalgebra;
 use std::collections::HashMap;
 
 use common;
-use common::{Material, Scene, Shader, Vertex8f32};
+use common::{Scene, Shader, Vertex8f32};
 use loader::DBLoader;
 
 use glium::backend::glutin_backend::GlutinFacade;
@@ -95,6 +95,7 @@ impl Renderer {
 		}
 	}
 	
+	#[allow(unused_assignments)]
 	pub fn create_shader_program(&self, shader_name: &str, dbloader: &DBLoader, display: &GlutinFacade) -> glium::program::Program {
 		let supported_glsl_version: Version = display.get_supported_glsl_version();
 		let api: glium::Api = supported_glsl_version.0;
@@ -119,7 +120,7 @@ impl Renderer {
 			Ok(s) => s,
 			Err(e) =>  {
 				// This is not likely to happen
-				panic!("Unable to parse supported glsl version string");
+				panic!("Unable to parse supported glsl version string: {}", e);
 			},
 		};
 		
