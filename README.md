@@ -18,4 +18,4 @@ The goal of quick-3d is to replace the need for C++ in hardware-accelerated 3D g
 
 
   **License:**
-  This program and it's source are availible under the "MIT License" please see LICENSE
+  This program and it's source are available under the "MIT License" please see LICENSE

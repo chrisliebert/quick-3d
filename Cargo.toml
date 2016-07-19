@@ -5,6 +5,9 @@ name = "quick3d"
 version = "0.1.0"
 authors = ["chrisliebert <liebert@pdx.edu>"]
 
+[build-dependencies]
+cmake = "0.1"
+
 [lib]
 name = "quick3d"
 path = "src/lib.rs"
