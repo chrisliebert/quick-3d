@@ -1,5 +1,4 @@
 -- Copyright (C) 2016 Chris Liebert
-
 local wrapper = nil
 
 function require_shared_library()
@@ -11,11 +10,6 @@ function isWindows()
   if package.config:sub(1,1) == "\\" then return true end
 end
 
--- Determine whether platform is Unix
-function isUnix()
-  if package.config:sub(1,1) == "/" then return false end
-end
-
 -- Generate the wrapper source and compile the shared libarary
 function build_wrapper()
   -- Generate quick3d_wrapper.c
@@ -25,17 +19,18 @@ function build_wrapper()
     os.exit(1)
   end
   
-  local quick3d_dylib = "quick3d"
+  local quick3d_dylib = "libquick3d"
   local wrapper_dylib = "quick3dwrapper"
   local dylib_ext
   local lua_lib
   
   if isWindows() then
+    quick3d_dylib = "quick3d"
     dylib_ext = ".dll"
-  lua_lib = "lua51.dll"
-  elseif isUnix() then
+    lua_lib = "lua51.dll"
+  else
     dylib_ext = ".so"
-  lua_lib = "-llua"
+    lua_lib = "-lluajit-5.1"
   end
   
   quick3d_dylib = quick3d_dylib .. dylib_ext
@@ -46,14 +41,17 @@ function build_wrapper()
     print "Unable to build rust library"
     os.exit(1)
   end
-  
-  if isUnix() then
-    os.execute("cp target/debug/"..quick3d_dylib.." .")
-  elseif isWindows() then
+
+  local lua_include = "/usr/include/lua5.1"  
+
+  if isWindows() then
+    lua_include = "/usr/include"
     os.execute("copy target\\debug\\" ..quick3d_dylib.." .")
+  else
+    os.execute("cp target/debug/"..quick3d_dylib.." .")
   end
   
-  local gcc_cmd = "gcc quick3d_wrap.c -fpic -shared "..quick3d_dylib.." "..lua_lib.." -o "..wrapper_dylib
+  local gcc_cmd = "gcc quick3d_wrap.c -fpic -shared -I"..lua_include.." "..quick3d_dylib.." "..lua_lib.." -o "..wrapper_dylib
   local gcc_result = os.execute(gcc_cmd)
   if not gcc_result == 0 then
     os.exit(2)
