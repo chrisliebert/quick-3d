@@ -1,3 +1,5 @@
+-- Copyright (C) 2016 Chris Liebert
+
 local wrapper = nil
 
 function require_shared_library()
