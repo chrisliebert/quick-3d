@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Chris Liebert
+-- Copyright (C) 2016 Chris Liebert
 
 local wrapper = nil
 
