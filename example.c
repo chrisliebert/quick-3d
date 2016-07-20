@@ -6,9 +6,6 @@
 #include "quick3d.h"
 
 int main(int argc, char** argv) {
-	Window window = create_window(800, 600, "My C Window");
-
-	while(poll_quit_event(&window) == 0) {
-		//render
-	}
+	Window* window = create_window(800, 600, "My C Window");
+	while(poll_quit_event(window) == 0) {}
 }

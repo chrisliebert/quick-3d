@@ -24,38 +24,51 @@ use glium::DisplayBuild;
 
 use glium::backend::glutin_backend::GlutinFacade;
 
-use common::Scene;
 use loader::DBLoader;
+use renderer::Renderer;
 
 #[no_mangle]
-pub extern "C" fn create_window(screen_width: libc::int32_t , screen_height: libc::int32_t, title: *const c_char) -> GlutinFacade {		
+pub extern "C" fn create_window(screen_width: libc::int32_t , screen_height: libc::int32_t, title: *const c_char) -> Box<GlutinFacade> {		
 	let w: u32 = screen_width as u32;
 	let h: u32 = screen_height as u32;
 	let window_title: String;
 	
 	unsafe {
 		window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
+		let display : GlutinFacade = glutin::WindowBuilder::new()
+	        //.resizable()
+	        //.with_vsync()
+	        //with_gl_debug_flag(true)
+	        .with_title(window_title)
+	        .with_visibility(true)
+	        .with_dimensions(w, h)
+	        .build_glium()
+	        .unwrap();
+	    return Box::new(display);
 	}
-	
-	let display : GlutinFacade = glutin::WindowBuilder::new()
-        //.resizable()
-        //.with_vsync()
-        //with_gl_debug_flag(true)
-        .with_title(window_title)
-        .with_visibility(true) // Window is shown when scene finishes loading.
-        .with_dimensions(w, h)
-        .build_glium()
-        .unwrap();
-    return display;
 }
 
 #[no_mangle]
-pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> *const DBLoader {		
+pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader> {		
 	unsafe {
 		let filename: String = CStr::from_ptr(filename_cstr).to_string_lossy().into_owned();	
 		let dbloader: DBLoader = DBLoader::new(&filename);
 		println!("Loaded {}", &filename);
-		return &dbloader;
+		return Box::new(dbloader);
+	}
+}
+
+#[no_mangle]
+pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader, display: &GlutinFacade) -> Box<Renderer> {		
+	return Box::new(renderer::Renderer::new(display, dbloader.load_scene()));
+}
+
+#[no_mangle]
+pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char, dbloader: &DBLoader, renderer: &Renderer, display: &GlutinFacade) -> Box<glium::program::Program> {		
+	unsafe {
+		let shader_name: String = CStr::from_ptr(shader_name_cstr).to_string_lossy().into_owned();	
+		let shader_program = renderer.create_shader_program(&shader_name, dbloader, display);
+		return Box::new(shader_program);
 	}
 }
 
@@ -79,55 +92,9 @@ pub extern "C" fn poll_quit_event(display: &GlutinFacade) -> libc::int32_t {
 }
 
 #[no_mangle]
-pub extern fn hello() {
-    use loader::DBLoader;
-    use renderer;
-    let screen_width = 400;
-    let screen_height = 300;
-    let db_file: &str = "test.db";
-
-    let dbloader: DBLoader = DBLoader::new(db_file);
-    let scene: Scene = dbloader.load_scene();
-
-    let display = glutin::WindowBuilder::new()
-        //.resizable()
-        //.with_vsync()
-        //with_gl_debug_flag(true)
-        .with_visibility(false) // Window is shown when scene finishes loading.
-        .with_dimensions(screen_width, screen_height)
-        .build_glium()
-        .unwrap();
-
-    let renderer = renderer::Renderer::new(&display, scene);
-    let shader_program = renderer.create_shader_program("default", &dbloader, &display);
-
-    let mut running = true;
-
-    // Show the window once the data is loaded
-    match display.get_window() {
-        Some(x) => x.show(),
-        None => {
-            running = false;
-            println!("Error retrieving window");
-        }
-    }
-
-    while running {
-        renderer.render(&display, &shader_program);
-
-        // Check for close events
-        for event in display.poll_events() {
-            match event {
-                Event::Closed => running = false,
-                Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Escape)) => {
-                    running = false
-                }
-                _ => (),
-            }
-        }
-    }
+pub extern "C" fn render(renderer: &Renderer, shader_program: &glium::program::Program, display: &GlutinFacade) {		
+	renderer.render(display, shader_program);
 }
-
 
 #[cfg(test)]
 mod tests {
