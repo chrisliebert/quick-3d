@@ -1,5 +1,9 @@
 -- Copyright (C) 2016 Chris Liebert
 
+-- Look for lua modules in the current directory
+package.path = package.path .. ";./?.lua"
+
+-- Include and initialise the Quick3D LUA API
 require "quick3d"
 local quick3d = quick3d_init()
 
