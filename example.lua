@@ -9,8 +9,7 @@ local renderer = quick3d.create_renderer_from_db_loader(loader, window)
 local shader = quick3d.get_shader_from_db_loader("default", loader, renderer, window)
 
 while quick3d.poll_quit_event(window) == 0 do
-  --print "hello"  
-	quick3d.render(renderer, shader, window)
+    quick3d.render(renderer, shader, window)
 end
 
 print "Quit"
