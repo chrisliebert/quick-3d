@@ -16,6 +16,8 @@ extern crate libc;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
+use std::mem;
+
 use glium::glutin;
 use glium::glutin::Event;
 use glium::glutin::ElementState;
@@ -94,6 +96,14 @@ pub extern "C" fn poll_quit_event(display: &GlutinFacade) -> libc::int32_t {
 #[no_mangle]
 pub extern "C" fn render(renderer: &Renderer, shader_program: &glium::program::Program, display: &GlutinFacade) {		
 	renderer.render(display, shader_program);
+}
+
+#[no_mangle]
+pub extern "C" fn take_memory(c_pointer: &*mut libc::c_void) -> Box<libc::c_void> {
+	unsafe {
+		let box_ptr = Box::from_raw(*c_pointer);
+		return box_ptr;
+	}	
 }
 
 #[cfg(test)]

@@ -15,7 +15,7 @@ crate-type = ["dylib", "rlib"]
 
 [[bin]]
 name = "example"
-path = "src/main.rs"
+path = "src/example.rs"
 
 [dependencies]
 glium = "*"

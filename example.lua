@@ -16,6 +16,11 @@ while quick3d.poll_quit_event(window) == 0 do
     quick3d.render(renderer, shader, window)
 end
 
+shader = quick3d.take_memory(shader)
+renderer = quick3d.take_memory(renderer)
+loader = quick3d.take_memory(loader)
+window = quick3d.take_memory(window)
+
 print "Quit"
 
 os.exit() -- Removing this call will cause Lua to crash on exit.
