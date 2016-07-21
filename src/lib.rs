@@ -1,6 +1,7 @@
 // Copyright(C) 2016 Chris Liebert
 #![crate_type = "dylib"]
 #![crate_name = "quick3d"]
+#![allow(dead_code)]
 #[macro_use]
 extern crate glium;
 
@@ -16,8 +17,6 @@ extern crate libc;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
-use std::mem;
-
 use glium::glutin;
 use glium::glutin::Event;
 use glium::glutin::ElementState;
@@ -30,14 +29,17 @@ use loader::DBLoader;
 use renderer::Renderer;
 
 #[no_mangle]
-pub extern "C" fn create_window(screen_width: libc::int32_t , screen_height: libc::int32_t, title: *const c_char) -> Box<GlutinFacade> {		
-	let w: u32 = screen_width as u32;
-	let h: u32 = screen_height as u32;
-	let window_title: String;
-	
-	unsafe {
-		window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
-		let display : GlutinFacade = glutin::WindowBuilder::new()
+pub extern "C" fn create_window(screen_width: libc::int32_t,
+                                screen_height: libc::int32_t,
+                                title: *const c_char)
+                                -> Box<GlutinFacade> {
+    let w: u32 = screen_width as u32;
+    let h: u32 = screen_height as u32;
+    let window_title: String;
+
+    unsafe {
+        window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
+        let display: GlutinFacade = glutin::WindowBuilder::new()
 	        //.resizable()
 	        //.with_vsync()
 	        //with_gl_debug_flag(true)
@@ -46,64 +48,72 @@ pub extern "C" fn create_window(screen_width: libc::int32_t , screen_height: lib
 	        .with_dimensions(w, h)
 	        .build_glium()
 	        .unwrap();
-	    return Box::new(display);
-	}
+        return Box::new(display);
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader> {		
-	unsafe {
-		let filename: String = CStr::from_ptr(filename_cstr).to_string_lossy().into_owned();	
-		let dbloader: DBLoader = DBLoader::new(&filename);
-		println!("Loaded {}", &filename);
-		return Box::new(dbloader);
-	}
+pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader> {
+    unsafe {
+        let filename: String = CStr::from_ptr(filename_cstr).to_string_lossy().into_owned();
+        let dbloader: DBLoader = DBLoader::new(&filename);
+        println!("Loaded {}", &filename);
+        return Box::new(dbloader);
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader, display: &GlutinFacade) -> Box<Renderer> {		
-	return Box::new(renderer::Renderer::new(display, dbloader.load_scene()));
+pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
+                                                 display: &GlutinFacade)
+                                                 -> Box<Renderer> {
+    return Box::new(renderer::Renderer::new(display, dbloader.load_scene()));
 }
 
 #[no_mangle]
-pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char, dbloader: &DBLoader, renderer: &Renderer, display: &GlutinFacade) -> Box<glium::program::Program> {		
-	unsafe {
-		let shader_name: String = CStr::from_ptr(shader_name_cstr).to_string_lossy().into_owned();	
-		let shader_program = renderer.create_shader_program(&shader_name, dbloader, display);
-		return Box::new(shader_program);
-	}
+pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char,
+                                            dbloader: &DBLoader,
+                                            renderer: &Renderer,
+                                            display: &GlutinFacade)
+                                            -> Box<glium::program::Program> {
+    unsafe {
+        let shader_name: String = CStr::from_ptr(shader_name_cstr).to_string_lossy().into_owned();
+        let shader_program = renderer.create_shader_program(&shader_name, dbloader, display);
+        return Box::new(shader_program);
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn poll_quit_event(display: &GlutinFacade) -> libc::int32_t {		
-	let mut quit : libc::int32_t = 0;
-	for event in display.poll_events() {
-            match event {
-                Event::Closed => quit = 1,
-                Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Escape)) => {
-                    quit = 1
-                }
-                _ => (),
+pub extern "C" fn poll_quit_event(display: &GlutinFacade) -> libc::int32_t {
+    let mut quit: libc::int32_t = 0;
+    for event in display.poll_events() {
+        match event {
+            Event::Closed => quit = 1,
+            Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Escape)) => {
+                quit = 1
             }
+            _ => (),
         }
-	if quit.clone() > 0 {
-		println!("Polling quit event returned {}", quit.clone());
-	}
-	
-	return quit;
+    }
+    if quit.clone() > 0 {
+        println!("Polling quit event returned {}", quit.clone());
+    }
+
+    return quit;
 }
 
 #[no_mangle]
-pub extern "C" fn render(renderer: &Renderer, shader_program: &glium::program::Program, display: &GlutinFacade) {		
-	renderer.render(display, shader_program);
+pub extern "C" fn render(renderer: &Renderer,
+                         shader_program: &glium::program::Program,
+                         display: &GlutinFacade) {
+    renderer.render(display, shader_program);
 }
 
 #[no_mangle]
-pub extern "C" fn take_memory(c_pointer: &*mut libc::c_void) -> Box<libc::c_void> {
-	unsafe {
-		let box_ptr = Box::from_raw(*c_pointer);
-		return box_ptr;
-	}	
+pub extern "C" fn take_memory(c_pointer: *mut libc::c_void) -> *mut libc::c_void {
+    unsafe {
+        let box_ptr = Box::from_raw(c_pointer);
+        return Box::into_raw(box_ptr);
+    }
 }
 
 #[cfg(test)]

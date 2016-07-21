@@ -13,5 +13,6 @@ Window* new_window() {
 int main(int argc, char** argv) {
 	Window* window = new_window();
 	while(poll_quit_event(window) == 0) {}
-	free(take_memory(window));
+	window = (Window*) take_memory(window);
+	free(window);
 }
