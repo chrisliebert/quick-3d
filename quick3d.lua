@@ -30,7 +30,8 @@ function build_wrapper()
     lua_lib = "lua51.dll"
   else
     dylib_ext = ".so"
-    lua_lib = "-lluajit-5.1"
+    lua_lib = "-lluajit -L/u/liebert/LuaJIT-2.0.4/src"
+    --lua_lib = "-lluajit-5.1"
   end
   
   quick3d_dylib = quick3d_dylib .. dylib_ext
@@ -42,7 +43,7 @@ function build_wrapper()
     os.exit(1)
   end
 
-  local lua_include = "/usr/include/lua5.1"  
+  local lua_include = "-I/usr/include/lua5.1 -I/u/liebert/LuaJIT-2.0.4/src"  
 
   if isWindows() then
     lua_include = "/usr/include"
@@ -51,7 +52,7 @@ function build_wrapper()
     os.execute("cp target/debug/"..quick3d_dylib.." .")
   end
   
-  local gcc_cmd = "gcc quick3d_wrap.c -fpic -shared -I"..lua_include.." "..quick3d_dylib.." "..lua_lib.." -o "..wrapper_dylib
+  local gcc_cmd = "gcc quick3d_wrap.c -fpic -shared "..lua_include.." "..quick3d_dylib.." "..lua_lib.." -o "..wrapper_dylib
   local gcc_result = os.execute(gcc_cmd)
   if not gcc_result == 0 then
     os.exit(2)
