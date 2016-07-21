@@ -148,7 +148,7 @@ mod tests {
         // assert!(scene.shaders.len() > 0);
     }
 
-    #[test]
+    //#[test]
     fn load_and_render_db() {
         println!("Running load_and_render_db test");
         let display = create_test_display();
