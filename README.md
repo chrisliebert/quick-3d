@@ -1,4 +1,5 @@
 Copyright(C) 2016 Chris Liebert
+[![Build Status](https://travis-ci.org/chrisliebert/quick-3d.svg?branch=master)](https://travis-ci.org/chrisliebert/quick-3d)
 
 quick-3d
 ===================
