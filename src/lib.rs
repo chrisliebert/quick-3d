@@ -28,6 +28,8 @@ use glium::backend::glutin_backend::GlutinFacade;
 use loader::DBLoader;
 use renderer::Renderer;
 
+use std::cell::RefCell;
+
 #[no_mangle]
 pub extern "C" fn create_window(screen_width: libc::int32_t,
                                 screen_height: libc::int32_t,
@@ -53,20 +55,36 @@ pub extern "C" fn create_window(screen_width: libc::int32_t,
 }
 
 #[no_mangle]
+pub extern "C" fn free_window(cell: RefCell<GlutinFacade>) {
+    let memory = cell.into_inner();
+}
+
+#[no_mangle]
 pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader> {
     unsafe {
         let filename: String = CStr::from_ptr(filename_cstr).to_string_lossy().into_owned();
         let dbloader: DBLoader = DBLoader::new(&filename);
         println!("Loaded {}", &filename);
-        return Box::new(dbloader);
+        Box::new(dbloader)
     }
+}
+
+#[no_mangle]
+pub extern "C" fn free_db_loader(cell: RefCell<DBLoader>) {
+
+    let memory = cell.into_inner();
 }
 
 #[no_mangle]
 pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
                                                  display: &GlutinFacade)
                                                  -> Box<Renderer> {
-    return Box::new(renderer::Renderer::new(display, dbloader.load_scene()));
+    Box::new(renderer::Renderer::new(display, dbloader.load_scene()))
+}
+#[no_mangle]
+pub extern "C" fn free_renderer(cell: RefCell<Renderer>) {
+
+    let memory = cell.into_inner();
 }
 
 #[no_mangle]
@@ -108,14 +126,6 @@ pub extern "C" fn render(renderer: &Renderer,
     renderer.render(display, shader_program);
 }
 
-#[no_mangle]
-pub extern "C" fn take_memory(c_pointer: *mut libc::c_void) -> *mut libc::c_void {
-    unsafe {
-        let box_ptr = Box::from_raw(c_pointer);
-        return Box::into_raw(box_ptr);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use glium::glutin;
@@ -148,7 +158,7 @@ mod tests {
         // assert!(scene.shaders.len() > 0);
     }
 
-    //#[test]
+    // #[test]
     fn load_and_render_db() {
         println!("Running load_and_render_db test");
         let display = create_test_display();

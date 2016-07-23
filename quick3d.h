@@ -19,12 +19,11 @@ typedef struct DBLoader {
 	char* filename;
 } DBLoader;
 
-typedef struct Program {
-	void* loc;///
-} Program;
+typedef struct Shader {
+	void* loc;
+} Shader;
 
 typedef struct Renderer {
-	//
 	void* loc;
 } Renderer;
 
@@ -42,9 +41,14 @@ typedef struct Window {
 extern DBLoader* create_db_loader(const char* filename);
 extern Renderer* create_renderer_from_db_loader(DBLoader* loader, Window* window);
 extern Window* create_window(int screen_width, int screen_height, const char* title);
+
+extern void free_db_loader(DBLoader* dbloader);
+extern void free_renderer(Renderer* renderer);
+extern void free_shader(Shader* shader);
+extern void free_window(Window* memory);
+
+extern Shader* get_shader_from_db_loader(const char* name, DBLoader* dbloader, Renderer* renderer, Window* display);
 extern int poll_quit_event(Window* window);
-extern Program* get_shader_from_db_loader(const char* name, DBLoader* dbloader, Renderer* renderer, Window* display);
-extern void render(Renderer* renderer, Program* program, Window* window);
-extern void* take_memory(void* memory);
+extern void render(Renderer* renderer, Shader* shader, Window* window);
 
 #endif
