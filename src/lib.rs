@@ -14,6 +14,7 @@ pub mod renderer;
 extern crate nalgebra;
 extern crate libc;
 
+
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
@@ -28,13 +29,11 @@ use glium::backend::glutin_backend::GlutinFacade;
 use loader::DBLoader;
 use renderer::Renderer;
 
-use std::cell::RefCell;
-
 #[no_mangle]
 pub extern "C" fn create_window(screen_width: libc::int32_t,
                                 screen_height: libc::int32_t,
                                 title: *const c_char)
-                                -> Box<GlutinFacade> {
+                                -> *mut GlutinFacade {
     let w: u32 = screen_width as u32;
     let h: u32 = screen_height as u32;
     let window_title: String;
@@ -50,13 +49,13 @@ pub extern "C" fn create_window(screen_width: libc::int32_t,
 	        .with_dimensions(w, h)
 	        .build_glium()
 	        .unwrap();
-        return Box::new(display);
+        return Box::into_raw(Box::new(display));
     }
 }
 
 #[no_mangle]
-pub extern "C" fn free_window(cell: RefCell<GlutinFacade>) {
-    let memory = cell.into_inner();
+pub unsafe extern "C" fn free_window(ptr: *mut GlutinFacade) {
+    Box::from_raw(ptr);
 }
 
 #[no_mangle]
@@ -70,9 +69,8 @@ pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader
 }
 
 #[no_mangle]
-pub extern "C" fn free_db_loader(cell: RefCell<DBLoader>) {
-
-    let memory = cell.into_inner();
+pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
+    unsafe { Box::from_raw(ptr) };
 }
 
 #[no_mangle]
@@ -82,9 +80,8 @@ pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
     Box::new(renderer::Renderer::new(display, dbloader.load_scene()))
 }
 #[no_mangle]
-pub extern "C" fn free_renderer(cell: RefCell<Renderer>) {
-
-    let memory = cell.into_inner();
+pub extern "C" fn free_renderer(ptr: *mut Renderer) {
+    unsafe { Box::from_raw(ptr) };
 }
 
 #[no_mangle]
