@@ -16,10 +16,10 @@ while quick3d.poll_quit_event(window) == 0 do
     quick3d.render(renderer, shader, window)
 end
 
-shader = quick3d.take_memory(shader)
-renderer = quick3d.take_memory(renderer)
-loader = quick3d.take_memory(loader)
-window = quick3d.take_memory(window)
+--shader = quick3d.free_shader(shader)
+renderer = quick3d.free_renderer(renderer)
+loader = quick3d.free_db_loader(loader)
+window = quick3d.free_window(window)
 
 print "Quit"
 

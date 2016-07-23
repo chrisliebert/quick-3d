@@ -79,6 +79,7 @@ pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
                                                  -> Box<Renderer> {
     Box::new(renderer::Renderer::new(display, dbloader.load_scene()))
 }
+
 #[no_mangle]
 pub extern "C" fn free_renderer(ptr: *mut Renderer) {
     unsafe { Box::from_raw(ptr) };
@@ -95,6 +96,11 @@ pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char,
         let shader_program = renderer.create_shader_program(&shader_name, dbloader, display);
         return Box::new(shader_program);
     }
+}
+
+#[no_mangle]
+pub extern "C" fn free_shader(ptr: *mut glium::program::Program) {
+    unsafe { Box::from_raw(ptr) };
 }
 
 #[no_mangle]

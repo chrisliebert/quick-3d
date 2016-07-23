@@ -46,7 +46,7 @@ function build_wrapper()
   local lua_include = "-I/usr/include/lua5.1 -I/u/liebert/LuaJIT-2.0.4/src"  
 
   if isWindows() then
-    lua_include = "/usr/include"
+    lua_include = "-I/usr/include"
     os.execute("copy target\\debug\\" ..quick3d_dylib.." .")
   else
     os.execute("cp target/debug/"..quick3d_dylib.." .")
