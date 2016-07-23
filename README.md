@@ -1,7 +1,6 @@
 Copyright(C) 2016 Chris Liebert
-[![Build Status](https://travis-ci.org/chrisliebert/quick-3d.svg?branch=master)](https://travis-ci.org/chrisliebert/quick-3d)
 
-quick-3d
+quick-3d  [![Build Status](https://travis-ci.org/chrisliebert/quick-3d.svg?branch=master)](https://travis-ci.org/chrisliebert/quick-3d)
 ===================
 The goal of quick-3d is to replace the need for C++ in hardware-accelerated 3D graphics-based applications by using the Rust language. The main motivation for rust is it's ownership/borrowing system of managing memory.
 
