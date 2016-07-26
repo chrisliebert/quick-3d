@@ -33,7 +33,7 @@ use renderer::Renderer;
 pub extern "C" fn create_window(screen_width: libc::int32_t,
                                 screen_height: libc::int32_t,
                                 title: *const c_char)
-                                -> *mut GlutinFacade {
+                                -> Box<GlutinFacade> {
     let w: u32 = screen_width as u32;
     let h: u32 = screen_height as u32;
     let window_title: String;
@@ -49,13 +49,14 @@ pub extern "C" fn create_window(screen_width: libc::int32_t,
 	        .with_dimensions(w, h)
 	        .build_glium()
 	        .unwrap();
-        return Box::into_raw(Box::new(display));
+        return Box::new(display);
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn free_window(ptr: *mut GlutinFacade) {
-    Box::from_raw(ptr);
+pub extern "C" fn free_window(c_ptr: *mut GlutinFacade) {
+    let box_ptr: Box<GlutinFacade> = unsafe { Box::from_raw(c_ptr) };
+    Box::into_raw(box_ptr);
 }
 
 #[no_mangle]

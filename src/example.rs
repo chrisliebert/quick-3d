@@ -19,19 +19,21 @@ fn main() {
     let db_file: &str = "test.db";
 
     let dbloader: DBLoader = DBLoader::new(db_file);
+    let shader_dbloader: DBLoader = DBLoader::new("shaders.db");
     let scene: Scene = dbloader.load_scene();
 
     let display = glutin::WindowBuilder::new()
         //.resizable()
         //.with_vsync()
-        //with_gl_debug_flag(true)
+        .with_gl_debug_flag(true)
         .with_visibility(false) // Window is shown when scene finishes loading.
         .with_dimensions(screen_width, screen_height)
         .build_glium()
         .unwrap();
 
     let renderer = renderer::Renderer::new(&display, scene);
-    let shader_program = renderer.create_shader_program("default", &dbloader, &display);
+
+    let shader_program = renderer.create_shader_program("default", &shader_dbloader, &display);
 
     let mut running = true;
 
