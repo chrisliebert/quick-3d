@@ -9,7 +9,7 @@ use glium::glutin::ElementState;
 use glium::glutin::VirtualKeyCode;
 use glium::DisplayBuild;
 
-use quick3d::common::Scene;
+use quick3d::common::{Mesh, Scene};
 use quick3d::loader::DBLoader;
 use quick3d::renderer;
 
@@ -45,6 +45,9 @@ fn main() {
             println!("Error retrieving window");
         }
     }
+    
+	// The torus will be movable in the scene   
+    let torus: &Mesh = renderer.get_mesh("Torus").unwrap();
 
     while running {
         renderer.render(&display, &shader_program);
@@ -55,6 +58,26 @@ fn main() {
                 Event::Closed => running = false,
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Escape)) => {
                     running = false
+                }
+                Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::W)) => {
+                    println!("Pressed W");
+                    *torus.matrix.borrow_mut() = [
+			            [1.0f32, 0.0f32, 0.0f32, 0.0f32],
+			            [0.0f32, 1.0f32 ,0.0f32, 1.0f32],
+			            [0.0f32, 0.0f32, 1.0f32, 0.0f32],
+			            [0.0f32, 0.0f32, 0.0f32, 1.0f32],
+					];
+					println!("Matix: {:?}", *torus.matrix.borrow());
+                }
+                Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::S)) => {
+                    println!("Pressed S");
+                    *torus.matrix.borrow_mut() = [
+			            [1.0f32, 0.0f32, 0.0f32, 0.0f32],
+			            [0.0f32, 1.0f32 ,0.0f32, 0.0f32],
+			            [0.0f32, 0.0f32, 1.0f32, 0.0f32],
+			            [0.0f32, 0.0f32, 0.0f32, 1.0f32],
+					];
+					println!("Matix: {:?}", *torus.matrix.borrow());
                 }
                 _ => (),
             }

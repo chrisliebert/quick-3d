@@ -6,7 +6,7 @@ extern crate nalgebra;
 use std::collections::HashMap;
 
 use common;
-use common::{Scene, Shader, Vertex8f32};
+use common::{Mesh, Scene, Shader, Vertex8f32};
 use loader::DBLoader;
 
 use glium::backend::glutin_backend::GlutinFacade;
@@ -87,6 +87,15 @@ impl Renderer {
 			textures: textures,
 			vertex_buffers: vertex_buffers,
 		}
+	}
+	
+	pub fn get_mesh(&self, name: &str) -> Option<&Mesh> {
+		for i in 0..self.vertex_buffers.len() as usize {
+			if self.scene.meshes[i].name.eq(name) {
+				return Some(&self.scene.meshes[i]);
+			}
+		}
+		return None;
 	}
 	
 	#[allow(unused_assignments)]
