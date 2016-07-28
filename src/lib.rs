@@ -107,6 +107,20 @@ pub extern "C" fn free_shader(ptr: *mut glium::program::Program) {
     Box::into_raw(box_ptr);
 }
 
+use common::Camera;
+
+#[no_mangle]
+pub extern "C" fn create_camera(screen_width: f32, screen_height: f32)
+                                            -> Box<Camera> {
+	Box::new(Camera::new(screen_width, screen_height))
+}
+
+#[no_mangle]
+pub extern "C" fn free_camera(ptr: *mut Camera) {
+    let box_ptr: Box<Camera> = unsafe { Box::from_raw(ptr) };
+    Box::into_raw(box_ptr);
+}
+
 #[no_mangle]
 pub extern "C" fn poll_quit_event(display: &GlutinFacade) -> libc::int32_t {
     let mut quit: libc::int32_t = 0;
@@ -129,8 +143,9 @@ pub extern "C" fn poll_quit_event(display: &GlutinFacade) -> libc::int32_t {
 #[no_mangle]
 pub extern "C" fn render(renderer: &Renderer,
                          shader_program: &glium::program::Program,
+                         camera: &Camera,
                          display: &GlutinFacade) {
-    renderer.render(display, shader_program);
+    renderer.render(display, shader_program, camera);
 }
 
 #[cfg(test)]

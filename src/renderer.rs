@@ -6,7 +6,7 @@ extern crate nalgebra;
 use std::collections::HashMap;
 
 use common;
-use common::{Mesh, Scene, Shader, Vertex8f32};
+use common::{Camera, Mesh, Scene, Shader, Vertex8f32};
 use loader::DBLoader;
 
 use glium::backend::glutin_backend::GlutinFacade;
@@ -156,7 +156,7 @@ impl Renderer {
 		return program;
 	}
 	
-	pub fn render(&self, display: &GlutinFacade, program: &glium::program::Program) {
+	pub fn render(&self, display: &GlutinFacade, program: &glium::program::Program, camera: &Camera) {
 		let mut target = display.draw();
 		// TODO: generate this texture instead of loading from sqlite
 		let default_blank_texture = &self.textures["DEFAULT_BLANK_TEXTURE.png"];
@@ -181,8 +181,8 @@ impl Renderer {
 				}
 			}
 			let uniforms: glium::uniforms::UniformsStorage<_, _> = uniform! {
-				projection: *self.projection_matrix.as_ref(),
-				modelview: self.modelview_matrix_array,
+				projection: *camera.projection_matrix.borrow(),
+				modelview: *camera.modelview_matrix.borrow(),
 				light_position_worldspace: [2.0, 10.0, 1.0f32],
 				diffuse: diffuse,
 				diffuse_texture: opengl_texture,

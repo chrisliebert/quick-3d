@@ -9,7 +9,7 @@ use glium::glutin::ElementState;
 use glium::glutin::VirtualKeyCode;
 use glium::DisplayBuild;
 
-use quick3d::common::{Mesh, Scene};
+use quick3d::common::{Camera, Mesh, Scene};
 use quick3d::loader::DBLoader;
 use quick3d::renderer;
 
@@ -31,6 +31,7 @@ fn main() {
         .build_glium()
         .unwrap();
 
+	let camera: Camera = Camera::new(screen_width as f32, screen_height as f32);
     let renderer = renderer::Renderer::new(&display, scene);
 
     let shader_program = renderer.create_shader_program("default", &shader_dbloader, &display);
@@ -50,7 +51,7 @@ fn main() {
     let torus: &Mesh = renderer.get_mesh("Torus").unwrap();
 
     while running {
-        renderer.render(&display, &shader_program);
+        renderer.render(&display, &shader_program, &camera);
 
         // Check for close events
         for event in display.poll_events() {
