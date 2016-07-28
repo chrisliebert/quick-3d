@@ -38,12 +38,6 @@ impl Renderer {
 		let index_buffer: glium::index::NoIndices =
 			glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 	
-	/*
-		if scene.shaders.len() == 0 {
-			panic!("No shaders loaded");
-		}
-	*/
-	
 		let mut textures: HashMap<String, glium::texture::CompressedSrgbTexture2d> = HashMap::new();
 	
 		for i in 0..scene.images.len() {
@@ -183,6 +177,7 @@ impl Renderer {
 				light_position_worldspace: [2.0, 10.0, 1.0f32],
 				diffuse: diffuse,
 				diffuse_texture: opengl_texture,
+				model: *self.scene.meshes[i].matrix.borrow(),
 			};
 			
 			target.draw(&self.vertex_buffers[i],

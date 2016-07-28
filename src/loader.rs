@@ -4,6 +4,7 @@ extern crate time;
 
 use self::rusqlite::Connection;
 
+use std::cell::RefCell;
 use std::path::Path;
 
 use common::{ImageBlob, Material, Mesh, SceneNode, Scene, Shader, Vertex8f32};
@@ -113,11 +114,19 @@ impl DBLoader {
             if sn.material_index >= materials.len() {
                 panic!("Material index {} out of bounds", sn.material_index);
             }
+            
+            let identity: [[f32; 4]; 4] = [
+	            [1.0f32, 0.0f32, 0.0f32, 0.0f32],
+	            [0.0f32, 1.0f32 ,0.0f32, 0.0f32],
+	            [0.0f32, 0.0f32, 1.0f32, 0.0f32],
+	            [0.0f32, 0.0f32, 0.0f32, 1.0f32],
+			];
 
             let mesh = Mesh {
                 name: sn.name,
                 material_index: sn.material_index,
                 vertices: new_vertices,
+                matrix: RefCell::new(identity),
             };
             meshes.push(mesh);
         }

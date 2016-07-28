@@ -28,11 +28,14 @@ pub struct Vertex8f32 {
     pub texcoord: [f32; 2],
 }
 
+use std::cell::RefCell;
+
 #[derive(Clone)]
 pub struct Mesh {
     pub name: String,
     pub vertices: Vec<Vertex8f32>,
     pub material_index: usize,
+    pub matrix: RefCell<[[f32; 4]; 4]>,
 }
 
 pub struct ImageBlob {
@@ -45,3 +48,5 @@ pub struct Scene {
     pub meshes: Vec<Mesh>,
     pub images: Vec<ImageBlob>,
 }
+
+
