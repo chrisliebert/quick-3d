@@ -54,8 +54,8 @@ pub extern "C" fn create_window(screen_width: libc::int32_t,
 }
 
 #[no_mangle]
-pub extern "C" fn free_window(c_ptr: *mut GlutinFacade) {
-    let box_ptr: Box<GlutinFacade> = unsafe { Box::from_raw(c_ptr) };
+pub extern "C" fn free_window(ptr: *mut GlutinFacade) {
+    let box_ptr: Box<GlutinFacade> = unsafe { Box::from_raw(ptr) };
     Box::into_raw(box_ptr);
 }
 
@@ -71,7 +71,8 @@ pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader
 
 #[no_mangle]
 pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
-    unsafe { Box::from_raw(ptr) };
+    let box_ptr: Box<DBLoader> = unsafe { Box::from_raw(ptr) };
+    Box::into_raw(box_ptr);
 }
 
 #[no_mangle]
@@ -83,7 +84,8 @@ pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
 
 #[no_mangle]
 pub extern "C" fn free_renderer(ptr: *mut Renderer) {
-    unsafe { Box::from_raw(ptr) };
+    let box_ptr: Box<Renderer> = unsafe { Box::from_raw(ptr) };
+    Box::into_raw(box_ptr);
 }
 
 #[no_mangle]
@@ -101,7 +103,8 @@ pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char,
 
 #[no_mangle]
 pub extern "C" fn free_shader(ptr: *mut glium::program::Program) {
-    unsafe { Box::from_raw(ptr) };
+    let box_ptr: Box<glium::program::Program> = unsafe { Box::from_raw(ptr) };
+    Box::into_raw(box_ptr);
 }
 
 #[no_mangle]
