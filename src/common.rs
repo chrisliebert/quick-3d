@@ -32,8 +32,8 @@ use std::cell::RefCell;
 
 #[derive(Debug)]
 pub struct Camera {
-	pub modelview_matrix: RefCell<[[f32; 4]; 4]>,
-	pub projection_matrix: RefCell<[[f32; 4]; 4]>,
+    pub modelview_matrix: RefCell<[[f32; 4]; 4]>,
+    pub projection_matrix: RefCell<[[f32; 4]; 4]>,
 }
 
 #[derive(Clone)]
@@ -41,7 +41,7 @@ pub struct Mesh {
     pub name: String,
     pub vertices: Vec<Vertex8f32>,
     pub material_index: usize,
-    pub matrix: RefCell<[[f32; 4]; 4]>,
+    pub matrix: RefCell<Matrix4<f32>>,
 }
 
 pub struct ImageBlob {
@@ -58,24 +58,20 @@ pub struct Scene {
 use nalgebra::{Matrix4, PerspectiveMatrix3};
 
 impl Camera {
-	
-	pub fn new(screen_width: f32, screen_height: f32) -> Camera {
-		// Set up camera
-		let projection_matrix = PerspectiveMatrix3::new(screen_width / screen_height,
-		                                          45.0,
-		                                          0.1,
-		                                          1000.0);
-		let projection_matrix: Matrix4<f32> = projection_matrix.to_matrix();
-	
-	
-		let modelview_matrix_array = [[1.0f32, -0.0f32, -0.0f32, 0.0f32],
-		                          [0.0f32, 1.0f32, -0.0f32, 0.0f32],
-		                          [0.0f32, 0.0f32, 1.0f32, 0.0f32],
-		                          [-5.0f32, -3.0f32, -12.0f32, 1.0f32]];
-		Camera {
-			modelview_matrix: RefCell::new(modelview_matrix_array),
-			projection_matrix: RefCell::new(*projection_matrix.as_ref()),
-		}
-	}
-}
+    pub fn new(screen_width: f32, screen_height: f32) -> Camera {
+        // Set up camera
+        let projection_matrix =
+            PerspectiveMatrix3::new(screen_width / screen_height, 45.0, 0.1, 1000.0);
+        let projection_matrix: Matrix4<f32> = projection_matrix.to_matrix();
 
+        let modelview_matrix_array = [[1.0f32, -0.0f32, -0.0f32, 0.0f32],
+                                      [0.0f32, 1.0f32, -0.0f32, 0.0f32],
+                                      [0.0f32, 0.0f32, 1.0f32, 0.0f32],
+                                      [-5.0f32, -3.0f32, -12.0f32, 1.0f32]];
+
+        Camera {
+            modelview_matrix: RefCell::new(modelview_matrix_array),
+            projection_matrix: RefCell::new(*projection_matrix.as_ref()),
+        }
+    }
+}

@@ -3,6 +3,7 @@ extern crate rusqlite;
 extern crate time;
 
 use self::rusqlite::Connection;
+use nalgebra::{Eye, Matrix4};
 
 use std::cell::RefCell;
 use std::path::Path;
@@ -114,13 +115,8 @@ impl DBLoader {
             if sn.material_index >= materials.len() {
                 panic!("Material index {} out of bounds", sn.material_index);
             }
-            
-            let identity: [[f32; 4]; 4] = [
-	            [1.0f32, 0.0f32, 0.0f32, 0.0f32],
-	            [0.0f32, 1.0f32 ,0.0f32, 0.0f32],
-	            [0.0f32, 0.0f32, 1.0f32, 0.0f32],
-	            [0.0f32, 0.0f32, 0.0f32, 1.0f32],
-			];
+
+            let identity: Matrix4<f32> = Eye::new_identity(4);
 
             let mesh = Mesh {
                 name: sn.name,
@@ -171,7 +167,7 @@ impl DBLoader {
         let conn = Connection::open(Path::new(&self.filename)).unwrap();
 
         // TODO: if string ends with " es", the use_gles should be true
-        //let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
+        // let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
 
         let mut id_sql: String = "SELECT id FROM shader WHERE name = '".to_owned();
         id_sql.push_str(name);
@@ -197,9 +193,8 @@ impl DBLoader {
         let vertex_source: String = conn.query_row(&vertex_source_sql, &[], |row| row.get(0))
             .unwrap();
 
-        let fragment_source: String =
-            conn.query_row(&fragment_source_sql, &[], |row| row.get(0))
-                .unwrap();
+        let fragment_source: String = conn.query_row(&fragment_source_sql, &[], |row| row.get(0))
+            .unwrap();
 
         Shader {
             name: String::from(name),

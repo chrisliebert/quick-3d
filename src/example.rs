@@ -9,6 +9,9 @@ use glium::glutin::ElementState;
 use glium::glutin::VirtualKeyCode;
 use glium::DisplayBuild;
 
+use nalgebra::Matrix4;
+use nalgebra::identity;
+
 use quick3d::common::{Camera, Mesh, Scene};
 use quick3d::loader::DBLoader;
 use quick3d::renderer;
@@ -31,7 +34,7 @@ fn main() {
         .build_glium()
         .unwrap();
 
-	let camera: Camera = Camera::new(screen_width as f32, screen_height as f32);
+    let camera: Camera = Camera::new(screen_width as f32, screen_height as f32);
     let renderer = renderer::Renderer::new(&display, scene);
 
     let shader_program = renderer.create_shader_program("default", &shader_dbloader, &display);
@@ -46,9 +49,10 @@ fn main() {
             println!("Error retrieving window");
         }
     }
-    
-	// The torus will be movable in the scene   
+
+    // The torus will be movable in the scene
     let torus: &Mesh = renderer.get_mesh("Torus").unwrap();
+    let mut torus_height = 0.0f32;
 
     while running {
         renderer.render(&display, &shader_program, &camera);
@@ -61,27 +65,22 @@ fn main() {
                     running = false
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::W)) => {
-                    println!("Pressed W");
-                    *torus.matrix.borrow_mut() = [
-			            [1.0f32, 0.0f32, 0.0f32, 0.0f32],
-			            [0.0f32, 1.0f32 ,0.0f32, 1.0f32],
-			            [0.0f32, 0.0f32, 1.0f32, 0.0f32],
-			            [0.0f32, 0.0f32, 0.0f32, 1.0f32],
-					];
-					println!("Matix: {:?}", *torus.matrix.borrow());
+                    torus_height += 0.05f32;
+
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::S)) => {
-                    println!("Pressed S");
-                    *torus.matrix.borrow_mut() = [
-			            [1.0f32, 0.0f32, 0.0f32, 0.0f32],
-			            [0.0f32, 1.0f32 ,0.0f32, 0.0f32],
-			            [0.0f32, 0.0f32, 1.0f32, 0.0f32],
-			            [0.0f32, 0.0f32, 0.0f32, 1.0f32],
-					];
-					println!("Matix: {:?}", *torus.matrix.borrow());
+                    torus_height -= 0.05f32;
                 }
                 _ => (),
             }
         }
+
+        // Move the torus based on changes from keyboard input
+        // Get existing matrix
+        let mut matrix: Matrix4<f32> = *torus.matrix.borrow();
+        matrix.m24 = torus_height;
+
+        // Mutate the matrix
+        *torus.matrix.borrow_mut() = matrix;
     }
 }

@@ -168,7 +168,7 @@ impl Renderer {
 				light_position_worldspace: [2.0, 10.0, 1.0f32],
 				diffuse: diffuse,
 				diffuse_texture: opengl_texture,
-				model: *self.scene.meshes[i].matrix.borrow(),
+				model: *(*self.scene.meshes[i].matrix.borrow()).as_ref(),
 			};
 			
 			target.draw(&self.vertex_buffers[i],
