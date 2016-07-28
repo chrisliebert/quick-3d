@@ -13,7 +13,12 @@ end
 -- Generate the wrapper source and compile the shared libarary
 function build_wrapper()
   -- Generate quick3d_wrapper.c
-  local make_cmd = "make lualib"
+  local make_program = "make"
+  if isWindows() then
+	make_program = "mingw32-make.exe"
+	os.execute("copy target\\debug\\quick3d.dll .")
+  end
+  local make_cmd = make_program.." lualib"
   local make_result = os.execute(make_cmd)
   if not make_result == 0 then
     os.exit(2)
