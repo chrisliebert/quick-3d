@@ -12,14 +12,10 @@ use loader::DBLoader;
 use glium::backend::glutin_backend::GlutinFacade;
 use glium::{Program, Surface, Version};
 
-use self::nalgebra::{Matrix4, PerspectiveMatrix3};
-
 implement_vertex!(Vertex8f32, position, normal, texcoord);
 
 pub struct Renderer {
 	pub index_buffer: glium::index::NoIndices,
-	pub modelview_matrix_array: [[f32; 4]; 4],
-	pub projection_matrix: Matrix4<f32>,
 	pub scene: Scene,
 	pub textures: HashMap<String, glium::texture::CompressedSrgbTexture2d>,
 	pub vertex_buffers: Vec<glium::vertex::VertexBuffer<common::Vertex8f32>>,
@@ -67,22 +63,8 @@ impl Renderer {
 			}
 		}
 	
-		// Set up camera
-		let projection_matrix = PerspectiveMatrix3::new(screen_width as f32 / screen_height as f32,
-		                                          45.0,
-		                                          0.1,
-		                                          1000.0);
-		let projection_matrix_array: Matrix4<f32> = projection_matrix.to_matrix();
-	
-	
-		let modelview_matrix_array = [[1.0f32, -0.0f32, -0.0f32, 0.0f32],
-		                          [0.0f32, 1.0f32, -0.0f32, 0.0f32],
-		                          [0.0f32, 0.0f32, 1.0f32, 0.0f32],
-		                          [-5.0f32, -3.0f32, -12.0f32, 1.0f32]];
 		Renderer { 
 			index_buffer: index_buffer,
-			modelview_matrix_array: modelview_matrix_array,
-			projection_matrix: projection_matrix_array,
 			scene: scene,
 			textures: textures,
 			vertex_buffers: vertex_buffers,
