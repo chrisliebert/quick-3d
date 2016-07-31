@@ -8,6 +8,7 @@ use glium::glutin::{ElementState,Event,MouseButton,VirtualKeyCode};
 use glium::DisplayBuild;
 
 use nalgebra::Matrix4;
+use std::io::Error;
 
 use quick3d::common::{Camera, Mesh, Scene};
 use quick3d::loader::DBLoader;
@@ -50,8 +51,9 @@ fn main() {
     }
 
 
-    // The torus will be movable in the scene
-    let torus: &Mesh = renderer.get_mesh("Torus").unwrap();
+    // The torus will be movable in the scene if it is found
+    let torus: Result<&Mesh, Error> = renderer.get_mesh("Torus");
+    
     let mut torus_x = 0.0f32;
     let mut torus_y = 0.0f32;
     let mut torus_vertical_speed = 0.0f32;
@@ -135,16 +137,19 @@ fn main() {
             }
         }
 
-        // Move the torus based on changes from keyboard input
-        // Get existing matrix
-        
-        let mut matrix: Matrix4<f32> = *torus.matrix.borrow();
-        torus_x += torus_horizontal_speed;
-        torus_y += torus_vertical_speed;
-        matrix.m14 = torus_x;
-        matrix.m24 = torus_y;
-
-        // Mutate the matrix
-        *torus.matrix.borrow_mut() = matrix;
+		// Move the torus (if found) based on changes from keyboard input
+        match torus {
+        	Ok(torus) => {
+		        // Get existing matrix
+        		let mut matrix: Matrix4<f32> = *torus.matrix.borrow();
+		        torus_x += torus_horizontal_speed;
+		        torus_y += torus_vertical_speed;
+		        matrix.m14 = torus_x;
+		        matrix.m24 = torus_y;
+		        // Mutate the matrix
+		        *torus.matrix.borrow_mut() = matrix;
+        	},
+        	Err(_) => {}
+        }
     }
 }

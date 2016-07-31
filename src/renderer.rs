@@ -4,6 +4,7 @@ extern crate image;
 extern crate nalgebra;
 
 use std::collections::HashMap;
+use std::io::ErrorKind;
 
 use common;
 use common::{Camera, Mesh, Scene, Shader, Vertex8f32};
@@ -20,6 +21,8 @@ pub struct Renderer {
 	pub textures: HashMap<String, glium::texture::CompressedSrgbTexture2d>,
 	pub vertex_buffers: Vec<glium::vertex::VertexBuffer<common::Vertex8f32>>,
 }
+
+use std::io::Error;
 
 impl Renderer {
 	pub fn new(display: &GlutinFacade, scene: Scene) -> Renderer {
@@ -57,13 +60,13 @@ impl Renderer {
 		}
 	}
 	
-	pub fn get_mesh(&self, name: &str) -> Option<&Mesh> {
+	pub fn get_mesh(&self, name: &str) -> Result<&Mesh, Error> {
 		for i in 0..self.vertex_buffers.len() as usize {
 			if self.scene.meshes[i].name.eq(name) {
-				return Some(&self.scene.meshes[i]);
+				return Ok(&self.scene.meshes[i]);
 			}
 		}
-		return None;
+		return Err(Error::new(ErrorKind::NotFound, "Unable to load mesh"));
 	}
 	
 	#[allow(unused_assignments)]
@@ -128,7 +131,7 @@ impl Renderer {
 		let mut target = display.draw();
 		// TODO: generate this texture instead of loading from sqlite
 		let default_blank_texture = &self.textures["DEFAULT_BLANK_TEXTURE.png"];
-		target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
+		target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
 		for i in 0..self.vertex_buffers.len() as usize {
 			let material_index: usize = self.scene.meshes[i].material_index.clone();
 			let diffuse = self.scene.materials[material_index].diffuse.clone();
@@ -157,11 +160,20 @@ impl Renderer {
 				model: *(*self.scene.meshes[i].matrix.borrow()).as_ref(),
 			};
 			
+			let params = glium::DrawParameters {
+	            depth: glium::Depth {
+	                test: glium::DepthTest::IfLess,
+	                write: true,
+	                .. Default::default()
+	            },
+	            .. Default::default()
+	        };
+			
 			target.draw(&self.vertex_buffers[i],
 				&self.index_buffer,
 				program,
 				&uniforms,
-				&Default::default())
+				&params)
 				.unwrap();
 		}
 		target.finish().unwrap();
