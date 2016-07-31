@@ -49,20 +49,6 @@ impl Renderer {
 			textures.insert(scene.images[i].name.clone(), opengl_texture);		
 		}
 		
-		// Get the screen width and height in pixels
-		let screen_width: u32;
-		let screen_height: u32;
-		match display.get_window() {
-			Some(window) =>  {
-				let pixel_dimensions: (u32,u32) = window.get_inner_size_pixels().unwrap();
-				screen_width = pixel_dimensions.0;
-				screen_height = pixel_dimensions.1;
-			},
-			None => {
-				panic!("Error retrieving window when querying display size.");
-			}
-		}
-	
 		Renderer { 
 			index_buffer: index_buffer,
 			scene: scene,
@@ -142,7 +128,7 @@ impl Renderer {
 		let mut target = display.draw();
 		// TODO: generate this texture instead of loading from sqlite
 		let default_blank_texture = &self.textures["DEFAULT_BLANK_TEXTURE.png"];
-		target.clear_color(0.0, 0.0, 0.0, 1.0);
+		target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
 		for i in 0..self.vertex_buffers.len() as usize {
 			let material_index: usize = self.scene.meshes[i].material_index.clone();
 			let diffuse = self.scene.materials[material_index].diffuse.clone();
