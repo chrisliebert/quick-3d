@@ -68,6 +68,9 @@ fn main() {
     let mut camera_forward_speed = 0.0f32;
     let mut camera_left_speed = 0.0f32;
     
+    let mut w_state = false;
+    let mut camera_forward_speed = 0.0;
+    
     while running {
     	camera.update();
         renderer.render(&display, &shader_program, &camera);
@@ -76,13 +79,15 @@ fn main() {
         for event in display.poll_events() {
             match event {
                 Event::Closed => running = false,
-                
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Escape)) => {
                     running = false
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::W)) => {
-                    camera.move_forward(1.0);
-                }
+			        camera_forward_speed = 1.0;
+		        }
+		        Event::KeyboardInput(ElementState::Released, _, Some(VirtualKeyCode::W)) => {
+		            camera_forward_speed = 0.0;
+		        }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::A)) => {
                     camera.move_left(1.0);
                 }
@@ -128,6 +133,15 @@ fn main() {
                 	if left_button_pressed {
                 		// Rotate the camera if the left mouse button is pressed
                 		camera.aim(mouse_dx as f64, mouse_dy as f64);
+                		
+                		//todo: store a reference to window
+		                let cx: i32 = 600;
+		            	let cy: i32 = 400;
+                		if x + 10 >= screen_width as i32 || x <= 10 {
+		                	display.get_window().unwrap().set_cursor_position(cx, y);
+                		} else if y + 10 >= screen_height as i32 || y <= 10 {
+		                	display.get_window().unwrap().set_cursor_position(x, cy);
+                		}
                 	}
                 	mouse_last_x = x;
                 	mouse_last_y = y;
@@ -136,6 +150,8 @@ fn main() {
 	            _ => (),
             }
         }
+        
+		camera.move_forward(camera_forward_speed * 0.01);
 
 		// Move the torus (if found) based on changes from keyboard input
         match torus {

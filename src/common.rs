@@ -83,7 +83,7 @@ impl Camera {
             direction: RefCell::new(Vector3::new(0.0f32, 0.0f32, 1.0f32)),
             right: RefCell::new(Vector3::new(1.0f32, 0.0f32, 0.0f32)),
             up: RefCell::new(Vector3::new(0.0f32, 1.0f32, 0.0f32)),
-            horizontal_angle: RefCell::new(PI),
+            horizontal_angle: RefCell::new(0.0),
             vertical_angle: RefCell::new(0.0),
         };
         camera.aim(0.0, 0.0);
