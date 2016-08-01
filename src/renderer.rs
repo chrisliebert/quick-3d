@@ -4,6 +4,7 @@ extern crate image;
 extern crate nalgebra;
 
 use std::collections::HashMap;
+use std::io::Error;
 use std::io::ErrorKind;
 
 use common;
@@ -21,8 +22,6 @@ pub struct Renderer {
 	pub textures: HashMap<String, glium::texture::CompressedSrgbTexture2d>,
 	pub vertex_buffers: Vec<glium::vertex::VertexBuffer<common::Vertex8f32>>,
 }
-
-use std::io::Error;
 
 impl Renderer {
 	pub fn new(display: &GlutinFacade, scene: Scene) -> Renderer {
@@ -126,6 +125,66 @@ impl Renderer {
 		display.release_shader_compiler();
 		return program;
 	}
+	
+	pub fn create_shader_program_with_version(&self, shader_name: &str, dbloader: &DBLoader, glsl_version: &Version, display: &GlutinFacade) -> Result<glium::program::Program, Error> {
+		if !display.is_glsl_version_supported(&glsl_version) {
+			return Err(Error::new(ErrorKind::InvalidData, "Unsupported GLSL version"));
+		}
+		
+		let api: glium::Api = glsl_version.0;
+		let major_version : u8 = glsl_version.1;
+		let minor_version : u8 = glsl_version.2;
+		let mut glsl_version_string: String = major_version.to_string();
+		glsl_version_string.push_str(&minor_version.to_string());
+		glsl_version_string.push('0');
+		let mut use_gles: bool = false;// Use OpenGLES instead of OpenGL (for mobile devices)
+		
+		match api {
+				glium::Api::Gl => {
+					use_gles = false;
+				},
+				glium::Api::GlEs => {
+					use_gles = true;
+					glsl_version_string.push_str(" es");
+				},
+		};
+		
+		let glsl_version_number: u32 = match glsl_version_string.parse() {
+			Ok(s) => s,
+			Err(e) =>  {
+				// This is not likely to happen
+				panic!("Unable to parse supported glsl version string: {}", e);
+			},
+		};
+		
+		println!("Using glsl version {}", &glsl_version_string);
+	
+		let shader: Shader = dbloader.load_shader(shader_name, &glsl_version_string);
+	
+		let program;
+		
+		if use_gles {
+			program = program!(display,
+				glsl_version_number es => {
+					vertex: &shader.vertex_source,
+					fragment: &shader.fragment_source,
+				},
+			)
+		} else {
+			program = program!(display,
+				glsl_version_number => {
+					vertex: &shader.vertex_source,
+					fragment: &shader.fragment_source,
+				},
+			)
+		}
+		
+		match program {
+			Ok(p) => Ok(p),
+			Err(e) => Err(Error::new(ErrorKind::InvalidData, e)),
+		}
+	}
+	
 	
 	pub fn render(&self, display: &GlutinFacade, program: &glium::program::Program, camera: &Camera) {
 		let mut target = display.draw();
