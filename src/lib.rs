@@ -155,7 +155,6 @@ mod tests {
     use glium::DisplayBuild;
     use loader;
     use common::Scene;
-    use renderer;
 
     fn create_test_display() -> GlutinFacade {
         let display = glutin::WindowBuilder::new()
@@ -177,18 +176,6 @@ mod tests {
         let scene: Scene = load_test_scene();
         assert!(scene.meshes.len() > 0);
         assert!(scene.materials.len() > 0);
-        // assert!(scene.shaders.len() > 0);
     }
 
-    // #[test]
-    fn load_and_render_db() {
-        println!("Running load_and_render_db test");
-        let display = create_test_display();
-        let scene: Scene = load_test_scene();
-        assert!(scene.meshes.len() > 0);
-        assert!(scene.materials.len() > 0);
-        // assert!(scene.shaders.len() > 0);
-        // let renderer: renderer::Renderer = renderer::Renderer::new(&display, scene);
-        // renderer.render(&display);
-    }
 }

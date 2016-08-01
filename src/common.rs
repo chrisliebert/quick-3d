@@ -64,7 +64,7 @@ pub struct Camera {
     pub vertical_angle: RefCell<f64>,
 }
 
-use std::f64::consts::{FRAC_PI_2, PI};
+use std::f64::consts::{FRAC_PI_2};
 
 impl Camera {
     pub fn new(screen_width: f32, screen_height: f32) -> Camera {

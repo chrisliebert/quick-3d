@@ -1,4 +1,5 @@
 // Copyright(C) 2016 Chris Liebert
+
 extern crate glium;
 extern crate nalgebra;
 extern crate quick3d;
@@ -39,16 +40,16 @@ fn main() {
 
     let shader_program = renderer.create_shader_program("default", &shader_dbloader, &display);
 
-    let mut running: bool = true;
-
     // Show the window once the data is loaded
-    match display.get_window() {
-        Some(x) => x.show(),
+    let window = match display.get_window() {
+        Some(x) =>  {
+        	x.show();
+        	x
+        }
         None => {
-            running = false;
             panic!("Error retrieving window");
         }
-    }
+    };
 
 
     // The torus will be movable in the scene if it is found
@@ -62,31 +63,35 @@ fn main() {
     
     let mut mouse_last_x: i32 = 0;
     let mut mouse_last_y: i32 = 0;
-    let mut mouse_dx: i32 = 0;
-    let mut mouse_dy: i32 = 0;
+
+    let mut _mouse_dx: i32 = 0;
+    let mut _mouse_dy: i32 = 0;
     
-    let mut camera_forward_speed = 0.0f32;
-    let mut camera_left_speed = 0.0f32;
+    let mut _camera_forward_speed = 0.0f32;
+    let mut _camera_left_speed = 0.0f32;
     
-    let mut w_state = false;
-    let mut camera_forward_speed = 0.0;
+    let mut _w_state = false;
+    let mut _camera_forward_speed = 0.0;
     
-    while running {
+    let screen_center_x: i32 = (screen_width / 2) as i32;
+	let screen_center_y: i32 = (screen_height / 2) as i32;
+    
+    'running: loop {
     	camera.update();
         renderer.render(&display, &shader_program, &camera);
 
-        // Check for close events
+        // Check for events
         for event in display.poll_events() {
             match event {
-                Event::Closed => running = false,
+                Event::Closed => break 'running,
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Escape)) => {
-                    running = false
+                    break 'running;
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::W)) => {
-			        camera_forward_speed = 1.0;
+			        _camera_forward_speed = 1.0;
 		        }
 		        Event::KeyboardInput(ElementState::Released, _, Some(VirtualKeyCode::W)) => {
-		            camera_forward_speed = 0.0;
+		            _camera_forward_speed = 0.0;
 		        }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::A)) => {
                     camera.move_left(1.0);
@@ -128,19 +133,16 @@ fn main() {
                     left_button_pressed = false;
                 }
                 Event::MouseMoved(x, y) => {
-                	mouse_dx = mouse_last_x - x;
-                	mouse_dy = mouse_last_y - y;
+                	_mouse_dx = mouse_last_x - x;
+                	_mouse_dy = mouse_last_y - y;
                 	if left_button_pressed {
                 		// Rotate the camera if the left mouse button is pressed
-                		camera.aim(mouse_dx as f64, mouse_dy as f64);
+                		camera.aim(_mouse_dx as f64, _mouse_dy as f64);
                 		
-                		//todo: store a reference to window
-		                let cx: i32 = 600;
-		            	let cy: i32 = 400;
                 		if x + 10 >= screen_width as i32 || x <= 10 {
-		                	display.get_window().unwrap().set_cursor_position(cx, y);
+		                	let _ = window.set_cursor_position(screen_center_x, y);
                 		} else if y + 10 >= screen_height as i32 || y <= 10 {
-		                	display.get_window().unwrap().set_cursor_position(x, cy);
+		                	let _ = window.set_cursor_position(x, screen_center_y);
                 		}
                 	}
                 	mouse_last_x = x;
@@ -151,7 +153,7 @@ fn main() {
             }
         }
         
-		camera.move_forward(camera_forward_speed * 0.01);
+		camera.move_forward(_camera_forward_speed * 0.01);
 
 		// Move the torus (if found) based on changes from keyboard input
         match torus {
