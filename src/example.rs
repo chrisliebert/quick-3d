@@ -38,7 +38,16 @@ fn main() {
     let camera: Camera = Camera::new(screen_width as f32, screen_height as f32);
     let renderer = renderer::Renderer::new(&display, scene);
 
-    let shader_program = renderer.create_shader_program("default", &shader_dbloader, &display);
+	// Attempt to load GLSL version 330 if it is supported
+	let desired_glsl_version = glium::Version(glium::Api::Gl, 3, 3);
+	let shader_name = "default";
+    let shader_program = match renderer.create_shader_program_with_version(&shader_name, &shader_dbloader, &desired_glsl_version, &display) {
+    	Ok(p) => p,
+    	Err(e) =>  {
+    		println!("Unable to load {:?}: {}", desired_glsl_version, e);
+    		renderer.create_shader_program(&shader_name, &shader_dbloader, &display)
+    	}
+    };
 
     // Show the window once the data is loaded
     let window = match display.get_window() {
