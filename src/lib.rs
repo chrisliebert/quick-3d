@@ -23,40 +23,15 @@ use glium::glutin::Event;
 use glium::glutin::ElementState;
 use glium::glutin::VirtualKeyCode;
 use glium::DisplayBuild;
-
 use glium::backend::glutin_backend::GlutinFacade;
 
+use common::Camera;
 use loader::DBLoader;
 use renderer::Renderer;
 
 #[no_mangle]
-pub extern "C" fn create_window(screen_width: libc::int32_t,
-                                screen_height: libc::int32_t,
-                                title: *const c_char)
-                                -> Box<GlutinFacade> {
-    let w: u32 = screen_width as u32;
-    let h: u32 = screen_height as u32;
-    let window_title: String;
-
-    unsafe {
-        window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
-        let display: GlutinFacade = glutin::WindowBuilder::new()
-	        //.resizable()
-	        //.with_vsync()
-	        //with_gl_debug_flag(true)
-	        .with_title(window_title)
-	        .with_visibility(true)
-	        .with_dimensions(w, h)
-	        .build_glium()
-	        .unwrap();
-        return Box::new(display);
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn free_window(ptr: *mut GlutinFacade) {
-    let box_ptr: Box<GlutinFacade> = unsafe { Box::from_raw(ptr) };
-    Box::into_raw(box_ptr);
+pub extern "C" fn create_camera(screen_width: f32, screen_height: f32) -> Box<Camera> {
+    Box::new(Camera::new(screen_width, screen_height))
 }
 
 #[no_mangle]
@@ -70,9 +45,27 @@ pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader
 }
 
 #[no_mangle]
-pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
-    let box_ptr: Box<DBLoader> = unsafe { Box::from_raw(ptr) };
-    Box::into_raw(box_ptr);
+pub extern "C" fn create_display(screen_width: libc::int32_t,
+                                 screen_height: libc::int32_t,
+                                 title: *const c_char)
+                                 -> Box<GlutinFacade> {
+    let w: u32 = screen_width as u32;
+    let h: u32 = screen_height as u32;
+    let window_title: String;
+
+    unsafe {
+        window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
+        let display: GlutinFacade = glutin::WindowBuilder::new()
+	        //.resizable()
+	        //.with_vsync()
+	        .with_gl_debug_flag(true)
+	        .with_title(window_title)
+	        .with_visibility(true)
+	        .with_dimensions(w, h)
+	        .build_glium()
+	        .unwrap();
+        return Box::new(display);
+    }
 }
 
 #[no_mangle]
@@ -83,8 +76,32 @@ pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
 }
 
 #[no_mangle]
+pub extern "C" fn free_camera(ptr: *mut Camera) {
+    let box_ptr: Box<Camera> = unsafe { Box::from_raw(ptr) };
+    Box::into_raw(box_ptr);
+}
+
+#[no_mangle]
+pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
+    let box_ptr: Box<DBLoader> = unsafe { Box::from_raw(ptr) };
+    Box::into_raw(box_ptr);
+}
+
+#[no_mangle]
+pub extern "C" fn free_display(ptr: *mut GlutinFacade) {
+    let box_ptr: Box<GlutinFacade> = unsafe { Box::from_raw(ptr) };
+    Box::into_raw(box_ptr);
+}
+
+#[no_mangle]
 pub extern "C" fn free_renderer(ptr: *mut Renderer) {
     let box_ptr: Box<Renderer> = unsafe { Box::from_raw(ptr) };
+    Box::into_raw(box_ptr);
+}
+
+#[no_mangle]
+pub extern "C" fn free_shader(ptr: *mut glium::program::Program) {
+    let box_ptr: Box<glium::program::Program> = unsafe { Box::from_raw(ptr) };
     Box::into_raw(box_ptr);
 }
 
@@ -101,24 +118,60 @@ pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char,
     }
 }
 
-#[no_mangle]
-pub extern "C" fn free_shader(ptr: *mut glium::program::Program) {
-    let box_ptr: Box<glium::program::Program> = unsafe { Box::from_raw(ptr) };
-    Box::into_raw(box_ptr);
+#[repr(C)]
+pub struct MouseEvent {
+    pub dx: i32,
+    pub dy: i32,
+    pub last_x: i32,
+    pub last_y: i32, // pub quit: bool,
 }
 
-use common::Camera;
+static mut mouse_last_x: i32 = 0;
+static mut mouse_last_y: i32 = 0;
+static mut _mouse_dx: i32 = 0;
+static mut _mouse_dy: i32 = 0;
+static mut left_button_pressed: bool = false;
 
 #[no_mangle]
-pub extern "C" fn create_camera(screen_width: f32, screen_height: f32)
-                                            -> Box<Camera> {
-	Box::new(Camera::new(screen_width, screen_height))
-}
+pub unsafe extern "C" fn poll_mouse_event(display: &GlutinFacade) -> MouseEvent {
+    // Get the screen width and height in pixels
+    let pixel_dimensions: (u32, u32) = match display.get_window() {
+        Some(window) => window.get_inner_size_pixels().unwrap(),
+        None => {
+            panic!("Error retrieving window when querying display size.");
+        }
+    };
+    let screen_width: u32 = pixel_dimensions.0;
+    let screen_height: u32 = pixel_dimensions.1;
 
-#[no_mangle]
-pub extern "C" fn free_camera(ptr: *mut Camera) {
-    let box_ptr: Box<Camera> = unsafe { Box::from_raw(ptr) };
-    Box::into_raw(box_ptr);
+    let screen_center_x: i32 = (screen_width / 2) as i32;
+    let screen_center_y: i32 = (screen_height / 2) as i32;
+    for event in display.poll_events() {
+        match event {
+            Event::MouseMoved(x, y) => {
+                _mouse_dx = mouse_last_x - x;
+                _mouse_dy = mouse_last_y - y;
+                if left_button_pressed {
+                    if x + 10 >= screen_width as i32 || x <= 10 {
+                        let _ =
+                            display.get_window().unwrap().set_cursor_position(screen_center_x, y);
+                    } else if y + 10 >= screen_height as i32 || y <= 10 {
+                        let _ =
+                            display.get_window().unwrap().set_cursor_position(x, screen_center_y);
+                    }
+                }
+                mouse_last_x = x;
+                mouse_last_y = y;
+            }
+            _ => (),
+        }
+    }
+    MouseEvent {
+        dx: _mouse_dx,
+        dy: _mouse_dy,
+        last_x: mouse_last_x,
+        last_y: mouse_last_y,
+    }
 }
 
 #[no_mangle]
@@ -132,9 +185,6 @@ pub extern "C" fn poll_quit_event(display: &GlutinFacade) -> libc::int32_t {
             }
             _ => (),
         }
-    }
-    if quit.clone() > 0 {
-        println!("Polling quit event returned {}", quit.clone());
     }
 
     return quit;

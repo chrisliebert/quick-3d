@@ -6,14 +6,13 @@
 #include <stdlib.h>
 #include "quick3d.h"
 
-Window* new_window() {
-	return create_window(800, 600, "My C Window");
+Display* new_display() {
+	return create_display(800, 600, "My C Window");
 }
 
 int main(int argc, char** argv) {
-	Window* window = new_window();
-	while(poll_quit_event(window) == 0) {}
-	free_window(window);
-
+	Display* display = new_display();
+	while(poll_quit_event(display) == 0) {}
+	free_display(display);
 	return 0;
 }
