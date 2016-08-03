@@ -17,13 +17,18 @@ local renderer = quick3d.create_renderer_from_db_loader(scene_loader, display)
 local shader = quick3d.get_shader_from_db_loader("default", shader_loader, renderer, display)
 
 local running = true
+local mouse_factor = 0.01
 
 while running do
     quick3d.render(renderer, shader, camera, display)
+    local input = quick3d.poll_event(display)
     
-    local event = quick3d.poll_event(display)
-    print ("mouse: ".. mouse_event.dx .. ", " .. mouse_event.dy)
-    if event.quit then running = false end
+    if input.mouse.left_button_pressed and not (input.mouse.dx == 0 and input.mouse.dy == 0) then
+        quick3d.camera_aim(camera, input.mouse.dx * mouse_factor, input.mouse.dy * mouse_factor)
+        quick3d.camera_update(camera)
+    end
+    
+    if input.closed then running = false end
 end
 
 quick3d.free_camera(camera)

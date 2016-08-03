@@ -19,15 +19,43 @@ use std::ffi::CStr;
 use std::os::raw::c_char;
 
 use glium::glutin;
-use glium::glutin::Event;
-use glium::glutin::ElementState;
-use glium::glutin::VirtualKeyCode;
+use glium::glutin::{ElementState, Event, MouseButton, VirtualKeyCode};
 use glium::DisplayBuild;
 use glium::backend::glutin_backend::GlutinFacade;
 
 use common::Camera;
 use loader::DBLoader;
 use renderer::Renderer;
+
+#[no_mangle]
+pub extern "C" fn camera_aim(camera: &Camera, x: libc::c_double, y: libc::c_double) {
+	camera.aim(x as f64, y as f64);
+}
+
+#[no_mangle]
+pub extern "C" fn camera_move_forward(camera: &Camera, amount: libc::c_float) {
+	camera.move_forward(amount as f32);
+}
+
+#[no_mangle]
+pub extern "C" fn camera_move_backward(camera: &Camera, amount: libc::c_float) {
+	camera.move_backward(amount as f32);
+}
+
+#[no_mangle]
+pub extern "C" fn camera_move_left(camera: &Camera, amount: libc::c_float) {
+	camera.move_left(amount as f32);
+}
+
+#[no_mangle]
+pub extern "C" fn camera_move_right(camera: &Camera, amount: libc::c_float) {
+	camera.move_right(amount as f32);
+}
+
+#[no_mangle]
+pub extern "C" fn camera_update(camera: &Camera) {
+	camera.update();
+}
 
 #[no_mangle]
 pub extern "C" fn create_camera(screen_width: f32, screen_height: f32) -> Box<Camera> {
@@ -119,21 +147,33 @@ pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char,
 }
 
 #[repr(C)]
-pub struct MouseEvent {
+pub struct Mouse {
     pub dx: i32,
     pub dy: i32,
     pub last_x: i32,
-    pub last_y: i32, // pub quit: bool,
+    pub last_y: i32,
+    pub left_button_pressed: bool,
+    pub right_button_pressed: bool,
 }
 
-static mut mouse_last_x: i32 = 0;
-static mut mouse_last_y: i32 = 0;
-static mut _mouse_dx: i32 = 0;
-static mut _mouse_dy: i32 = 0;
-static mut left_button_pressed: bool = false;
+#[repr(C)]
+pub struct Input {
+    pub mouse: Mouse,
+    pub closed: bool,
+}
 
 #[no_mangle]
-pub unsafe extern "C" fn poll_mouse_event(display: &GlutinFacade) -> MouseEvent {
+pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
+	// The margin from the edge of the screen to allow before
+	// mouse cursor is moved to center
+	
+	static mut mouse_last_x: i32 = 0;
+	static mut mouse_last_y: i32 = 0;
+	static mut _mouse_dx: i32 = 0;
+	static mut _mouse_dy: i32 = 0;
+	static mut left_button_pressed: bool = false;
+	static mut right_button_pressed: bool = false;
+ 
     // Get the screen width and height in pixels
     let pixel_dimensions: (u32, u32) = match display.get_window() {
         Some(window) => window.get_inner_size_pixels().unwrap(),
@@ -143,51 +183,65 @@ pub unsafe extern "C" fn poll_mouse_event(display: &GlutinFacade) -> MouseEvent 
     };
     let screen_width: u32 = pixel_dimensions.0;
     let screen_height: u32 = pixel_dimensions.1;
-
+    
     let screen_center_x: i32 = (screen_width / 2) as i32;
     let screen_center_y: i32 = (screen_height / 2) as i32;
+    
+    let mouse_grab_margin: i32 = screen_center_y / 2;
+
+    let mut closed = false;
+    
     for event in display.poll_events() {
         match event {
+        	Event::Closed => closed = true,
+            Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Escape)) => {
+                closed = true
+            }
+            Event::MouseInput(ElementState::Pressed, MouseButton::Left) => {
+                left_button_pressed = true;
+            }
+            Event::MouseInput(ElementState::Released, MouseButton::Left) => {
+                left_button_pressed = false;
+            }
+            Event::MouseInput(ElementState::Pressed, MouseButton::Right) => {
+                right_button_pressed = true;
+            }
+            Event::MouseInput(ElementState::Released, MouseButton::Right) => {
+                right_button_pressed = false;
+            }
             Event::MouseMoved(x, y) => {
                 _mouse_dx = mouse_last_x - x;
                 _mouse_dy = mouse_last_y - y;
+                mouse_last_x = x;
+		        mouse_last_y = y;
                 if left_button_pressed {
-                    if x + 10 >= screen_width as i32 || x <= 10 {
+                    if x + mouse_grab_margin >= screen_width as i32 || x <= mouse_grab_margin {
                         let _ =
                             display.get_window().unwrap().set_cursor_position(screen_center_x, y);
-                    } else if y + 10 >= screen_height as i32 || y <= 10 {
+                            _mouse_dx = 0;
+                            mouse_last_x = screen_center_x;
+                    } else if y + mouse_grab_margin >= screen_height as i32 || y <= mouse_grab_margin {
                         let _ =
                             display.get_window().unwrap().set_cursor_position(x, screen_center_y);
+                            _mouse_dy = 0;
+                            mouse_last_y = screen_center_y;
                     }
-                }
-                mouse_last_x = x;
-                mouse_last_y = y;
+                } 
             }
-            _ => (),
+            _ => ()
         }
     }
-    MouseEvent {
-        dx: _mouse_dx,
-        dy: _mouse_dy,
-        last_x: mouse_last_x,
-        last_y: mouse_last_y,
+    Input {
+	    mouse: Mouse {
+	        dx: _mouse_dx,
+	        dy: _mouse_dy,
+	        last_x: mouse_last_x,
+	        last_y: mouse_last_y,
+	        left_button_pressed: left_button_pressed,
+	        right_button_pressed: right_button_pressed,
+	    },
+	    closed: closed,
     }
-}
-
-#[no_mangle]
-pub extern "C" fn poll_quit_event(display: &GlutinFacade) -> libc::int32_t {
-    let mut quit: libc::int32_t = 0;
-    for event in display.poll_events() {
-        match event {
-            Event::Closed => quit = 1,
-            Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Escape)) => {
-                quit = 1
-            }
-            _ => (),
-        }
-    }
-
-    return quit;
 }
 
 #[no_mangle]

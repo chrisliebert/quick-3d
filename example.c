@@ -12,7 +12,11 @@ Display* new_display() {
 
 int main(int argc, char** argv) {
 	Display* display = new_display();
-	while(poll_quit_event(display) == 0) {}
+	bool running = true;
+	while(running) {
+		Input input = poll_event(display);
+		running = !input.closed;
+	}
 	free_display(display);
 	return 0;
 }

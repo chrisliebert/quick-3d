@@ -87,6 +87,8 @@ fn main() {
 
     let screen_center_x: i32 = (screen_width / 2) as i32;
     let screen_center_y: i32 = (screen_height / 2) as i32;
+    
+    let mouse_grab_margin: i32 = screen_center_y / 2;
 
     'running: loop {
         camera.update();
@@ -147,18 +149,22 @@ fn main() {
                 Event::MouseMoved(x, y) => {
                     _mouse_dx = mouse_last_x - x;
                     _mouse_dy = mouse_last_y - y;
+                    mouse_last_x = x;
+                    mouse_last_y = y;
                     if left_button_pressed {
                         // Rotate the camera if the left mouse button is pressed
                         camera.aim(_mouse_dx as f64, _mouse_dy as f64);
 
-                        if x + 10 >= screen_width as i32 || x <= 10 {
+                        if x + mouse_grab_margin >= screen_width as i32 || x <= mouse_grab_margin {
                             let _ = window.set_cursor_position(screen_center_x, y);
-                        } else if y + 10 >= screen_height as i32 || y <= 10 {
+                            mouse_last_x = screen_center_x;
+                            _mouse_dx = 0;
+                        } else if y + mouse_grab_margin >= screen_height as i32 || y <= mouse_grab_margin {
                             let _ = window.set_cursor_position(x, screen_center_y);
+                            mouse_last_y = screen_center_y;
+                            _mouse_dy = 0;
                         }
                     }
-                    mouse_last_x = x;
-                    mouse_last_y = y;
                 }
 
                 _ => (),
