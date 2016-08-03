@@ -164,9 +164,6 @@ pub struct Input {
 
 #[no_mangle]
 pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
-	// The margin from the edge of the screen to allow before
-	// mouse cursor is moved to center
-	
 	static mut mouse_last_x: i32 = 0;
 	static mut mouse_last_y: i32 = 0;
 	static mut _mouse_dx: i32 = 0;
@@ -183,10 +180,12 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
     };
     let screen_width: u32 = pixel_dimensions.0;
     let screen_height: u32 = pixel_dimensions.1;
-    
     let screen_center_x: i32 = (screen_width / 2) as i32;
     let screen_center_y: i32 = (screen_height / 2) as i32;
     
+    // The margin from the edge of the screen to allow before
+	// mouse cursor is moved to center
+	
     let mouse_grab_margin: i32 = screen_center_y / 2;
 
     let mut closed = false;
