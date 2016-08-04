@@ -137,14 +137,14 @@ impl Renderer {
 		let mut glsl_version_string: String = major_version.to_string();
 		glsl_version_string.push_str(&minor_version.to_string());
 		glsl_version_string.push('0');
-		let mut use_gles: bool = false;// Use OpenGLES instead of OpenGL (for mobile devices)
+		let mut _use_gles: bool = false;// Use OpenGLES instead of OpenGL (for mobile devices)
 		
 		match api {
 				glium::Api::Gl => {
-					use_gles = false;
+					_use_gles = false;
 				},
 				glium::Api::GlEs => {
-					use_gles = true;
+					_use_gles = true;
 					glsl_version_string.push_str(" es");
 				},
 		};
@@ -163,7 +163,7 @@ impl Renderer {
 	
 		let program;
 		
-		if use_gles {
+		if _use_gles {
 			program = program!(display,
 				glsl_version_number es => {
 					vertex: &shader.vertex_source,
