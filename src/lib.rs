@@ -256,36 +256,40 @@ use std::sync::{Arc, Mutex};
 #[repr(C)]
 pub struct ConsoleInput {
 	pub thread_handle: std::thread::JoinHandle<i32>,
-	pub buffer: Arc<Mutex<CString>>,
+	pub buffer: Arc<Mutex<String>>,
     pub finished: Arc<Mutex<bool>>,
 }
 
 #[no_mangle]
 pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
 	use std::thread;
-	let buffer_arc: Arc<Mutex<CString>> = Arc::new(Mutex::new(CString::new("").unwrap()));
+	let buffer_arc: Arc<Mutex<String>> = Arc::new(Mutex::new(String::new()));
 	let buffer_arc_copy = buffer_arc.clone();
 	let finished_arc: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
 	let finished_arc_copy = finished_arc.clone();
+	{
+		// Initialize the finished value
+		let finished = finished_arc.clone();
+		let mut finished_lock = finished.lock().unwrap();
+		*finished_lock = false;
+	}
 	
-	//let mut cmds: String = String::new();
 	let child = thread::spawn(move || {
 		println!("Enter command, or return to close console");
 		'console: loop {
 			let mut buffer = String::new();
 			match std::io::stdin().read_line(&mut buffer) {
 				Ok(_) => { 
-					if 1 == buffer.len() { break 'console };
+					if 2 == buffer.len() { break 'console };
 					let arc = buffer_arc.clone();
 					let mut writer = arc.lock().unwrap();
-					let mut new_string: String = (*writer).clone().into_string().unwrap();
+					let mut new_string: String = (*writer).clone();
 					new_string.push_str(&buffer);
-					*writer = CString::new(new_string).unwrap();
+					*writer = new_string;
 					std::thread::yield_now();
 				},
 				Err(e) => println!("Error: {:?}", e),
 			}
-		    std::thread::yield_now();
 		}
 		println!("Console closed");
 		let finished = finished_arc.clone();
@@ -294,6 +298,7 @@ pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
 	    return 0;
 	});
 	
+	std::thread::yield_now();
 	Box::new(ConsoleInput{thread_handle: child, buffer: buffer_arc_copy, finished: finished_arc_copy})
 }
 
@@ -305,15 +310,15 @@ pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
 	retval
 }
 
-use std::ffi::CString;
 #[no_mangle]
-pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> CString {
-	let retval: CString;
+pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *const u8 {
+	let mut retval: String;
 	let arc = console.buffer.clone();
 	let mut mutex = arc.lock().unwrap();
 	retval = (*mutex).clone();
-	*mutex = CString::new("").unwrap();
-	retval
+	retval.push('\0');
+	*mutex = String::new();
+	retval.as_ptr()
 }
 
 #[no_mangle]
