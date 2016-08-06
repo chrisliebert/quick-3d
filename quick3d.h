@@ -20,6 +20,7 @@ typedef void* DBLoader;
 typedef void* Renderer;
 typedef void* Shader;
 typedef void* Display;
+typedef void* ConsoleInput;
 
 typedef struct Mouse {
 	int dx, dy, last_x, last_y;
@@ -49,8 +50,17 @@ extern void free_display(Display memory);
 extern void free_renderer(Renderer renderer);
 extern void free_shader(Shader shader);
 
+extern void thread_sleep(int ms);
+extern void thread_yield();
+extern ConsoleInput create_console_reader();
+extern bool console_is_closed(ConsoleInput console);
+extern char* read_console_buffer(ConsoleInput console);
+extern void wait_console_quit(ConsoleInput console);
+
 extern Shader get_shader_from_db_loader(const char* name, DBLoader dbloader, Renderer renderer, Display display);
 extern Input poll_event(Display display);
+extern void window_hide(Display display);
+extern void window_show(Display display);
 extern void render(Renderer renderer, Shader shader, Camera camera, Display display);
 
 #endif

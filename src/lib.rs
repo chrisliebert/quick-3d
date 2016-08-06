@@ -251,6 +251,124 @@ pub extern "C" fn render(renderer: &Renderer,
     renderer.render(display, shader_program, camera);
 }
 
+use std::time::Duration;
+
+#[no_mangle]
+pub extern "C" fn thread_sleep(ms: libc::int32_t) {
+    std::thread::sleep(Duration::from_millis(ms as u64));
+}
+
+#[no_mangle]
+pub extern "C" fn thread_yield() {
+    std::thread::yield_now();
+}
+
+use std::sync::{Arc, Mutex};
+
+#[repr(C)]
+pub struct ConsoleInput {
+    pub thread_handle: std::thread::JoinHandle<i32>,
+    pub buffer: Arc<Mutex<String>>,
+    pub finished: Arc<Mutex<bool>>,
+}
+
+#[no_mangle]
+pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
+	use std::thread;
+	let buffer_arc: Arc<Mutex<String>> = Arc::new(Mutex::new(String::new()));
+	let buffer_arc_copy = buffer_arc.clone();
+	let finished_arc: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
+	let finished_arc_copy = finished_arc.clone();
+	{
+		// Initialize the finished value
+		let finished = finished_arc.clone();
+		let mut finished_lock = finished.lock().unwrap();
+		*finished_lock = false;
+	}
+	
+	let child = thread::spawn(move || {
+		println!("Enter command, or return to close console");
+		'console: loop {
+			let mut buffer = String::new();
+			match std::io::stdin().read_line(&mut buffer) {
+				Ok(_) => {
+					buffer = buffer
+						.replace("\r", "")
+						.replace("\n", " ");
+					if 1 == buffer.len() { break 'console };
+					let arc = buffer_arc.clone();
+					let mut writer = arc.lock().unwrap();
+					let mut new_string: String = (*writer).clone();
+					new_string.push_str(&buffer);
+					*writer = new_string;
+					std::thread::yield_now();
+				},
+				Err(e) => println!("Error: {:?}", e),
+			}
+		}
+		println!("Console closed");
+		let finished = finished_arc.clone();
+		let mut finished_lock = finished.lock().unwrap();
+		*finished_lock = true;
+	    return 0;
+	});
+	
+	std::thread::yield_now();
+	Box::new(ConsoleInput{thread_handle: child, buffer: buffer_arc_copy, finished: finished_arc_copy})
+}
+
+#[no_mangle]
+pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
+	let arc = console.finished.clone();
+	let mutex = arc.lock().unwrap();
+	mutex.clone()
+}
+
+use std::ffi::CString;
+
+#[no_mangle]
+pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *mut libc::c_char {
+	let retval: String;
+	let arc = console.buffer.clone();
+	let mut mutex = arc.lock().unwrap();
+	retval = (*mutex).clone();
+	*mutex = String::new();
+	CString::new(retval).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn wait_console_quit(handle: *mut ConsoleInput) {
+	let child: Box<ConsoleInput> = unsafe { Box::from_raw(handle) };
+	match child.thread_handle.join() {
+		Ok(_) => {},
+		Err(e) => println!("Console thread did not return: {:?}", e),
+	}
+}
+
+#[no_mangle]
+pub extern "C" fn window_hide(display: &GlutinFacade) {
+	 match display.get_window() {
+        Some(w) => {
+            w.hide();
+        }
+        None => {
+            panic!("Error retrieving window");
+        }
+    };
+}
+
+#[no_mangle]
+pub extern "C" fn window_show(display: &GlutinFacade) {
+    match display.get_window() {
+        Some(w) => {
+            w.show();
+        }
+        None => {
+            panic!("Error retrieving window");
+        }
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use glium::glutin;
