@@ -16,12 +16,14 @@ function build_wrapper()
   local make_program = "make"
   if isWindows() then
 	make_program = "mingw32-make.exe"
-	os.execute("copy target\\debug\\quick3d.dll .")
   end
   local make_cmd = make_program.." lualib"
   local make_result = os.execute(make_cmd)
   if not make_result == 0 then
     os.exit(2)
+  end
+  if isWindows() then
+	os.execute("copy target\\debug\\quick3d.dll .")
   end
 end
 
