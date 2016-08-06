@@ -59,7 +59,8 @@ extern void wait_console_quit(ConsoleInput console);
 
 extern Shader get_shader_from_db_loader(const char* name, DBLoader dbloader, Renderer renderer, Display display);
 extern Input poll_event(Display display);
-extern void hide_window(Display display);
+extern void window_hide(Display display);
+extern void window_show(Display display);
 extern void render(Renderer renderer, Shader shader, Camera camera, Display display);
 
 #endif

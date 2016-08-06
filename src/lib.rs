@@ -346,10 +346,22 @@ pub extern "C" fn wait_console_quit(handle: *mut ConsoleInput) {
 }
 
 #[no_mangle]
-pub extern "C" fn hide_window(display: &GlutinFacade) {
+pub extern "C" fn window_hide(display: &GlutinFacade) {
 	 match display.get_window() {
         Some(w) => {
             w.hide();
+        }
+        None => {
+            panic!("Error retrieving window");
+        }
+    };
+}
+
+#[no_mangle]
+pub extern "C" fn window_show(display: &GlutinFacade) {
+    match display.get_window() {
+        Some(w) => {
+            w.show();
         }
         None => {
             panic!("Error retrieving window");

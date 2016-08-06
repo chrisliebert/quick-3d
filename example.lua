@@ -65,7 +65,7 @@ while not quick3d.console_is_closed(console) do
     end
    
     if input.closed then
-        quick3d.hide_window(display)
+        quick3d.window_hide(display)
     end
 end
 
