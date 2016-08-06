@@ -309,33 +309,19 @@ pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
 pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
 	let arc = console.finished.clone();
 	let mutex = arc.lock().unwrap();
-	let retval: bool = mutex.clone();
-	retval
-}
-
-#[cfg(target_os = "windows")]
-#[no_mangle]
-pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *const u8 {
-	let mut retval: String;
-	let arc = console.buffer.clone();
-	let mut mutex = arc.lock().unwrap();
-	retval = (*mutex).clone();
-	retval.push('\0');
-	*mutex = String::new();
-	retval.as_ptr()
+	mutex.clone()
 }
 
 use std::ffi::CString;
 
-#[cfg(not(target_os = "windows"))]
 #[no_mangle]
-pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> CString {
+pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *mut libc::c_char {
 	let mut retval: String;
 	let arc = console.buffer.clone();
 	let mut mutex = arc.lock().unwrap();
 	retval = (*mutex).clone();
 	*mutex = String::new();
-	CString::new(retval).unwrap()
+	CString::new(retval).unwrap().into_raw()
 }
 
 #[no_mangle]
