@@ -50,6 +50,7 @@ extern void free_display(Display memory);
 extern void free_renderer(Renderer renderer);
 extern void free_shader(Shader shader);
 
+extern void thread_sleep(int ms);
 extern void thread_yield();
 extern ConsoleInput create_console_reader();
 extern bool console_is_closed(ConsoleInput console);

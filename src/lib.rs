@@ -251,9 +251,16 @@ pub extern "C" fn render(renderer: &Renderer,
     renderer.render(display, shader_program, camera);
 }
 
+use std::time::Duration;
+
+#[no_mangle]
+pub extern "C" fn thread_sleep(ms: libc::int32_t) {
+    std::thread::sleep(Duration::from_millis(ms as u64));
+}
+
 #[no_mangle]
 pub extern "C" fn thread_yield() {
-	std::thread::yield_now();
+    std::thread::yield_now();
 }
 
 use std::sync::{Arc, Mutex};

@@ -52,13 +52,13 @@ while not quick3d.console_is_closed(console) do
     -- Read from console buffer
     console_command = quick3d.read_console_buffer(console)
     if string.len(console_command) > 0 then	
-		local context = {}
+	local context = {}
 
-		-- Put all the global variables in the command context
-		setmetatable(context, { __index = _G })
-		
-		context.string = string
-		context.table = table
+	-- Put all the global variables in the command context
+	setmetatable(context, { __index = _G })
+	
+	context.string = string
+	context.table = table
         if not pcall(execute_command, console_command, context) then
             print ("Failed to execute command: " .. console_command)
         end
