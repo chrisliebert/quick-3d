@@ -260,16 +260,6 @@ pub struct ConsoleInput {
     pub finished: Arc<Mutex<bool>>,
 }
 
-#[cfg(target_os = "windows")]
-fn get_ffi_str_size() -> usize {
-    2
-}
-
-#[cfg(not(target_os = "windows"))]
-fn get_ffi_str_size() -> usize {
-    1
-}
-
 #[no_mangle]
 pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
 	use std::thread;
@@ -289,8 +279,11 @@ pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
 		'console: loop {
 			let mut buffer = String::new();
 			match std::io::stdin().read_line(&mut buffer) {
-				Ok(_) => { 
-					if get_ffi_str_size() == buffer.len() { break 'console };
+				Ok(_) => {
+					buffer = buffer
+						.replace("\r", "")
+						.replace("\n", " ");
+					if 1 == buffer.len() { break 'console };
 					let arc = buffer_arc.clone();
 					let mut writer = arc.lock().unwrap();
 					let mut new_string: String = (*writer).clone();
