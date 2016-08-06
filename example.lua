@@ -5,30 +5,34 @@ package.path = package.path .. ";./?.lua"
 
 -- Include and initialise the Quick3D LUA API
 require "quick3d"
-local quick3d = quick3d_init()
+quick3d = quick3d_init()
 
-local screen_width = 640
-local screen_height = 480
-local display = quick3d.create_display(screen_width, screen_height, "My Lua Window")
-local camera = quick3d.create_camera(screen_width, screen_height)
-local scene_loader = quick3d.create_db_loader("test.db")
-local shader_loader = quick3d.create_db_loader("shaders.db")
-local renderer = quick3d.create_renderer_from_db_loader(scene_loader, display)
-local shader = quick3d.get_shader_from_db_loader("default", shader_loader, renderer, display)
-local console = quick3d.create_console_reader()
+screen_width = 640
+screen_height = 480
+display = quick3d.create_display(screen_width, screen_height, "My Lua Window")
+camera = quick3d.create_camera(screen_width, screen_height)
+scene_loader = quick3d.create_db_loader("test.db")
+shader_loader = quick3d.create_db_loader("shaders.db")
+renderer = quick3d.create_renderer_from_db_loader(scene_loader, display)
+shader = quick3d.get_shader_from_db_loader("default", shader_loader, renderer, display)
+console = quick3d.create_console_reader()
 
-local mouse_factor = 0.01
+mouse_factor = 0.01
 
-function execute_command(command)
-    local f = loadstring(command)
-    
+local function execute_command(command, environment)
+    -- TODO: only use the depricated setenv()/loadstring() if load() is unavailible
+	-- See http://stackoverflow.com/questions/9268954/lua-pass-context-into-loadstring
+	
+	local f = loadstring(command)
     if f == nil then
-      -- If f is nill, it could still be an expression in which case we return it and print the value
-      f = assert(loadstring("return " .. command))
+      -- If f is nill, it could still be an expression in which case we return it and print the value 
+	  f = assert(loadstring("return " .. command))
+	  setfenv(f, environment)
       result = f()
-      print("Expression returned "..f())
+      print("Expression returned "..result)
     else
       -- Otherwise we just call the function
+	  setfenv(f, environment)
       local result = f()
       if not result == nil then
          -- If the function returns a value, print it
@@ -47,8 +51,15 @@ while not quick3d.console_is_closed(console) do
     end
     -- Read from console buffer
     console_command = quick3d.read_console_buffer(console)
-    if string.len(console_command) > 0 then
-        if not pcall(execute_command, console_command) then
+    if string.len(console_command) > 0 then	
+		local context = {}
+
+		-- Put all the global variables in the command context
+		setmetatable(context, { __index = _G })
+		
+		context.string = string
+		context.table = table
+        if not pcall(execute_command, console_command, context) then
             print ("Failed to execute command: " .. console_command)
         end
     end
@@ -66,5 +77,7 @@ quick3d.free_renderer(renderer)
 quick3d.free_db_loader(shader_loader)
 quick3d.free_db_loader(scene_loader)
 quick3d.free_display(display)
+
+collectgarbage()
 
 os.exit() -- Removing this call will cause Lua to crash on exit.

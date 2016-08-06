@@ -251,6 +251,11 @@ pub extern "C" fn render(renderer: &Renderer,
     renderer.render(display, shader_program, camera);
 }
 
+#[no_mangle]
+pub extern "C" fn thread_yield() {
+	std::thread::yield_now();
+}
+
 use std::sync::{Arc, Mutex};
 
 #[repr(C)]
@@ -316,7 +321,7 @@ use std::ffi::CString;
 
 #[no_mangle]
 pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *mut libc::c_char {
-	let mut retval: String;
+	let retval: String;
 	let arc = console.buffer.clone();
 	let mut mutex = arc.lock().unwrap();
 	retval = (*mutex).clone();
