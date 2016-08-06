@@ -47,7 +47,7 @@ while not quick3d.console_is_closed(console) do
     end
     -- Read from console buffer
     console_command = quick3d.read_console_buffer(console)
-    if string.len(console_command) > 2 then
+    if string.len(console_command) > 0 then
         if not pcall(execute_command, console_command) then
             print ("Failed to execute command: " .. console_command)
         end

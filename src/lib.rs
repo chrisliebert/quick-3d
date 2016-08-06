@@ -255,9 +255,19 @@ use std::sync::{Arc, Mutex};
 
 #[repr(C)]
 pub struct ConsoleInput {
-	pub thread_handle: std::thread::JoinHandle<i32>,
-	pub buffer: Arc<Mutex<String>>,
+    pub thread_handle: std::thread::JoinHandle<i32>,
+    pub buffer: Arc<Mutex<String>>,
     pub finished: Arc<Mutex<bool>>,
+}
+
+#[cfg(target_os = "windows")]
+fn get_ffi_str_size() -> usize {
+    2
+}
+
+#[cfg(not(target_os = "windows"))]
+fn get_ffi_str_size() -> usize {
+    1
 }
 
 #[no_mangle]
@@ -280,7 +290,7 @@ pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
 			let mut buffer = String::new();
 			match std::io::stdin().read_line(&mut buffer) {
 				Ok(_) => { 
-					if 2 == buffer.len() { break 'console };
+					if get_ffi_str_size() == buffer.len() { break 'console };
 					let arc = buffer_arc.clone();
 					let mut writer = arc.lock().unwrap();
 					let mut new_string: String = (*writer).clone();
@@ -310,6 +320,7 @@ pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
 	retval
 }
 
+#[cfg(target_os = "windows")]
 #[no_mangle]
 pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *const u8 {
 	let mut retval: String;
@@ -319,6 +330,19 @@ pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *const u8 {
 	retval.push('\0');
 	*mutex = String::new();
 	retval.as_ptr()
+}
+
+use std::ffi::CString;
+
+#[cfg(not(target_os = "windows"))]
+#[no_mangle]
+pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> CString {
+	let mut retval: String;
+	let arc = console.buffer.clone();
+	let mut mutex = arc.lock().unwrap();
+	retval = (*mutex).clone();
+	*mutex = String::new();
+	CString::new(retval).unwrap()
 }
 
 #[no_mangle]
