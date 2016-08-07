@@ -16,6 +16,8 @@ use glium::{Program, Surface, Version};
 
 implement_vertex!(Vertex8f32, position, normal, texcoord);
 
+/// A representation of the Glium data needed for rendering
+///
 pub struct Renderer {
 	pub index_buffer: glium::index::NoIndices,
 	pub scene: Scene,
@@ -24,6 +26,8 @@ pub struct Renderer {
 }
 
 impl Renderer {
+	/// Create a new renderer from a `Scene` struct
+	///
 	pub fn new(display: &GlutinFacade, scene: Scene) -> Renderer {
 	
 		let mut vertex_buffers: Vec<glium::vertex::VertexBuffer<common::Vertex8f32>> =
@@ -59,6 +63,8 @@ impl Renderer {
 		}
 	}
 	
+	/// Try to find the reference to a `Mesh` by name
+	/// 
 	pub fn get_mesh(&self, name: &str) -> Result<&Mesh, Error> {
 		for i in 0..self.vertex_buffers.len() as usize {
 			if self.scene.meshes[i].name.eq(name) {
@@ -68,6 +74,8 @@ impl Renderer {
 		return Err(Error::new(ErrorKind::NotFound, "Unable to load mesh"));
 	}
 	
+	/// Create a `glium::program::Program` object from a `DBLoader` that contains the shader and shader_version tables in SQLite
+	///
 	#[allow(unused_assignments)]
 	pub fn create_shader_program(&self, shader_name: &str, dbloader: &DBLoader, display: &GlutinFacade) -> glium::program::Program {
 		let supported_glsl_version: Version = display.get_supported_glsl_version();
@@ -126,6 +134,8 @@ impl Renderer {
 		return program;
 	}
 	
+	/// Create a `glium::program::Program` object from a `DBLoader` that has a specific shader version
+	///
 	pub fn create_shader_program_with_version(&self, shader_name: &str, dbloader: &DBLoader, glsl_version: &Version, display: &GlutinFacade) -> Result<glium::program::Program, Error> {
 		if !display.is_glsl_version_supported(&glsl_version) {
 			return Err(Error::new(ErrorKind::InvalidData, "Unsupported GLSL version"));
@@ -185,7 +195,8 @@ impl Renderer {
 		}
 	}
 	
-	
+	/// Draw the `Scene` data consumed by self to the display
+	///
 	pub fn render(&self, display: &GlutinFacade, program: &glium::program::Program, camera: &Camera) {
 		let mut target = display.draw();
 		// TODO: generate this texture instead of loading from sqlite

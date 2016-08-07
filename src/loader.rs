@@ -8,36 +8,33 @@ use nalgebra::{Eye, Matrix4};
 use std::cell::RefCell;
 use std::path::Path;
 
-use common::{ImageBlob, Material, Mesh, SceneNode, Scene, Shader, Vertex8f32};
+use common::{ImageBlob, Material, Mesh, Scene, Shader, Vertex8f32};
 
+
+/// A struct representing an SQLite database loader
 pub struct DBLoader {
     filename: String,
 }
 
-fn create_vertex8f32(px: f64,
-                     py: f64,
-                     pz: f64,
-                     nx: f64,
-                     ny: f64,
-                     nz: f64,
-                     tu: f64,
-                     tv: f64)
-                     -> Vertex8f32 {
-    let position: [f32; 3] = [px as f32, py as f32, pz as f32];
-    let normal: [f32; 3] = [nx as f32, ny as f32, nz as f32];
-    let texcoord: [f32; 2] = [tu as f32, tv as f32];
-    Vertex8f32 {
-        position: position,
-        normal: normal,
-        texcoord: texcoord,
-    }
+/// A node to index geometric data loaded from SQLite
+///
+/// A scene node is used to index data that is loaded from the vertex table
+/// of an SQLite database.
+///
+pub struct SceneNode {
+    pub name: String,
+    pub material_index: usize,
+    pub start_position: i32,
+    pub end_position: i32,
 }
 
 impl DBLoader {
+	/// Create a new DBLoader object
     pub fn new(filename: &str) -> DBLoader {
         DBLoader { filename: String::from(filename) }
     }
 
+	/// Load the contents of an SQLite datbase into a `Scene` data structure.
     pub fn load_scene(&self) -> Scene {
         let conn = Connection::open(Path::new(&self.filename)).unwrap();
 
@@ -45,7 +42,7 @@ impl DBLoader {
         let mut vertex_stmt = conn.prepare("SELECT px, py, pz, nx, ny, nz, tu, tv FROM vertex")
             .unwrap();
         let vertex_iter = vertex_stmt.query_map(&[], |row| {
-                create_vertex8f32(row.get(0),
+                Vertex8f32::from_f64(row.get(0),
                                   row.get(1),
                                   row.get(2),
                                   row.get(3),
@@ -163,12 +160,9 @@ impl DBLoader {
         };
     }
 
+	/// Load a shader from an SQLite database
     pub fn load_shader(&self, name: &str, glsl_version_string: &str) -> Shader {
         let conn = Connection::open(Path::new(&self.filename)).unwrap();
-
-        // TODO: if string ends with " es", the use_gles should be true
-        // let use_gles = false; // Use OpenGLES instead of OpenGL (for mobile devices)
-
         let mut id_sql: String = "SELECT id FROM shader WHERE name = '".to_owned();
         id_sql.push_str(name);
         id_sql.push('\'');

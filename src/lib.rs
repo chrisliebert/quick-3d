@@ -14,9 +14,9 @@ pub mod renderer;
 extern crate nalgebra;
 extern crate libc;
 
-
 use std::ffi::CStr;
 use std::os::raw::c_char;
+use std::sync::{Arc, Mutex};
 
 use glium::glutin;
 use glium::glutin::{ElementState, Event, MouseButton, VirtualKeyCode};
@@ -27,41 +27,159 @@ use common::Camera;
 use loader::DBLoader;
 use renderer::Renderer;
 
+/// The following methods annotated as #[no_mangle] provide external interfaces
+/// that can be accessed from C and SWIG
+///
+
+/// Structure for querying stdin console input
+///
+/// ```c
+/// /* C representation */
+/// typedef void* ConsoleInput;
+/// ```
+///
+pub struct ConsoleInput {
+    pub thread_handle: std::thread::JoinHandle<i32>,
+    pub buffer: Arc<Mutex<String>>,
+    pub finished: Arc<Mutex<bool>>,
+}
+
+/// Structure for querying information about the mouse input
+///
+/// ```c
+/// /* C representation */
+/// #include <stdbool.h>
+/// typedef struct Mouse {
+///		int dx, dy, last_x, last_y;
+///		bool left_button_pressed, right_button_pressed;
+/// } Mouse;
+/// ```
+///
+#[repr(C)]
+pub struct Mouse {
+    pub dx: i32,
+    pub dy: i32,
+    pub last_x: i32,
+    pub last_y: i32,
+    pub left_button_pressed: bool,
+    pub right_button_pressed: bool,
+}
+
+/// Structure for querying information about user input
+///
+/// ```c
+/// /* C representation */
+/// #include <stdbool.h>
+/// typedef struct Input {
+///		Mouse mouse;
+///		bool closed;
+///} Input;
+/// ```
+///
+#[repr(C)]
+pub struct Input {
+    pub mouse: Mouse,
+    pub closed: bool,
+}
+
+/// `extern void camera_aim(Camera camera, double x, double y);`
+///
 #[no_mangle]
 pub extern "C" fn camera_aim(camera: &Camera, x: libc::c_double, y: libc::c_double) {
 	camera.aim(x as f64, y as f64);
 }
 
+/// `extern void camera_move_forward(Camera camera, float amount);`
+///
 #[no_mangle]
 pub extern "C" fn camera_move_forward(camera: &Camera, amount: libc::c_float) {
 	camera.move_forward(amount as f32);
 }
 
+/// `extern void camera_move_backward(Camera camera, float amount);`
+///
 #[no_mangle]
 pub extern "C" fn camera_move_backward(camera: &Camera, amount: libc::c_float) {
 	camera.move_backward(amount as f32);
 }
 
+/// `extern void camera_move_left(Camera camera, float amount);`
+///
 #[no_mangle]
 pub extern "C" fn camera_move_left(camera: &Camera, amount: libc::c_float) {
 	camera.move_left(amount as f32);
 }
 
+/// `extern void camera_move_right(Camera camera, float amount);`
+///
 #[no_mangle]
 pub extern "C" fn camera_move_right(camera: &Camera, amount: libc::c_float) {
 	camera.move_right(amount as f32);
 }
 
+/// `extern void camera_update(Camera camera);`
+///
 #[no_mangle]
 pub extern "C" fn camera_update(camera: &Camera) {
 	camera.update();
 }
 
+/// `extern Camera create_camera(float screen_width, float screen_height);`
+///
 #[no_mangle]
 pub extern "C" fn create_camera(screen_width: f32, screen_height: f32) -> Box<Camera> {
     Box::new(Camera::new(screen_width, screen_height))
 }
 
+/// `extern ConsoleInput create_console_reader();`
+///
+#[no_mangle]
+pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
+	use std::thread;
+	let buffer_arc: Arc<Mutex<String>> = Arc::new(Mutex::new(String::new()));
+	let buffer_arc_copy = buffer_arc.clone();
+	let finished_arc: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
+	let finished_arc_copy = finished_arc.clone();
+	{
+		// Initialize the finished value
+		let finished = finished_arc.clone();
+		let mut finished_lock = finished.lock().unwrap();
+		*finished_lock = false;
+	}
+	
+	let child = thread::spawn(move || {
+		println!("Enter command, or return to close console");
+		'console: loop {
+			let mut buffer = String::new();
+			match std::io::stdin().read_line(&mut buffer) {
+				Ok(_) => {
+					buffer = buffer
+						.replace("\r", "")
+						.replace("\n", " ");
+					if 1 == buffer.len() { break 'console };
+					let arc = buffer_arc.clone();
+					let mut writer = arc.lock().unwrap();
+					let mut new_string: String = (*writer).clone();
+					new_string.push_str(&buffer);
+					*writer = new_string;
+					std::thread::yield_now();
+				},
+				Err(e) => println!("Error: {:?}", e),
+			}
+		}
+		println!("Console closed");
+		let finished = finished_arc.clone();
+		let mut finished_lock = finished.lock().unwrap();
+		*finished_lock = true;
+	    return 0;
+	});
+	
+	std::thread::yield_now();
+	Box::new(ConsoleInput{thread_handle: child, buffer: buffer_arc_copy, finished: finished_arc_copy})
+}
+
+/// `extern DBLoader create_db_loader(const char* filename);`
+///
 #[no_mangle]
 pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader> {
     unsafe {
@@ -72,6 +190,8 @@ pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader
     }
 }
 
+/// `extern Display create_display(int screen_width, int screen_height, const char* title);`
+///
 #[no_mangle]
 pub extern "C" fn create_display(screen_width: libc::int32_t,
                                  screen_height: libc::int32_t,
@@ -96,43 +216,66 @@ pub extern "C" fn create_display(screen_width: libc::int32_t,
     }
 }
 
+/// `extern Renderer create_renderer_from_db_loader(DBLoader loader, Display display);`
+///
 #[no_mangle]
 pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
                                                  display: &GlutinFacade)
                                                  -> Box<Renderer> {
     Box::new(renderer::Renderer::new(display, dbloader.load_scene()))
 }
+                                                 
+/// `extern bool console_is_closed(ConsoleInput console);`
+///
+#[no_mangle]
+pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
+	let arc = console.finished.clone();
+	let mutex = arc.lock().unwrap();
+	mutex.clone()
+}
 
+/// `extern void free_camera(Camera camera);`
+///
 #[no_mangle]
 pub extern "C" fn free_camera(ptr: *mut Camera) {
     let box_ptr: Box<Camera> = unsafe { Box::from_raw(ptr) };
     Box::into_raw(box_ptr);
 }
 
+/// `extern void free_db_loader(DBLoader dbloader);`
+///
 #[no_mangle]
 pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
     let box_ptr: Box<DBLoader> = unsafe { Box::from_raw(ptr) };
     Box::into_raw(box_ptr);
 }
 
+/// `extern void free_display(Display memory);`
+///
 #[no_mangle]
 pub extern "C" fn free_display(ptr: *mut GlutinFacade) {
     let box_ptr: Box<GlutinFacade> = unsafe { Box::from_raw(ptr) };
     Box::into_raw(box_ptr);
 }
 
+/// `extern void free_renderer(Renderer renderer);`
+///
 #[no_mangle]
 pub extern "C" fn free_renderer(ptr: *mut Renderer) {
     let box_ptr: Box<Renderer> = unsafe { Box::from_raw(ptr) };
     Box::into_raw(box_ptr);
 }
 
+/// `extern void free_shader(Shader shader);`
+///
 #[no_mangle]
 pub extern "C" fn free_shader(ptr: *mut glium::program::Program) {
     let box_ptr: Box<glium::program::Program> = unsafe { Box::from_raw(ptr) };
     Box::into_raw(box_ptr);
 }
 
+/// `extern Shader get_shader_from_db_loader(const char* name, DBLoader dbloader, Renderer renderer, Display display);`
+///
 #[no_mangle]
 pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char,
                                             dbloader: &DBLoader,
@@ -144,24 +287,12 @@ pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char,
         let shader_program = renderer.create_shader_program(&shader_name, dbloader, display);
         return Box::new(shader_program);
     }
-}
+}                                         
 
-#[repr(C)]
-pub struct Mouse {
-    pub dx: i32,
-    pub dy: i32,
-    pub last_x: i32,
-    pub last_y: i32,
-    pub left_button_pressed: bool,
-    pub right_button_pressed: bool,
-}
-
-#[repr(C)]
-pub struct Input {
-    pub mouse: Mouse,
-    pub closed: bool,
-}
-
+/// Check for user input events
+///
+/// `extern Input poll_event(Display display);`
+///
 #[no_mangle]
 pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
 	static mut mouse_last_x: i32 = 0;
@@ -227,7 +358,7 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
                     }
                 } 
             }
-            _ => ()
+            _ => () // All events that arent matched are consumed here
         }
     }
     Input {
@@ -243,89 +374,8 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn render(renderer: &Renderer,
-                         shader_program: &glium::program::Program,
-                         camera: &Camera,
-                         display: &GlutinFacade) {
-    renderer.render(display, shader_program, camera);
-}
-
-use std::time::Duration;
-
-#[no_mangle]
-pub extern "C" fn thread_sleep(ms: libc::int32_t) {
-    std::thread::sleep(Duration::from_millis(ms as u64));
-}
-
-#[no_mangle]
-pub extern "C" fn thread_yield() {
-    std::thread::yield_now();
-}
-
-use std::sync::{Arc, Mutex};
-
-#[repr(C)]
-pub struct ConsoleInput {
-    pub thread_handle: std::thread::JoinHandle<i32>,
-    pub buffer: Arc<Mutex<String>>,
-    pub finished: Arc<Mutex<bool>>,
-}
-
-#[no_mangle]
-pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
-	use std::thread;
-	let buffer_arc: Arc<Mutex<String>> = Arc::new(Mutex::new(String::new()));
-	let buffer_arc_copy = buffer_arc.clone();
-	let finished_arc: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
-	let finished_arc_copy = finished_arc.clone();
-	{
-		// Initialize the finished value
-		let finished = finished_arc.clone();
-		let mut finished_lock = finished.lock().unwrap();
-		*finished_lock = false;
-	}
-	
-	let child = thread::spawn(move || {
-		println!("Enter command, or return to close console");
-		'console: loop {
-			let mut buffer = String::new();
-			match std::io::stdin().read_line(&mut buffer) {
-				Ok(_) => {
-					buffer = buffer
-						.replace("\r", "")
-						.replace("\n", " ");
-					if 1 == buffer.len() { break 'console };
-					let arc = buffer_arc.clone();
-					let mut writer = arc.lock().unwrap();
-					let mut new_string: String = (*writer).clone();
-					new_string.push_str(&buffer);
-					*writer = new_string;
-					std::thread::yield_now();
-				},
-				Err(e) => println!("Error: {:?}", e),
-			}
-		}
-		println!("Console closed");
-		let finished = finished_arc.clone();
-		let mut finished_lock = finished.lock().unwrap();
-		*finished_lock = true;
-	    return 0;
-	});
-	
-	std::thread::yield_now();
-	Box::new(ConsoleInput{thread_handle: child, buffer: buffer_arc_copy, finished: finished_arc_copy})
-}
-
-#[no_mangle]
-pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
-	let arc = console.finished.clone();
-	let mutex = arc.lock().unwrap();
-	mutex.clone()
-}
-
-use std::ffi::CString;
-
+/// `extern char* read_console_buffer(ConsoleInput console);`
+///
 #[no_mangle]
 pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *mut libc::c_char {
 	let retval: String;
@@ -336,6 +386,36 @@ pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *mut libc::c_ch
 	CString::new(retval).unwrap().into_raw()
 }
 
+/// `extern void render(Renderer renderer, Shader shader, Camera camera, Display display);`
+///
+#[no_mangle]
+pub extern "C" fn render(renderer: &Renderer,
+                         shader_program: &glium::program::Program,
+                         camera: &Camera,
+                         display: &GlutinFacade) {
+    renderer.render(display, shader_program, camera);
+}
+
+use std::time::Duration;
+
+/// `extern void thread_sleep(int ms);`
+///
+#[no_mangle]
+pub extern "C" fn thread_sleep(ms: libc::int32_t) {
+    std::thread::sleep(Duration::from_millis(ms as u64));
+}
+
+/// `extern void thread_yield();`
+///
+#[no_mangle]
+pub extern "C" fn thread_yield() {
+    std::thread::yield_now();
+}
+
+use std::ffi::CString;
+
+/// `extern void wait_console_quit(ConsoleInput console);`
+///
 #[no_mangle]
 pub extern "C" fn wait_console_quit(handle: *mut ConsoleInput) {
 	let child: Box<ConsoleInput> = unsafe { Box::from_raw(handle) };
@@ -345,6 +425,8 @@ pub extern "C" fn wait_console_quit(handle: *mut ConsoleInput) {
 	}
 }
 
+/// `extern void window_hide(Display display);`
+///
 #[no_mangle]
 pub extern "C" fn window_hide(display: &GlutinFacade) {
 	 match display.get_window() {
@@ -357,6 +439,8 @@ pub extern "C" fn window_hide(display: &GlutinFacade) {
     };
 }
 
+/// `extern void window_show(Display display);`
+///
 #[no_mangle]
 pub extern "C" fn window_show(display: &GlutinFacade) {
     match display.get_window() {
