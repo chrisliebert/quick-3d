@@ -43,3 +43,63 @@ function quick3d_init()
   return wrapper
 end
 
+-- Camera object wrapper
+Camera = {}
+Camera.__index = Camera
+
+function Camera.aim(self, x, y)
+  wrapper.camera_aim(self.struct, x, y)
+  self:update()
+end
+
+function Camera.create(self, screen_width, screen_height)
+  local camera = {}
+  setmetatable(camera, Camera)
+  self.struct = wrapper.create_camera(screen_width, screen_height)
+  return camera
+end
+
+function Camera.move_forward(self, amount)
+  wrapper.camera_move_forward(self.struct, amount)
+  wrapper.camera_update(self.struct)
+end
+
+function Camera.move_backward(self, amount)
+  wrapper.camera_move_backward(self.struct, amount)
+  wrapper.camera_update(self.struct)
+end
+
+function Camera.move_left(self, amount)
+  wrapper.camera_move_left(self.struct, amount)
+  wrapper.camera_update(self.struct)
+end
+
+function Camera.move_right(self, amount)
+  wrapper.camera_move_right(self.struct, amount)
+  wrapper.camera_update(self.struct)
+end
+
+function Camera.update(self)
+  wrapper.camera_update(self.struct)
+  wrapper.camera_update(self.struct)
+end
+
+-- Display object wrapper
+Display = {}
+Display.__index = Display
+
+function Display.create(self, screen_width, screen_height, window_title)
+  local display = {}
+  setmetatable(display, Display)
+  self.struct = wrapper.create_display(screen_width, screen_height, window_title)
+  return display
+end
+
+function Display.hide(self)
+  wrapper.window_hide(self.struct)
+end
+
+function Display.show(self)
+  wrapper.window_show(self.struct)
+end
+
