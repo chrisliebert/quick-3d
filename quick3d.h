@@ -38,11 +38,12 @@ extern void camera_move_backward(Camera camera, float amount);
 extern void camera_move_left(Camera camera, float amount);
 extern void camera_move_right(Camera camera, float amount);
 extern void camera_update(Camera camera);
-
 extern Camera create_camera(float screen_width, float screen_height);
+extern ConsoleInput create_console_reader();
 extern DBLoader create_db_loader(const char* filename);
 extern Display create_display(int screen_width, int screen_height, const char* title);
 extern Renderer create_renderer_from_db_loader(DBLoader loader, Display display);
+extern bool console_is_closed(ConsoleInput console);
 
 extern void free_camera(Camera camera);
 extern void free_db_loader(DBLoader dbloader);
@@ -50,17 +51,14 @@ extern void free_display(Display memory);
 extern void free_renderer(Renderer renderer);
 extern void free_shader(Shader shader);
 
-extern void thread_sleep(int ms);
-extern void thread_yield();
-extern ConsoleInput create_console_reader();
-extern bool console_is_closed(ConsoleInput console);
-extern char* read_console_buffer(ConsoleInput console);
-extern void wait_console_quit(ConsoleInput console);
-
 extern Shader get_shader_from_db_loader(const char* name, DBLoader dbloader, Renderer renderer, Display display);
 extern Input poll_event(Display display);
+extern char* read_console_buffer(ConsoleInput console);
+extern void render(Renderer renderer, Shader shader, Camera camera, Display display);
+extern void wait_console_quit(ConsoleInput console);
 extern void window_hide(Display display);
 extern void window_show(Display display);
-extern void render(Renderer renderer, Shader shader, Camera camera, Display display);
+extern void thread_sleep(int ms);
+extern void thread_yield();
 
 #endif
