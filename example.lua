@@ -13,8 +13,8 @@ require "quick3d"
 -- Initialize Quick3D
 quick3d = quick3d_init()
 
-screen_width = 640
-screen_height = 480
+screen_width = 800
+screen_height = 600
 display = Display:create(screen_width, screen_height, "My Lua Window")
 camera = Camera:create(screen_width, screen_height)
 scene_loader = quick3d.create_db_loader("test.db")
@@ -23,6 +23,7 @@ renderer = quick3d.create_renderer_from_db_loader(scene_loader, display.struct)
 shader = quick3d.get_shader_from_db_loader("default", shader_loader, renderer, display.struct)
 console = quick3d.create_console_reader()
 
+camera_speed = 0.01
 mouse_factor = 0.01
 
 -- Put all the global variables in the command context
@@ -58,30 +59,36 @@ local function execute_command(command, environment)
 end
 
 function demo()
-  camera:move_right(20)
+  
   for i=1000,10000 do 
+    if i < 1040 then camera:move_right(0.001) end
     camera:move_forward(i * 0.0001) camera:aim(i * 0.001, 0)
     quick3d.render(renderer, shader, camera.struct, display.struct)
     quick3d.thread_sleep(10)
-    local input = quick3d.poll_event(display.struct)
-    
-    if input.mouse.left_button_pressed then
+    local input = quick3d.poll_event(display.struct)    
+    if input.space then
       return
     end
-    
-    if input.closed then
-      os.exit()
-    end
-    
    end
+end
+
+function quit()
+  quick3d.free_camera(camera.struct)
+  quick3d.free_shader(shader)
+  quick3d.free_renderer(renderer)
+  quick3d.free_db_loader(shader_loader)
+  quick3d.free_db_loader(scene_loader)
+  quick3d.free_display(display.struct)
+  collectgarbage()
+  os.exit() -- Removing this call will cause Lua to crash on exit.
 end
 
 local console_command = ""
 while not quick3d.console_is_closed(console) do
   quick3d.render(renderer, shader, camera.struct, display.struct)
   local input = quick3d.poll_event(display.struct)
-  if input.mouse.left_button_pressed and not (input.mouse.dx == 0 and input.mouse.dy == 0) then
-    camera:aim(input.mouse.dx * mouse_factor, input.mouse.dy * mouse_factor)
+  if input.mouse_left and not (input.mouse_dx == 0 and input.mouse_dy == 0) then
+    camera:aim(input.mouse_dx * mouse_factor, input.mouse_dy * mouse_factor)
   end
   -- Read from console buffer
   console_command = quick3d.read_console_buffer(console)
@@ -94,20 +101,30 @@ while not quick3d.console_is_closed(console) do
     end
   end
 
-  if input.closed then
+  if input.w or input.up then
+    camera:move_forward(camera_speed)
+  end
+
+  if input.a or input.left then
+    camera:move_left(camera_speed)
+  end
+
+  if input.d or input.right then
+    camera:move_right(camera_speed)
+  end
+  
+  if input.s or input.down then
+    camera:move_backward(camera_speed)
+  end
+
+  if input.escape then
     display:hide()
+  end
+
+  if input.closed then
+    quit()
   end
 end
 
 quick3d.wait_console_quit(console)
-
-quick3d.free_camera(camera.struct)
-quick3d.free_shader(shader)
-quick3d.free_renderer(renderer)
-quick3d.free_db_loader(shader_loader)
-quick3d.free_db_loader(scene_loader)
-quick3d.free_display(display.struct)
-
-collectgarbage()
-
-os.exit() -- Removing this call will cause Lua to crash on exit.
+quit()

@@ -61,22 +61,22 @@ end
 
 function Camera.move_forward(self, amount)
   wrapper.camera_move_forward(self.struct, amount)
-  wrapper.camera_update(self.struct)
+  self:update()
 end
 
 function Camera.move_backward(self, amount)
   wrapper.camera_move_backward(self.struct, amount)
-  wrapper.camera_update(self.struct)
+  self:update()
 end
 
 function Camera.move_left(self, amount)
   wrapper.camera_move_left(self.struct, amount)
-  wrapper.camera_update(self.struct)
+  self:update()
 end
 
 function Camera.move_right(self, amount)
   wrapper.camera_move_right(self.struct, amount)
-  wrapper.camera_update(self.struct)
+  self:update()
 end
 
 function Camera.update(self)
