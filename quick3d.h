@@ -22,14 +22,16 @@ typedef void* Shader;
 typedef void* Display;
 typedef void* ConsoleInput;
 
-typedef struct Mouse {
-	int dx, dy, last_x, last_y;
-	bool left_button_pressed, right_button_pressed;
-} Mouse;
-
 typedef struct Input {
-	Mouse mouse;
+	bool key_1, key_2, key_3, key_4, key_5, key_6, key_7, key_8, key_9, key_0;
+	bool a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
+	bool up, left, right, down;
+	bool space;
+	bool escape;
 	bool closed;
+	int mouse_dx, mouse_dy;
+	int mouse_x, mouse_y;
+	bool mouse_left, mouse_right;
 } Input;
 
 extern void camera_aim(Camera camera, double x, double y);
