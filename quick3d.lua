@@ -103,3 +103,20 @@ function Display.show(self)
   wrapper.window_show(self.struct)
 end
 
+
+-- Renderer object wrapper
+Renderer = {}
+Renderer.__index = Renderer
+
+function Renderer.create(self, db_filename, display)
+  local renderer = {}
+  setmetatable(renderer, Renderer)
+  local dbloader = wrapper.create_db_loader(db_filename)
+  self.struct = wrapper.create_renderer_from_db_loader(dbloader, display.struct)
+  wrapper.free_db_loader(dbloader)
+  return renderer
+end
+
+function Renderer.render(self, shader, camera, display)
+  wrapper.render(self.struct, shader, camera.struct, display.struct)
+end

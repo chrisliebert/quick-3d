@@ -17,10 +17,9 @@ screen_width = 800
 screen_height = 600
 display = Display:create(screen_width, screen_height, "My Lua Window")
 camera = Camera:create(screen_width, screen_height)
-scene_loader = quick3d.create_db_loader("test.db")
 shader_loader = quick3d.create_db_loader("shaders.db")
-renderer = quick3d.create_renderer_from_db_loader(scene_loader, display.struct)
-shader = quick3d.get_shader_from_db_loader("default", shader_loader, renderer, display.struct)
+renderer = Renderer:create("test.db", display)
+shader = quick3d.get_shader_from_db_loader("default", shader_loader, renderer.struct, display.struct)
 console = quick3d.create_console_reader()
 
 camera_speed = 0.01
@@ -63,7 +62,7 @@ function demo()
   for i=1000,10000 do 
     if i < 1040 then camera:move_right(0.001) end
     camera:move_forward(i * 0.0001) camera:aim(i * 0.001, 0)
-    quick3d.render(renderer, shader, camera.struct, display.struct)
+    renderer:render(shader, camera, display)
     quick3d.thread_sleep(10)
     local input = quick3d.poll_event(display.struct)    
     if input.space then
@@ -75,9 +74,8 @@ end
 function quit()
   quick3d.free_camera(camera.struct)
   quick3d.free_shader(shader)
-  quick3d.free_renderer(renderer)
+  quick3d.free_renderer(renderer.struct)
   quick3d.free_db_loader(shader_loader)
-  quick3d.free_db_loader(scene_loader)
   quick3d.free_display(display.struct)
   collectgarbage()
   os.exit() -- Removing this call will cause Lua to crash on exit.
@@ -85,7 +83,7 @@ end
 
 local console_command = ""
 while not quick3d.console_is_closed(console) do
-  quick3d.render(renderer, shader, camera.struct, display.struct)
+  renderer:render(shader, camera, display)
   local input = quick3d.poll_event(display.struct)
   if input.mouse_left and not (input.mouse_dx == 0 and input.mouse_dy == 0) then
     camera:aim(input.mouse_dx * mouse_factor, input.mouse_dy * mouse_factor)
