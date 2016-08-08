@@ -277,7 +277,7 @@ pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
 #[no_mangle]
 pub extern "C" fn free_camera(ptr: *mut Camera) {
     let box_ptr: Box<Camera> = unsafe { Box::from_raw(ptr) };
-    Box::into_raw(box_ptr);
+    drop(box_ptr)
 }
 
 /// `extern void free_db_loader(DBLoader dbloader);`
@@ -285,7 +285,7 @@ pub extern "C" fn free_camera(ptr: *mut Camera) {
 #[no_mangle]
 pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
     let box_ptr: Box<DBLoader> = unsafe { Box::from_raw(ptr) };
-    Box::into_raw(box_ptr);
+    drop(box_ptr)
 }
 
 /// `extern void free_display(Display memory);`
@@ -293,7 +293,7 @@ pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
 #[no_mangle]
 pub extern "C" fn free_display(ptr: *mut GlutinFacade) {
     let box_ptr: Box<GlutinFacade> = unsafe { Box::from_raw(ptr) };
-    Box::into_raw(box_ptr);
+    drop(box_ptr)
 }
 
 /// `extern void free_renderer(Renderer renderer);`
@@ -301,7 +301,7 @@ pub extern "C" fn free_display(ptr: *mut GlutinFacade) {
 #[no_mangle]
 pub extern "C" fn free_renderer(ptr: *mut Renderer) {
     let box_ptr: Box<Renderer> = unsafe { Box::from_raw(ptr) };
-    Box::into_raw(box_ptr);
+    drop(box_ptr)
 }
 
 /// `extern void free_shader(Shader shader);`
@@ -309,7 +309,7 @@ pub extern "C" fn free_renderer(ptr: *mut Renderer) {
 #[no_mangle]
 pub extern "C" fn free_shader(ptr: *mut glium::program::Program) {
     let box_ptr: Box<glium::program::Program> = unsafe { Box::from_raw(ptr) };
-    Box::into_raw(box_ptr);
+    drop(box_ptr)
 }
 
 /// `extern Shader get_shader_from_db_loader(const char* name, DBLoader dbloader, Renderer renderer, Display display);`
@@ -799,7 +799,7 @@ use std::ffi::CString;
 pub extern "C" fn wait_console_quit(handle: *mut ConsoleInput) {
 	let child: Box<ConsoleInput> = unsafe { Box::from_raw(handle) };
 	match child.thread_handle.join() {
-		Ok(_) => {},
+		Ok(c) => drop(c),
 		Err(e) => println!("Console thread did not return: {:?}", e),
 	}
 }
