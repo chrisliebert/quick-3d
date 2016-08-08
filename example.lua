@@ -17,13 +17,21 @@ screen_width = 800
 screen_height = 600
 display = Display:create(screen_width, screen_height, "My Lua Window")
 camera = Camera:create(screen_width, screen_height)
-shader_loader = quick3d.create_db_loader("shaders.db")
 renderer = Renderer:create("test.db", display)
-shader = quick3d.get_shader_from_db_loader("default", shader_loader, renderer.struct, display.struct)
+shader = Shader:create("default", "shaders.db", renderer, display)
 console = quick3d.create_console_reader()
 
 camera_speed = 0.01
 mouse_factor = 0.01
+
+function quit()
+  quick3d.free_camera(camera.struct)
+  quick3d.free_shader(shader.struct)
+  quick3d.free_renderer(renderer.struct)
+  quick3d.free_display(display.struct)
+  collectgarbage()
+  os.exit() -- Removing this call will cause Lua to crash on exit.
+end
 
 -- Put all the global variables in the command context
 local function get_context()
@@ -69,16 +77,6 @@ function demo()
       return
     end
    end
-end
-
-function quit()
-  quick3d.free_camera(camera.struct)
-  quick3d.free_shader(shader)
-  quick3d.free_renderer(renderer.struct)
-  quick3d.free_db_loader(shader_loader)
-  quick3d.free_display(display.struct)
-  collectgarbage()
-  os.exit() -- Removing this call will cause Lua to crash on exit.
 end
 
 local console_command = ""

@@ -741,9 +741,9 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
     	down: down,
     	space: space,
     	escape: escape,
-	    closed: closed,
+		closed: closed,
 	    
-	    // Mouse
+		// Mouse
         mouse_dx: _mouse_dx,
         mouse_dy: _mouse_dy,
         mouse_x: mouse_last_x,

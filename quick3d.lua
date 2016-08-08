@@ -118,5 +118,20 @@ function Renderer.create(self, db_filename, display)
 end
 
 function Renderer.render(self, shader, camera, display)
-  wrapper.render(self.struct, shader, camera.struct, display.struct)
+  wrapper.render(self.struct, shader.struct, camera.struct, display.struct)
 end
+
+
+-- Shader object wrapper
+Shader = {}
+Shader.__index = Shader
+
+function Shader.create(self, name, db_filename, renderer, display)
+  local shader = {}
+  setmetatable(shader, Shader)
+  local dbloader = wrapper.create_db_loader(db_filename)
+  self.struct = wrapper.get_shader_from_db_loader(name, dbloader, renderer.struct, display.struct)
+  wrapper.free_db_loader(dbloader)
+  return shader
+end
+
