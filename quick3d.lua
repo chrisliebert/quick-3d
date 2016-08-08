@@ -43,6 +43,48 @@ function quick3d_init()
   return wrapper
 end
 
+-- Load LUA code from a string
+function load_string(command)
+  -- Load code in a way that supports multiple versions of LUA
+  -- See http://stackoverflow.com/questions/9268954/lua-pass-context-into-loadstring
+  
+  if setenv and loadstring then
+    -- Lua 5.1/5.2
+    local context = {}
+    setmetatable(context, { __index = _G })
+    context.string = string
+    context.table = table
+    local f = loadstring(command)
+    if f == nil then return nil end
+    -- The enviroment must be set in order to access the scripts global variables
+    setenv(f, context)
+    return f
+  else
+    -- Lua >= 5.3
+    local f = load(command, "function() " ..command .. " end", "t", _ENV)
+    return f
+  end
+end
+
+-- Evaluate an expression or function
+function eval(command)
+  local f = load_string(command)
+  if f == nil then
+    -- If f is nill, it could still be an expression in which case we return it and print the value 
+    f = load_string("return " .. command)
+    assert(f)
+    result = f()
+    print("Expression returned "..result)
+  else
+    -- Otherwise we just call the function
+    local result = f()
+    if not result == nil then
+      -- If the function returns a value, print it
+      print("Function returned ".. result)
+    end
+  end
+end
+
 -- Camera object wrapper
 Camera = {}
 Camera.__index = Camera

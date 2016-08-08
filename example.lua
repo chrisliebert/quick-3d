@@ -33,40 +33,8 @@ function quit()
   os.exit() -- Removing this call will cause Lua to crash on exit.
 end
 
--- Put all the global variables in the command context
-local function get_context()
-  local context = {}
-  setmetatable(context, { __index = _G })
-  context.string = string
-  context.table = table
-  return context
-end
-
-local function execute_command(command, environment)
-  -- TODO: only use the depricated setenv()/loadstring() if load() is unavailible
-  -- See http://stackoverflow.com/questions/9268954/lua-pass-context-into-loadstring
-
-  local f = loadstring(command)
-  if f == nil then
-    -- If f is nill, it could still be an expression in which case we return it and print the value 
-    f = loadstring("return " .. command)
-    assert(f)
-    -- The enviroment must be set in order to access the scripts global variables
-    setfenv(f, environment)
-    result = f()
-    print("Expression returned "..result)
-  else
-    -- Otherwise we just call the function
-    local result = f()
-    if not result == nil then
-      -- If the function returns a value, print it
-      print("Function returned ".. result)
-    end
-  end
-end
-
 function demo()
-  
+  -- Make the camera move in a circle, user can abort by pressing space
   for i=1000,10000 do 
     if i < 1040 then camera:move_right(0.001) end
     camera:move_forward(i * 0.0001) camera:aim(i * 0.001, 0)
@@ -89,8 +57,7 @@ while not quick3d.console_is_closed(console) do
   -- Read from console buffer
   console_command = quick3d.read_console_buffer(console)
   if string.len(console_command) > 0 then	
-    local context = get_context()
-    local success, errormsg = pcall(execute_command, console_command, context)
+    local success, errormsg = pcall(eval, console_command)
     if not success then
       print ("Failed to execute command: " .. console_command)
       print("Error: " .. errormsg)
