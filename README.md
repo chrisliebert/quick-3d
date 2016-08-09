@@ -23,10 +23,13 @@ With Quick3D, it is possible to leverage GPU technology in a way that is likely 
 
 Quick3D includes an example LUA script that demonstrates dynamic instramentation by providing a console which allows the programmer to write scripts and issue commands while the application is running. The camera can also be rotated in the direction that the mouse is dragged. The camera can be moved forward, backward, left and right by using the arrow keys or W/A/S/D on the keyboard. In addition to the LUA example, there is a more secure example written in Rust that is similar but without the ability to execute commands while the program is running.
 
-**Setting up a Quick3D Development Environment**
+
 Make sure the following dependencies are installed, most Linux distributions already these libraries with a package manager.
+
+
+
 | Dependency | Website |
-| :------- | :---- |
+|:-----------|:--------|
 | A C compiler such as GCC or Clang and the `make` tool | https://gcc.gnu.org/ |
 | SQLite developer libraries | https://www.sqlite.org/ |
 | SQLite Browser (Optional, this is a useful tool for reading and writing SQLite databases) |
@@ -35,29 +38,36 @@ Make sure the following dependencies are installed, most Linux distributions alr
 | SWIG the Simplified Wrapper Interface Generator | http://www.swig.org/ |
 
 **Note for Windows Users**
+
 Quick3D can also be build on windows using the GNU ABI. The MSVC ABI is not tested.
 
 **Building the Rust Library**
+
 `cargo build`
 
 **Running the Rust Example**
+
 `cargo run`
 
 **A Note about Load Shared Libraries**
+
 If you are using Linux, it is likely that your operating system does not know where to find the shared libraries.
 This can be resolved by updating the LD_LIBRARY_PATH environment variable: `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.` The operating system will now search the current directory when attempting to load shared libraries. After building the debug library with `cargo build` it is recommended that you create a symlink to target/debug/libquick3d.so, i.e `ln -s target/debug/libquick3d.so`
 On Windows, quick3d.dll is copied to the current directory if it is not found when running Quick3D from LUA which is already configured to be in the search path for shared libraries.
 
 **Building the LUA Library**
+
 The LUA wrapper for Quick3D will try to build the debug shared library automatically if no library is present, making the following step optional:
 `make lualib`
 This should produce quick3dwrapper.so on a Unix system and quick3dwrapper.dll on Windows.
 If this command fails, you might need to modify the paths/commands in Makefile for LUA and SWIG.
 
 **Running the LUA Example**
+
 `lua example.lua` or `luajit example.lua`
 
 Once example.lua is running, code can be entered directly into the console including functions, statements and expressions. For example you can type `f = function() print("Hello World") end` and now f() will be available in the console as `f()`. If you enter `5+5`, the result will be evaluated and printed. It is also create new variables or access global variables, for example `x = screen_width / screen_height` would store the result of the quotient of global script variables screen_width and screen_height in a new variable x.
 
   **License:**
+  
   This program and it's source are available under the "MIT License" please see LICENSE
