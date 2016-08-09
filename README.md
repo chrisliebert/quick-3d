@@ -17,15 +17,14 @@ The goal of Quick3D is to replace the need for C++ in hardware-accelerated 3D gr
 | Example for Android | *Nice to have | A basic example for android |
 
 
-Often applications will need to access large amounts of information that is subject to change. This issue is often addressed by leveraging existing database systems that have been optimized and tested extensively. SQLite is a lightwieght database system that will store arbirary amounts of data in a single file for convenience. Rusqlite is the Rust API (Application Programming Interface) that is used to read SQLite databases that can be produced from Wavefront .obj files using a tool called Obj2sqlite.
+Often applications will need to access large amounts of information that is subject to change. This issue is often addressed by leveraging existing database systems that have been optimized and tested extensively. SQLite is a lightwieght database system that will store arbirary amounts of data in a single file for convenience. Rusqlite is a Rust API that is used to read SQLite databases that can be produced from Wavefront .obj files using a tool called Obj2sqlite.
 
-With Quick3D, it is possible to leverage GPU technology in a way that is likely to run on a wide range of devices while maintaining code readability. There is considerable room for optimization in the Quick3D library and future versions have the potential to improve performance of applications written using version 0.1 of the library.
+With Quick3D, it is possible to leverage GPU technology in a way that is likely to run on a wide range of devices while maintaining code readability. There is considerable room for optimization in the Quick3D library and future versions have the potential to improve performance of applications written using version 0.1.
 
-Quick3D includes an example LUA script that demonstrates dynamic instramentation by providing a console which allows the programmer to write scripts and issue commands while the application is running. The camera can also be rotated in the direction that the mouse is dragged. The camera can be moved forward, backward, left and right by using the arrow keys or W/A/S/D on the keyboard. In addition to the LUA example, there is a more secure example written in Rust that is similar but without the ability to execute commands while the program is running.
+Quick3D includes an example LUA script that demonstrates dynamic instramentation by providing a console which allows the programmer to write scripts and issue commands while the application is running. The camera can also be rotated in the direction that the mouse is dragged. The camera can be moved forward, backward, left and right by using the arrow keys or W/A/S/D on the keyboard. In addition to the LUA example, there is a more secure example written in Rust that is similar but lacking the ability to execute commands.
 
 
 Make sure the following dependencies are installed, most Linux distributions already include these libraries with a package manager.
-
 
 
 | Dependency | Website |
@@ -39,7 +38,7 @@ Make sure the following dependencies are installed, most Linux distributions alr
 
 **Note for Windows Users**
 
-Quick3D can also be build on windows using the GNU ABI. The MSVC ABI is not tested.
+Quick3D can also be built for Windows using the GNU ABI. The MSVC ABI is not tested.
 
 **Building the Rust Library**
 
@@ -53,14 +52,14 @@ Quick3D can also be build on windows using the GNU ABI. The MSVC ABI is not test
 
 If you are using Linux, it is likely that your operating system does not know where to find the shared libraries.
 This can be resolved by updating the LD_LIBRARY_PATH environment variable: `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.` The operating system will now search the current directory when attempting to load shared libraries. After building the debug library with `cargo build` it is recommended that you create a symlink to target/debug/libquick3d.so, i.e `ln -s target/debug/libquick3d.so .`
-On Windows, quick3d.dll is copied to the current directory if it is not found when running Quick3D from LUA which is already configured to be in the search path for shared libraries.
+On Windows, quick3d.dll is copied to the current directory if it is not found when running Quick3D from LUA which is already configured to be in the search path for shared libraries..
 
 **Building the LUA Library**
 
 The LUA wrapper for Quick3D will try to build the debug shared library automatically if no library is present, making the following step optional:
 `make lualib`
 This should produce quick3dwrapper.so on a Unix system and quick3dwrapper.dll on Windows.
-If this command fails, you might need to modify the paths/commands in Makefile for LUA and SWIG.
+If this command fails, you can modify the paths/commands in Makefile for LUA and SWIG.
 
 **Running the LUA Example**
 
