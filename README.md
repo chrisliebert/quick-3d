@@ -32,7 +32,7 @@ Make sure the following dependencies are installed, most Linux distributions alr
 |:-----------|:--------|
 | A C compiler such as GCC or Clang and the `make` tool | https://gcc.gnu.org/ |
 | SQLite developer libraries | https://www.sqlite.org/ |
-| SQLite Browser (Optional, this is a useful tool for reading and writing SQLite databases) |
+| SQLite Browser (Optional, this is a useful tool for reading and writing SQLite databases) | http://sqlitebrowser.org/ |
 | The Rust compiler (1.8 or greater) | https://www.rust-lang.org |
 | LUA version 5.1 or greater with the developer libraries (LuaJIT 2.0 or greater is also supported) | https://www.lua.org/ or http://luajit.org/ |
 | SWIG the Simplified Wrapper Interface Generator | http://www.swig.org/ |
