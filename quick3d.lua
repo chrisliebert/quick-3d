@@ -123,7 +123,6 @@ end
 
 function Camera.update(self)
   wrapper.camera_update(self.struct)
-  wrapper.camera_update(self.struct)
 end
 
 -- Display object wrapper
