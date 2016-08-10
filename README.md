@@ -21,7 +21,7 @@ Often applications will need to access large amounts of information that is subj
 
 With Quick3D, it is possible to leverage GPU technology in a way that is likely to run on a wide range of devices while maintaining code readability. There is considerable room for optimization in the Quick3D library and future versions have the potential to improve performance of applications written using version 0.1.
 
-Quick3D includes an example LUA script that demonstrates dynamic instramentation by providing a console which allows the programmer to write scripts and issue commands while the application is running. The camera can also be rotated in the direction that the mouse is dragged. The camera can be moved forward, backward, left and right by using the arrow keys or W/A/S/D on the keyboard. In addition to the LUA example, there is a more secure example written in Rust that is similar but lacking the ability to execute commands.
+Quick3D includes an example LUA script that demonstrates dynamic instrumentation by providing a console which allows the programmer to write scripts and issue commands while the application is running. The camera can also be rotated in the direction that the mouse is dragged. The camera can be moved forward, backward, left and right by using the arrow keys or W/A/S/D on the keyboard. In addition to the LUA example, there is a more secure example written in Rust that is similar but lacking the ability to execute commands.
 
 
 Make sure the following dependencies are installed, most Linux distributions already include these libraries with a package manager.
