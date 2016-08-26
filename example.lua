@@ -3,10 +3,6 @@
 -- Look for lua modules in the current directory
 package.path = package.path .. ";./?.lua"
 
--- Ensure stdout is captured in all threads
--- This improves support on consoles such as msys
-io.stdout:setvbuf 'no'
-
 -- Include and initialise the Quick3D LUA API
 require "quick3d"
 

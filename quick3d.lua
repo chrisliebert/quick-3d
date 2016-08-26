@@ -66,6 +66,10 @@ function load_string(command)
   end
 end
 
+-- Ensure stdout is captured in all threads
+-- This improves support on consoles such as msys
+io.stdout:setvbuf 'no'
+
 -- Evaluate an expression or function
 function eval(command)
   local f = load_string(command)
