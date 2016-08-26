@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# Copyright (C) 2016 Chris Liebert
 import quick3dwrapper as q3d
 
 screen_width, screen_height = 640, 480
