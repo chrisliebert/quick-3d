@@ -50,65 +50,65 @@ pub struct ConsoleInput {
 /// /* C representation */
 /// #include <stdbool.h>
 /// typedef struct Input {
-///		bool key_1, key_2, key_3, key_4, key_5, key_6, key_7, key_8, key_9, key_0;
-///		bool a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
-///		bool up, left, right, down;
-///		bool space;
-///		bool escape;
-///		bool closed;
-///		int mouse_dx, mouse_dy;
-///		int mouse_x, mouse_y;
-///		bool mouse_left, mouse_right;
+///        bool key_1, key_2, key_3, key_4, key_5, key_6, key_7, key_8, key_9, key_0;
+///        bool a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
+///        bool up, left, right, down;
+///        bool space;
+///        bool escape;
+///        bool closed;
+///        int mouse_dx, mouse_dy;
+///        int mouse_x, mouse_y;
+///        bool mouse_left, mouse_right;
 ///} Input;
 /// ```
 ///
 #[repr(C)]
 pub struct Input {
-	pub key_1: bool,
-	pub key_2: bool,
-	pub key_3: bool,
-	pub key_4: bool,
-	pub key_5: bool,
-	pub key_6: bool,
-	pub key_7: bool,
-	pub key_8: bool,
-	pub key_9: bool,
-	pub key_0: bool,
-	
-	pub a: bool,
-	pub b: bool,
-	pub c: bool,
-	pub d: bool,
-	pub e: bool,
-	pub f: bool,
-	pub g: bool,
-	pub h: bool,
-	pub i: bool,
-	pub j: bool,
-	pub k: bool,
-	pub l: bool,
-	pub m: bool,
-	pub n: bool,
-	pub o: bool,
-	pub p: bool,
-	pub q: bool,
-	pub r: bool,
-	pub s: bool,
-	pub t: bool,
-	pub u: bool,
-	pub v: bool,
-	pub w: bool,
-	pub x: bool,
-	pub y: bool,
-	pub z: bool,
-	
-	pub up: bool,
-	pub left: bool,
-	pub right: bool,
-	pub down: bool,
-	
-	pub space: bool,
-	pub escape: bool,
+    pub key_1: bool,
+    pub key_2: bool,
+    pub key_3: bool,
+    pub key_4: bool,
+    pub key_5: bool,
+    pub key_6: bool,
+    pub key_7: bool,
+    pub key_8: bool,
+    pub key_9: bool,
+    pub key_0: bool,
+    
+    pub a: bool,
+    pub b: bool,
+    pub c: bool,
+    pub d: bool,
+    pub e: bool,
+    pub f: bool,
+    pub g: bool,
+    pub h: bool,
+    pub i: bool,
+    pub j: bool,
+    pub k: bool,
+    pub l: bool,
+    pub m: bool,
+    pub n: bool,
+    pub o: bool,
+    pub p: bool,
+    pub q: bool,
+    pub r: bool,
+    pub s: bool,
+    pub t: bool,
+    pub u: bool,
+    pub v: bool,
+    pub w: bool,
+    pub x: bool,
+    pub y: bool,
+    pub z: bool,
+    
+    pub up: bool,
+    pub left: bool,
+    pub right: bool,
+    pub down: bool,
+    
+    pub space: bool,
+    pub escape: bool,
     pub closed: bool,
     
     // Mouse
@@ -124,42 +124,42 @@ pub struct Input {
 ///
 #[no_mangle]
 pub extern "C" fn camera_aim(camera: &Camera, x: libc::c_double, y: libc::c_double) {
-	camera.aim(x as f64, y as f64);
+    camera.aim(x as f64, y as f64);
 }
 
 /// `extern void camera_move_forward(Camera camera, float amount);`
 ///
 #[no_mangle]
 pub extern "C" fn camera_move_forward(camera: &Camera, amount: libc::c_float) {
-	camera.move_forward(amount as f32);
+    camera.move_forward(amount as f32);
 }
 
 /// `extern void camera_move_backward(Camera camera, float amount);`
 ///
 #[no_mangle]
 pub extern "C" fn camera_move_backward(camera: &Camera, amount: libc::c_float) {
-	camera.move_backward(amount as f32);
+    camera.move_backward(amount as f32);
 }
 
 /// `extern void camera_move_left(Camera camera, float amount);`
 ///
 #[no_mangle]
 pub extern "C" fn camera_move_left(camera: &Camera, amount: libc::c_float) {
-	camera.move_left(amount as f32);
+    camera.move_left(amount as f32);
 }
 
 /// `extern void camera_move_right(Camera camera, float amount);`
 ///
 #[no_mangle]
 pub extern "C" fn camera_move_right(camera: &Camera, amount: libc::c_float) {
-	camera.move_right(amount as f32);
+    camera.move_right(amount as f32);
 }
 
 /// `extern void camera_update(Camera camera);`
 ///
 #[no_mangle]
 pub extern "C" fn camera_update(camera: &Camera) {
-	camera.update();
+    camera.update();
 }
 
 /// `extern Camera create_camera(float screen_width, float screen_height);`
@@ -173,47 +173,47 @@ pub extern "C" fn create_camera(screen_width: f32, screen_height: f32) -> Box<Ca
 ///
 #[no_mangle]
 pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
-	use std::thread;
-	let buffer_arc: Arc<Mutex<String>> = Arc::new(Mutex::new(String::new()));
-	let buffer_arc_copy = buffer_arc.clone();
-	let finished_arc: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
-	let finished_arc_copy = finished_arc.clone();
-	{
-		// Initialize the finished value
-		let finished = finished_arc.clone();
-		let mut finished_lock = finished.lock().unwrap();
-		*finished_lock = false;
-	}
-	
-	let child = thread::spawn(move || {
-		println!("Enter command, or return to close console");
-		'console: loop {
-			let mut buffer = String::new();
-			match std::io::stdin().read_line(&mut buffer) {
-				Ok(_) => {
-					buffer = buffer
-						.replace("\r", "")
-						.replace("\n", " ");
-					if 1 == buffer.len() { break 'console };
-					let arc = buffer_arc.clone();
-					let mut writer = arc.lock().unwrap();
-					let mut new_string: String = (*writer).clone();
-					new_string.push_str(&buffer);
-					*writer = new_string;
-					std::thread::yield_now();
-				},
-				Err(e) => println!("Error: {:?}", e),
-			}
-		}
-		println!("Console closed");
-		let finished = finished_arc.clone();
-		let mut finished_lock = finished.lock().unwrap();
-		*finished_lock = true;
-	    return 0;
-	});
-	
-	std::thread::yield_now();
-	Box::new(ConsoleInput{thread_handle: child, buffer: buffer_arc_copy, finished: finished_arc_copy})
+    use std::thread;
+    let buffer_arc: Arc<Mutex<String>> = Arc::new(Mutex::new(String::new()));
+    let buffer_arc_copy = buffer_arc.clone();
+    let finished_arc: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
+    let finished_arc_copy = finished_arc.clone();
+    {
+        // Initialize the finished value
+        let finished = finished_arc.clone();
+        let mut finished_lock = finished.lock().unwrap();
+        *finished_lock = false;
+    }
+    
+    let child = thread::spawn(move || {
+        println!("Enter command, or return to close console");
+        'console: loop {
+            let mut buffer = String::new();
+            match std::io::stdin().read_line(&mut buffer) {
+                Ok(_) => {
+                    buffer = buffer
+                        .replace("\r", "")
+                        .replace("\n", " ");
+                    if 1 == buffer.len() { break 'console };
+                    let arc = buffer_arc.clone();
+                    let mut writer = arc.lock().unwrap();
+                    let mut new_string: String = (*writer).clone();
+                    new_string.push_str(&buffer);
+                    *writer = new_string;
+                    std::thread::yield_now();
+                },
+                Err(e) => println!("Error: {:?}", e),
+            }
+        }
+        println!("Console closed");
+        let finished = finished_arc.clone();
+        let mut finished_lock = finished.lock().unwrap();
+        *finished_lock = true;
+        return 0;
+    });
+    
+    std::thread::yield_now();
+    Box::new(ConsoleInput{thread_handle: child, buffer: buffer_arc_copy, finished: finished_arc_copy})
 }
 
 /// `extern DBLoader create_db_loader(const char* filename);`
@@ -242,14 +242,14 @@ pub extern "C" fn create_display(screen_width: libc::int32_t,
     unsafe {
         window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
         let display: GlutinFacade = glutin::WindowBuilder::new()
-	        //.resizable()
-	        //.with_vsync()
-	        .with_gl_debug_flag(true)
-	        .with_title(window_title)
-	        .with_visibility(true)
-	        .with_dimensions(w, h)
-	        .build_glium()
-	        .unwrap();
+            //.resizable()
+            //.with_vsync()
+            .with_gl_debug_flag(true)
+            .with_title(window_title)
+            .with_visibility(true)
+            .with_dimensions(w, h)
+            .build_glium()
+            .unwrap();
         return Box::new(display);
     }
 }
@@ -267,9 +267,9 @@ pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
 ///
 #[no_mangle]
 pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
-	let arc = console.finished.clone();
-	let mutex = arc.lock().unwrap();
-	mutex.clone()
+    let arc = console.finished.clone();
+    let mutex = arc.lock().unwrap();
+    mutex.clone()
 }
 
 /// `extern void free_camera(Camera camera);`
@@ -333,62 +333,62 @@ pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char,
 ///
 #[no_mangle]
 pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
-	static mut mouse_last_x: i32 = 0;
-	static mut mouse_last_y: i32 = 0;
-	static mut _mouse_dx: i32 = 0;
-	static mut _mouse_dy: i32 = 0;
-	static mut left_button_pressed: bool = false;
-	static mut right_button_pressed: bool = false;
-	
-	// Top numeric key states
-	static mut key_1: bool = false;
-	static mut key_2: bool = false;
-	static mut key_3: bool = false;
-	static mut key_4: bool = false;
-	static mut key_5: bool = false;
-	static mut key_6: bool = false;
-	static mut key_7: bool = false;
-	static mut key_8: bool = false;
-	static mut key_9: bool = false;
-	static mut key_0: bool = false;
-	
-	// Letter key states
-	static mut a: bool = false;
-	static mut b: bool = false;
-	static mut c: bool = false;
-	static mut d: bool = false;
-	static mut e: bool = false;
-	static mut f: bool = false;
-	static mut g: bool = false;
-	static mut h: bool = false;
-	static mut i: bool = false;
-	static mut j: bool = false;
-	static mut k: bool = false;
-	static mut l: bool = false;
-	static mut m: bool = false;
-	static mut n: bool = false;
-	static mut o: bool = false;
-	static mut p: bool = false;
-	static mut q: bool = false;
-	static mut r: bool = false;
-	static mut s: bool = false;
-	static mut t: bool = false;
-	static mut u: bool = false;
-	static mut v: bool = false;
-	static mut w: bool = false;
-	static mut x: bool = false;
-	static mut y: bool = false;
-	static mut z: bool = false;
+    static mut mouse_last_x: i32 = 0;
+    static mut mouse_last_y: i32 = 0;
+    static mut _mouse_dx: i32 = 0;
+    static mut _mouse_dy: i32 = 0;
+    static mut left_button_pressed: bool = false;
+    static mut right_button_pressed: bool = false;
+    
+    // Top numeric key states
+    static mut key_1: bool = false;
+    static mut key_2: bool = false;
+    static mut key_3: bool = false;
+    static mut key_4: bool = false;
+    static mut key_5: bool = false;
+    static mut key_6: bool = false;
+    static mut key_7: bool = false;
+    static mut key_8: bool = false;
+    static mut key_9: bool = false;
+    static mut key_0: bool = false;
+    
+    // Letter key states
+    static mut a: bool = false;
+    static mut b: bool = false;
+    static mut c: bool = false;
+    static mut d: bool = false;
+    static mut e: bool = false;
+    static mut f: bool = false;
+    static mut g: bool = false;
+    static mut h: bool = false;
+    static mut i: bool = false;
+    static mut j: bool = false;
+    static mut k: bool = false;
+    static mut l: bool = false;
+    static mut m: bool = false;
+    static mut n: bool = false;
+    static mut o: bool = false;
+    static mut p: bool = false;
+    static mut q: bool = false;
+    static mut r: bool = false;
+    static mut s: bool = false;
+    static mut t: bool = false;
+    static mut u: bool = false;
+    static mut v: bool = false;
+    static mut w: bool = false;
+    static mut x: bool = false;
+    static mut y: bool = false;
+    static mut z: bool = false;
 
-	static mut up: bool = false;
-	static mut left: bool = false;
-	static mut right: bool = false;
-	static mut down: bool = false;
-	
-	static mut space: bool = false;
-	static mut escape: bool = false;
-	
-	
+    static mut up: bool = false;
+    static mut left: bool = false;
+    static mut right: bool = false;
+    static mut down: bool = false;
+    
+    static mut space: bool = false;
+    static mut escape: bool = false;
+    
+    
     // Get the screen width and height in pixels
     let pixel_dimensions: (u32, u32) = match display.get_window() {
         Some(window) => window.get_inner_size_pixels().unwrap(),
@@ -402,15 +402,15 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
     let screen_center_y: i32 = (screen_height / 2) as i32;
     
     // The margin from the edge of the screen to allow before
-	// mouse cursor is moved to center
-	
+    // mouse cursor is moved to center
+    
     let mouse_grab_margin: i32 = screen_center_y / 2;
 
-	let mut closed = false;
+    let mut closed = false;
     
     for event in display.poll_events() {
         match event {
-        	Event::Closed => closed = true,
+            Event::Closed => closed = true,
             Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Key1)) => {
                 key_1 = true;
             }
@@ -680,7 +680,7 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
                 _mouse_dx = mouse_last_x - mx;
                 _mouse_dy = mouse_last_y - my;
                 mouse_last_x = mx;
-		        mouse_last_y = my;
+                mouse_last_y = my;
                 if left_button_pressed {
                     if mx + mouse_grab_margin >= screen_width as i32 || mx <= mouse_grab_margin {
                         let _ =
@@ -699,51 +699,51 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
         }
     }
     Input {
-    	key_1: key_1,
-    	key_2: key_2,
-    	key_3: key_3,
-    	key_4: key_4,
-    	key_5: key_5,
-    	key_6: key_6,
-    	key_7: key_7,
-    	key_8: key_8,
-    	key_9: key_9,
-    	key_0: key_0,
-    	a: a,
-    	b: b,
-    	c: c,
-    	d: d,
-    	e: e,
-    	f: f,
-    	g: g,
-    	h: h,
-    	i: i,
-    	j: j,
-    	k: k,
-    	l: l,
-    	m: m,
-    	n: n,
-    	o: o,
-    	p: p,
-    	q: q,
-    	r: r,
-    	s: s,
-    	t: t,
-    	u: u,
-    	v: v,
-    	w: w,
-    	x: x,
-    	y: y,
-    	z: z,
-    	up: up,
-    	left: left,
-    	right: right,
-    	down: down,
-    	space: space,
-    	escape: escape,
-		closed: closed,
-	    
-		// Mouse
+        key_1: key_1,
+        key_2: key_2,
+        key_3: key_3,
+        key_4: key_4,
+        key_5: key_5,
+        key_6: key_6,
+        key_7: key_7,
+        key_8: key_8,
+        key_9: key_9,
+        key_0: key_0,
+        a: a,
+        b: b,
+        c: c,
+        d: d,
+        e: e,
+        f: f,
+        g: g,
+        h: h,
+        i: i,
+        j: j,
+        k: k,
+        l: l,
+        m: m,
+        n: n,
+        o: o,
+        p: p,
+        q: q,
+        r: r,
+        s: s,
+        t: t,
+        u: u,
+        v: v,
+        w: w,
+        x: x,
+        y: y,
+        z: z,
+        up: up,
+        left: left,
+        right: right,
+        down: down,
+        space: space,
+        escape: escape,
+        closed: closed,
+        
+        // Mouse
         mouse_dx: _mouse_dx,
         mouse_dy: _mouse_dy,
         mouse_x: mouse_last_x,
@@ -757,12 +757,12 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
 ///
 #[no_mangle]
 pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *mut libc::c_char {
-	let retval: String;
-	let arc = console.buffer.clone();
-	let mut mutex = arc.lock().unwrap();
-	retval = (*mutex).clone();
-	*mutex = String::new();
-	CString::new(retval).unwrap().into_raw()
+    let retval: String;
+    let arc = console.buffer.clone();
+    let mut mutex = arc.lock().unwrap();
+    retval = (*mutex).clone();
+    *mutex = String::new();
+    CString::new(retval).unwrap().into_raw()
 }
 
 /// `extern void render(Renderer renderer, Shader shader, Camera camera, Display display);`
@@ -797,25 +797,25 @@ use std::ffi::CString;
 ///
 #[no_mangle]
 pub extern "C" fn wait_console_quit(handle: *mut ConsoleInput) {
-	let child: Box<ConsoleInput> = unsafe { Box::from_raw(handle) };
-	match child.thread_handle.join() {
-		Ok(c) => drop(c),
-		Err(e) => println!("Console thread did not return: {:?}", e),
-	}
+    let child: Box<ConsoleInput> = unsafe { Box::from_raw(handle) };
+    match child.thread_handle.join() {
+        Ok(c) => drop(c),
+        Err(e) => println!("Console thread did not return: {:?}", e),
+    }
 }
 
 /// `extern void window_hide(Display display);`
 ///
 #[no_mangle]
 pub extern "C" fn window_hide(display: &GlutinFacade) {
-	 match display.get_window() {
-        Some(w) => {
-            w.hide();
-        }
-        None => {
-            panic!("Error retrieving window");
-        }
-    };
+	match display.get_window() {
+	    Some(w) => {
+	        w.hide();
+	    }
+	    None => {
+	        panic!("Error retrieving window");
+	    }
+	};
 }
 
 /// `extern void window_show(Display display);`

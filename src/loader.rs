@@ -29,12 +29,12 @@ pub struct SceneNode {
 }
 
 impl DBLoader {
-	/// Create a new DBLoader object
+    /// Create a new DBLoader object
     pub fn new(filename: &str) -> DBLoader {
         DBLoader { filename: String::from(filename) }
     }
 
-	/// Load the contents of an SQLite datbase into a `Scene` data structure.
+    /// Load the contents of an SQLite datbase into a `Scene` data structure.
     pub fn load_scene(&self) -> Scene {
         let conn = Connection::open(Path::new(&self.filename)).unwrap();
 
@@ -43,13 +43,13 @@ impl DBLoader {
             .unwrap();
         let vertex_iter = vertex_stmt.query_map(&[], |row| {
                 Vertex8f32::from_f64(row.get(0),
-                                  row.get(1),
-                                  row.get(2),
-                                  row.get(3),
-                                  row.get(4),
-                                  row.get(5),
-                                  row.get(6),
-                                  row.get(7))
+                                     row.get(1),
+                                     row.get(2),
+                                     row.get(3),
+                                     row.get(4),
+                                     row.get(5),
+                                     row.get(6),
+                                     row.get(7))
             })
             .unwrap();
 
@@ -160,7 +160,7 @@ impl DBLoader {
         };
     }
 
-	/// Load a shader from an SQLite database
+    /// Load a shader from an SQLite database
     pub fn load_shader(&self, name: &str, glsl_version_string: &str) -> Shader {
         let conn = Connection::open(Path::new(&self.filename)).unwrap();
         let mut id_sql: String = "SELECT id FROM shader WHERE name = '".to_owned();

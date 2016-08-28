@@ -38,7 +38,7 @@ pub struct Material {
 
 /// Geometry and material information that can be rendered
 ///
-/// A `Scene` contains geometry that will be rendered along with reference materials and 
+/// A `Scene` contains geometry that will be rendered along with reference materials and
 /// textures
 ///
 pub struct Scene {
@@ -59,7 +59,7 @@ pub struct Shader {
     pub fragment_source: String,
 }
 
-/// `Vertex8f32` - The default implementation of a vertex which is buffered to 
+/// `Vertex8f32` - The default implementation of a vertex which is buffered to
 /// the graphics processing unit.
 ///
 /// `Vertex8f32` consists of a `position` attribute
@@ -77,26 +77,26 @@ pub struct Vertex8f32 {
 }
 
 impl Vertex8f32 {
-	/// Create a `Vertex3f32` from f64 values
-	///
-	pub fn from_f64(px: f64,
-	                     py: f64,
-	                     pz: f64,
-	                     nx: f64,
-	                     ny: f64,
-	                     nz: f64,
-	                     tu: f64,
-	                     tv: f64)
-	                     -> Vertex8f32 {
-	    let position: [f32; 3] = [px as f32, py as f32, pz as f32];
-	    let normal: [f32; 3] = [nx as f32, ny as f32, nz as f32];
-	    let texcoord: [f32; 2] = [tu as f32, tv as f32];
-	    Vertex8f32 {
-	        position: position,
-	        normal: normal,
-	        texcoord: texcoord,
-	    }
-	}
+    /// Create a `Vertex3f32` from f64 values
+    ///
+    pub fn from_f64(px: f64,
+                    py: f64,
+                    pz: f64,
+                    nx: f64,
+                    ny: f64,
+                    nz: f64,
+                    tu: f64,
+                    tv: f64)
+                    -> Vertex8f32 {
+        let position: [f32; 3] = [px as f32, py as f32, pz as f32];
+        let normal: [f32; 3] = [nx as f32, ny as f32, nz as f32];
+        let texcoord: [f32; 2] = [tu as f32, tv as f32];
+        Vertex8f32 {
+            position: position,
+            normal: normal,
+            texcoord: texcoord,
+        }
+    }
 }
 
 use std::cell::RefCell;
@@ -124,9 +124,9 @@ pub struct Camera {
 use std::f64::consts::FRAC_PI_2;
 
 impl Camera {
-	/// Create a new perspective `Camera` using screen_width and screen_height to calculate the
-	/// aspect ratio.
-	///
+    /// Create a new perspective `Camera` using screen_width and screen_height to calculate the
+    /// aspect ratio.
+    ///
     pub fn new(screen_width: f32, screen_height: f32) -> Camera {
         // Set up camera
         let projection_matrix =
@@ -151,8 +151,8 @@ impl Camera {
         return camera;
     }
 
-	/// Rotate a `Camera` in a relative direction perpendicular to the focal point.
-	///
+    /// Rotate a `Camera` in a relative direction perpendicular to the focal point.
+    ///
     pub fn aim(&self, x: f64, y: f64) {
         let factor = 0.01;
         let mut horizontal = *self.horizontal_angle.borrow();
@@ -177,14 +177,14 @@ impl Camera {
         *self.up.borrow_mut() = nalgebra::cross(&right, &direction);
     }
 
-	/// Move a `Camera` backward by a specified amount.
-	///
+    /// Move a `Camera` backward by a specified amount.
+    ///
     pub fn move_backward(&self, amount: f32) {
         self.move_forward(-1.0 * amount);
     }
 
-	/// Move a `Camera` forward by a specified amount.
-	///
+    /// Move a `Camera` forward by a specified amount.
+    ///
     pub fn move_forward(&self, amount: f32) {
         let direction: Vector3<f32> = *self.direction.borrow();
         let position: Vector3<f32> = *self.position.borrow();
@@ -192,14 +192,14 @@ impl Camera {
         *self.position.borrow_mut() = position + scaled_direction;
     }
 
-	/// Move a `Camera` left by a specified amount.
-	///
+    /// Move a `Camera` left by a specified amount.
+    ///
     pub fn move_left(&self, amount: f32) {
         self.move_right(-1.0 * amount);
     }
 
-	/// Move a `Camera` right by a specified amount.
-	///
+    /// Move a `Camera` right by a specified amount.
+    ///
     pub fn move_right(&self, amount: f32) {
         let right: Vector3<f32> = *self.right.borrow();
         let position: Vector3<f32> = *self.position.borrow();
@@ -207,8 +207,8 @@ impl Camera {
         *self.position.borrow_mut() = position + scaled_right;
     }
 
-	/// Once a camera is moved or aimed, the modelview matrix must be re-calculated.
-	///
+    /// Once a camera is moved or aimed, the modelview matrix must be re-calculated.
+    ///
     pub fn update(&self) {
         let position: Vector3<f32> = *self.position.borrow();
         let direction: Vector3<f32> = *self.direction.borrow();
