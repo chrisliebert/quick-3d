@@ -4,6 +4,10 @@
 name = "quick3d"
 version = "0.1.0"
 authors = ["chrisliebert <liebert@pdx.edu>"]
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+]
 
 [lib]
 name = "quick3d"
