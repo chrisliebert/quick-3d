@@ -4,10 +4,18 @@
 name = "quick3d"
 version = "0.1.1"
 authors = ["chrisliebert <liebert@pdx.edu>"]
+keywords = ["3D", "Glium", "OpenGL", "graphics"]
+description = "A 3D rendering framework written in Rust."
 include = [
-    "**/*.rs",
+    "src/common.rs",
+	"src/lib.rs",
+	"src/loader.rs",
+	"src/renderer.rs",
     "Cargo.toml",
 ]
+readme = "README.md"
+repository = "repository"
+license-file = "LICENSE"
 
 [lib]
 name = "quick3d"
