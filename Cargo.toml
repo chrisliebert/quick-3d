@@ -14,7 +14,7 @@ include = [
     "Cargo.toml",
 ]
 readme = "README.md"
-repository = "repository"
+repository = "https://github.com/chrisliebert/quick-3d.git"
 license-file = "LICENSE"
 
 [lib]
