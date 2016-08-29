@@ -11,6 +11,7 @@ include = [
 	"src/lib.rs",
 	"src/loader.rs",
 	"src/renderer.rs",
+	"src/example.rs",
     "Cargo.toml",
 ]
 readme = "README.md"
