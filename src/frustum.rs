@@ -3,7 +3,7 @@
 
 #[derive(Debug)]
 pub struct Frustum {
-    // left right bottom to near and far planes
+    // left right bottom top near and far planes
     planes: [[f32; 4]; 6],
 }
 
