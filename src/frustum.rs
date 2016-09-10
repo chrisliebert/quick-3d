@@ -1,3 +1,5 @@
+// Copyright (C) 2016 Chris Liebert
+
 // Frustum extracting and testing algorithm used from
 // http://www.racer.nl/reference/vfc_markmorley.htm
 
