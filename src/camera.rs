@@ -1,3 +1,5 @@
+// Copyright (C) 2016 Chris Liebert
+
 use nalgebra;
 use nalgebra::{Eye, Isometry3, Matrix4, PerspectiveMatrix3, ToHomogeneous, Vector3};
 
