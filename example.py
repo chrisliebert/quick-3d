@@ -12,7 +12,7 @@ def init():
 
 def destroy(display, camera):
     q3d.free_display(display)
-	q3d.free_camera(camera)
+    q3d.free_camera(camera)
 
 def main():
     display, camera, console_reader = init()
