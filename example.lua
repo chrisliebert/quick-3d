@@ -24,6 +24,7 @@ function quit()
   quick3d.free_shader(shader.struct)
   quick3d.free_renderer(renderer.struct)
   quick3d.free_display(display.struct)
+  quick3d.free_display(camera.struct)
   collectgarbage()
   os.exit() -- Removing this call will cause Lua to crash on exit.
 end

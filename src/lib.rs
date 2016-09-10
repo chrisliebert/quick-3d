@@ -281,6 +281,13 @@ pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
     mutex.clone()
 }
 
+/// `extern void free_camera(Camera memory);`
+///
+#[no_mangle]
+pub extern "C" fn free_camera(ptr: *mut Camera) {
+    let box_ptr: Box<Camera> = unsafe { Box::from_raw(ptr) };
+    drop(box_ptr)
+}
 
 /// `extern void free_db_loader(DBLoader dbloader);`
 ///

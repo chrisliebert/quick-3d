@@ -46,6 +46,7 @@ extern Display create_display(int screen_width, int screen_height, const char* t
 extern Renderer create_renderer_from_db_loader(DBLoader loader, Display display);
 extern bool console_is_closed(ConsoleInput console);
 
+extern void free_camera(Camera camera);
 extern void free_db_loader(DBLoader dbloader);
 extern void free_display(Display memory);
 extern void free_renderer(Renderer renderer);
