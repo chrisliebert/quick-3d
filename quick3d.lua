@@ -94,8 +94,7 @@ Camera = {}
 Camera.__index = Camera
 
 function Camera.aim(self, x, y)
-  wrapper.camera_aim(self.struct, x, y)
-  self:update()
+  self.struct = wrapper.camera_aim(self.struct, x, y)
 end
 
 function Camera.create(self, screen_width, screen_height)
@@ -106,28 +105,21 @@ function Camera.create(self, screen_width, screen_height)
 end
 
 function Camera.move_forward(self, amount)
-  wrapper.camera_move_forward(self.struct, amount)
-  self:update()
+  self.struct = wrapper.camera_move_forward(self.struct, amount)
 end
 
 function Camera.move_backward(self, amount)
-  wrapper.camera_move_backward(self.struct, amount)
-  self:update()
+  self.struct = wrapper.camera_move_backward(self.struct, amount)
 end
 
 function Camera.move_left(self, amount)
-  wrapper.camera_move_left(self.struct, amount)
-  self:update()
+  self.struct = wrapper.camera_move_left(self.struct, amount)
 end
 
 function Camera.move_right(self, amount)
-  wrapper.camera_move_right(self.struct, amount)
-  self:update()
+  self.struct = wrapper.camera_move_right(self.struct, amount)
 end
 
-function Camera.update(self)
-  wrapper.camera_update(self.struct)
-end
 
 -- Display object wrapper
 Display = {}

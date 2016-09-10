@@ -5,9 +5,10 @@
 #[macro_use]
 extern crate glium;
 
+pub mod frustum;
 pub mod common;
-
 pub mod loader;
+pub mod camera;
 #[macro_use]
 pub mod renderer;
 
@@ -23,7 +24,7 @@ use glium::glutin::{ElementState, Event, MouseButton, VirtualKeyCode};
 use glium::DisplayBuild;
 use glium::backend::glutin_backend::GlutinFacade;
 
-use common::Camera;
+use camera::Camera;
 use loader::DBLoader;
 use renderer::Renderer;
 
@@ -123,43 +124,51 @@ pub struct Input {
 /// `extern void camera_aim(Camera camera, double x, double y);`
 ///
 #[no_mangle]
-pub extern "C" fn camera_aim(camera: &Camera, x: libc::c_double, y: libc::c_double) {
-    camera.aim(x as f64, y as f64);
+pub extern "C" fn camera_aim(camera: *mut Camera, x: libc::c_double, y: libc::c_double) -> Box<Camera> {
+    let camera: Box<Camera> = unsafe { Box::from_raw(camera) };
+    let new_camera = Box::new(camera.aim(x as f64, y as f64));
+    drop(camera);
+    new_camera
 }
 
 /// `extern void camera_move_forward(Camera camera, float amount);`
 ///
 #[no_mangle]
-pub extern "C" fn camera_move_forward(camera: &Camera, amount: libc::c_float) {
-    camera.move_forward(amount as f32);
+pub extern "C" fn camera_move_forward(camera: *mut Camera, amount: libc::c_float) -> Box<Camera> {
+    let camera: Box<Camera> = unsafe { Box::from_raw(camera) };
+    let new_camera = Box::new(camera.move_forward(amount as f32));
+    drop(camera);
+    new_camera
 }
 
 /// `extern void camera_move_backward(Camera camera, float amount);`
 ///
 #[no_mangle]
-pub extern "C" fn camera_move_backward(camera: &Camera, amount: libc::c_float) {
-    camera.move_backward(amount as f32);
+pub extern "C" fn camera_move_backward(camera: *mut Camera, amount: libc::c_float) -> Box<Camera> {
+    let camera: Box<Camera> = unsafe { Box::from_raw(camera) };
+    let new_camera = Box::new(camera.move_backward(amount as f32));
+    drop(camera);
+    new_camera
 }
 
 /// `extern void camera_move_left(Camera camera, float amount);`
 ///
 #[no_mangle]
-pub extern "C" fn camera_move_left(camera: &Camera, amount: libc::c_float) {
-    camera.move_left(amount as f32);
+pub extern "C" fn camera_move_left(camera: *mut Camera, amount: libc::c_float) -> Box<Camera> {
+    let camera: Box<Camera> = unsafe { Box::from_raw(camera) };    
+    let new_camera = Box::new(camera.move_left(amount as f32));
+    drop(camera);
+    new_camera
 }
 
 /// `extern void camera_move_right(Camera camera, float amount);`
 ///
 #[no_mangle]
-pub extern "C" fn camera_move_right(camera: &Camera, amount: libc::c_float) {
-    camera.move_right(amount as f32);
-}
-
-/// `extern void camera_update(Camera camera);`
-///
-#[no_mangle]
-pub extern "C" fn camera_update(camera: &Camera) {
-    camera.update();
+pub extern "C" fn camera_move_right(camera: *mut Camera, amount: libc::c_float) -> Box<Camera> {
+    let camera: Box<Camera> = unsafe { Box::from_raw(camera) };   
+    let new_camera = Box::new(camera.move_right(amount as f32));
+    drop(camera);
+    new_camera
 }
 
 /// `extern Camera create_camera(float screen_width, float screen_height);`
@@ -272,13 +281,6 @@ pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
     mutex.clone()
 }
 
-/// `extern void free_camera(Camera camera);`
-///
-#[no_mangle]
-pub extern "C" fn free_camera(ptr: *mut Camera) {
-    let box_ptr: Box<Camera> = unsafe { Box::from_raw(ptr) };
-    drop(box_ptr)
-}
 
 /// `extern void free_db_loader(DBLoader dbloader);`
 ///

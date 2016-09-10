@@ -34,12 +34,11 @@ typedef struct Input {
 	bool mouse_left, mouse_right;
 } Input;
 
-extern void camera_aim(Camera camera, double x, double y);
-extern void camera_move_forward(Camera camera, float amount);
-extern void camera_move_backward(Camera camera, float amount);
-extern void camera_move_left(Camera camera, float amount);
-extern void camera_move_right(Camera camera, float amount);
-extern void camera_update(Camera camera);
+extern Camera camera_aim(Camera camera, double x, double y);
+extern Camera camera_move_forward(Camera camera, float amount);
+extern Camera camera_move_backward(Camera camera, float amount);
+extern Camera camera_move_left(Camera camera, float amount);
+extern Camera camera_move_right(Camera camera, float amount);
 extern Camera create_camera(float screen_width, float screen_height);
 extern ConsoleInput create_console_reader();
 extern DBLoader create_db_loader(const char* filename);
@@ -47,7 +46,6 @@ extern Display create_display(int screen_width, int screen_height, const char* t
 extern Renderer create_renderer_from_db_loader(DBLoader loader, Display display);
 extern bool console_is_closed(ConsoleInput console);
 
-extern void free_camera(Camera camera);
 extern void free_db_loader(DBLoader dbloader);
 extern void free_display(Display memory);
 extern void free_renderer(Renderer renderer);

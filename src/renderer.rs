@@ -7,8 +7,9 @@ use std::collections::HashMap;
 use std::io::Error;
 use std::io::ErrorKind;
 
+use camera::Camera;
 use common;
-use common::{Camera, Mesh, Scene, Shader, Vertex8f32};
+use common::{Mesh, Scene, Shader, Vertex8f32};
 use loader::DBLoader;
 
 use glium::backend::glutin_backend::GlutinFacade;
@@ -222,8 +223,8 @@ impl Renderer {
                 }
             }
             let uniforms: glium::uniforms::UniformsStorage<_, _> = uniform! {
-                projection: *camera.projection_matrix.borrow(),
-                modelview: *camera.modelview_matrix.borrow(),
+                projection: camera.projection_matrix,
+                modelview: camera.modelview_matrix,
                 light_position_worldspace: [2.0, 10.0, 1.0f32],
                 diffuse: diffuse,
                 diffuse_texture: opengl_texture,

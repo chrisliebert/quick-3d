@@ -21,7 +21,6 @@ camera_speed = 0.01
 mouse_factor = 0.01
 
 function quit()
-  quick3d.free_camera(camera.struct)
   quick3d.free_shader(shader.struct)
   quick3d.free_renderer(renderer.struct)
   quick3d.free_display(display.struct)

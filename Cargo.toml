@@ -7,12 +7,12 @@ authors = ["chrisliebert <liebert@pdx.edu>"]
 keywords = ["3D", "Glium", "OpenGL", "graphics"]
 description = "A 3D rendering framework written in Rust."
 include = [
-    "src/common.rs",
+	"src/common.rs",
 	"src/lib.rs",
 	"src/loader.rs",
 	"src/renderer.rs",
 	"src/example.rs",
-    "Cargo.toml",
+	"Cargo.toml",
 ]
 readme = "README.md"
 repository = "https://github.com/chrisliebert/quick-3d.git"

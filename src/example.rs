@@ -11,7 +11,8 @@ use glium::DisplayBuild;
 use nalgebra::Matrix4;
 use std::io::Error;
 
-use quick3d::common::{Camera, Mesh, Scene};
+use quick3d::camera::Camera;
+use quick3d::common::{Mesh, Scene};
 use quick3d::loader::DBLoader;
 use quick3d::renderer;
 
@@ -35,7 +36,7 @@ fn main() {
         .build_glium()
         .unwrap();
 
-    let camera: Camera = Camera::new(screen_width as f32, screen_height as f32);
+    let mut camera: Camera = Camera::new(screen_width as f32, screen_height as f32);
     let renderer = renderer::Renderer::new(&display, scene);
 
     // Attempt to load GLSL version 330 if it is supported
@@ -91,7 +92,6 @@ fn main() {
     let mouse_grab_margin: i32 = screen_center_y / 2;
 
     'running: loop {
-        camera.update();
         renderer.render(&display, &shader_program, &camera);
 
         // Check for events
@@ -108,13 +108,13 @@ fn main() {
                     _camera_forward_speed = 0.0;
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::A)) => {
-                    camera.move_left(1.0);
+                     camera = camera.move_left(1.0);
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::S)) => {
-                    camera.move_backward(1.0);
+                     camera = camera.move_backward(1.0);
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::D)) => {
-                    camera.move_right(1.0);
+                    camera = camera.move_right(1.0);
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::I)) => {
                     torus_vertical_speed = 0.001f32;
@@ -153,7 +153,7 @@ fn main() {
                     mouse_last_y = y;
                     if left_button_pressed {
                         // Rotate the camera if the left mouse button is pressed
-                        camera.aim(_mouse_dx as f64, _mouse_dy as f64);
+                        camera = camera.aim(_mouse_dx as f64, _mouse_dy as f64);
 
                         if x + mouse_grab_margin >= screen_width as i32 || x <= mouse_grab_margin {
                             let _ = window.set_cursor_position(screen_center_x, y);
@@ -171,7 +171,7 @@ fn main() {
             }
         }
 
-        camera.move_forward(_camera_forward_speed * 0.01);
+        camera = camera.move_forward(_camera_forward_speed * 0.01);
 
         // Move the torus (if found) based on changes from keyboard input
         match torus {
