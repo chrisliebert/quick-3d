@@ -1,4 +1,5 @@
-/* Copyright 2016 Chris Liebert */
+/* Copyright (C) 2016 Chris Liebert */
+
 #ifndef _QUICK3D_H_
 #define _QUICK3D_H_
 
