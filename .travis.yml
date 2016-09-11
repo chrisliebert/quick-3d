@@ -9,6 +9,6 @@ matrix:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y cmake libsqlite3-dev swig2.0 libluajit-5.1-dev luajit
-after_install:
+script:
   - cd examples/Lua
   - cargo build --verbose
