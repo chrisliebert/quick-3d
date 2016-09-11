@@ -1,0 +1,14 @@
+[package]
+name = "quick3dwrapper"
+version = "0.1.0"
+authors = ["Chris Liebert <liebert@pdx.edu>"]
+build = "build.rs"
+
+[build-dependencies]
+cmake = "0.1"
+
+[dependencies]
+
+[lib]
+name = "quick3dwrappertest"
+path = "test.rs"
