@@ -11,8 +11,6 @@ pub struct Frustum {
 
 impl Frustum {
     pub fn create(&self, modl: &[f32; 16], proj: &[f32; 16]) -> Frustum {
-        println!("Extracting frustum");
-
         // Combine the two matrices (multiply projection by modelview)
         let clip: [f32; 16] =
             [modl[0] * proj[0] + modl[1] * proj[4] + modl[2] * proj[8] + modl[3] * proj[12],
@@ -97,7 +95,7 @@ impl Frustum {
         }
     }
 
-    pub fn cube_inside(&self, x: f32, y: f32, z: f32, size: f32) -> bool {
+    pub fn cube_intersecting(&self, x: f32, y: f32, z: f32, size: f32) -> bool {
         for p in 0..6 {
             if !((self.planes[p][0] * (x - size) + self.planes[p][1] * (y - size) + self.planes[p][2] * (z - size) + self.planes[p][3] > 0.0f32) ||
                  (self.planes[p][0] * (x + size) + self.planes[p][1] * (y - size) + self.planes[p][2] * (z - size) + self.planes[p][3] > 0.0f32) ||
@@ -113,7 +111,7 @@ impl Frustum {
         true
     }
 
-    pub fn point_inside(&self, x: f32, y: f32, z: f32) -> bool {
+    pub fn point_intersecting(&self, x: f32, y: f32, z: f32) -> bool {
         for p in 0..6 {
             if self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z <= 0.0f32 {
                 return false;
@@ -122,7 +120,7 @@ impl Frustum {
         true
     }
 
-    pub fn sphere_inside(&self, x: f32, y: f32, z: f32, r: f32) -> bool {
+    pub fn sphere_intersecting(&self, x: f32, y: f32, z: f32, r: f32) -> bool {
         for p in 0..6 {
             if (self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z) <= -r {
                 return false;
