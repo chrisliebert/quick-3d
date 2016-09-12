@@ -11,18 +11,17 @@ addons:
     sources:
       - george-edison55-precise-backports
     packages:
-      - libsqlite3-dev
-      - swig2.0
-      - build-essential
-      - liblua5.1-dev
-      - lua5.1
       - cmake
       - cmake-data
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential liblua5.1-dev lua5.1
 script:
   - cargo build
   - cargo test
   - cd ffi/Lua
   - export LUA_INCLUDE_DIR=/usr/include/lua5.1
   - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
+  - export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - cargo build --verbose
   - cargo test
