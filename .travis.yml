@@ -8,25 +8,12 @@ matrix:
     - rust: nightly
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential
-  - curl -R -O http://www.lua.org/ftp/lua-5.3.3.tar.gz
-  - tar zxf lua-5.3.3.tar.gz
-  - cd lua-5.3.3
-  - make linux test
-  - sudo make install
-  - cd ..
-  - curl -R -O https://cmake.org/files/v3.6/cmake-3.6.2.tar.gz
-  - tar zxf cmake-3.6.2.tar.gz
-  - cd cmake-3.6.2
-  - ./bootstrap
-  - make
-  - sudo make install  
-  - cd ..
+  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential lua5.2 liblua5.2-dev cmake
 script:
-  - export LUA_INCLUDE_DIR=/usr/local/include
-  - export LUA_LIBRARY=/usr/local/lib/liblua.a
-  - cargo build --verbose
-  - cargo test --verbose
+  - export LUA_INCLUDE_DIR=/usr/include/lua5.2
+  - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.2.a
+  - cargo build
+  - cargo test
   - cd ffi/Lua
   - cargo build --verbose
-  - cargo test --verbose
+  - cargo test
