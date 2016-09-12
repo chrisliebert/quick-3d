@@ -33,7 +33,11 @@ ENDIF(MSVC)
 
 SWIG_LINK_LIBRARIES(quick3dwrapper ${QUICK3D_LIBRARY} ${LUA_LIBRARIES})
 
-SET_TARGET_PROPERTIES(quick3dwrapper PROPERTIES LINKER_LANGUAGE C) 
+# Use C instead of CXX
+SET_TARGET_PROPERTIES(quick3dwrapper PROPERTIES LINKER_LANGUAGE C)
+
+# Removes the lib prefix since it is not used with Lua
+SET_TARGET_PROPERTIES(quick3dwrapper PROPERTIES PREFIX "")
 
 # This will copy quick3dwrapper.[dll/so] to the parent directory and is used in build.rs
 INSTALL(TARGETS quick3dwrapper DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/..)
