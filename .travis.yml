@@ -6,16 +6,23 @@ rust:
 matrix:
   allow_failures:
     - rust: nightly
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get remove -y cmake
-  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential liblua5.2-dev lua5.2
-  - sudo add-apt-repository ppa:george-edison55/precise-backports --yes
-  - sudo apt-get -qq update
-  - sudo apt-get install -y cmake
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - libsqlite3-dev
+      - swig2.0
+      - build-essential
+      - liblua5.1-dev
+      - lua5.1
+      - cmake
+      - cmake-data
 script:
-  - export LUA_INCLUDE_DIR=/usr/include/lua5.2
-  - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.2.a
+  - cargo build
+  - cargo test
   - cd ffi/Lua
+  - export LUA_INCLUDE_DIR=/usr/include/lua5.1
+  - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - cargo build --verbose
   - cargo test
