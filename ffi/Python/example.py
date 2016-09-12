@@ -38,7 +38,7 @@ def main():
 	            print("Invalid command: " + console_command)
     
     #clean up
-    destroy(camera, display)
+    destroy(display, camera)
 
 if __name__=='__main__':
     main()
