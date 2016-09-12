@@ -1,0 +1,16 @@
+# Copyright (C) 2016 Chris Liebert
+
+[package]
+name = "quick3d-c_example"
+version = "0.1.0"
+authors = ["Chris Liebert <liebert@pdx.edu>"]
+build = "build.rs"
+
+[build-dependencies]
+cmake = "0.1"
+
+[dependencies]
+
+[lib]
+name = "testlib"
+path = "test.rs"

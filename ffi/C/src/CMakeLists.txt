@@ -1,0 +1,31 @@
+# Copyright (C) 2016 Chris Liebert
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+PROJECT(c_example)
+SET(QUICK3D_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+
+LINK_DIRECTORIES(${QUICK3D_LIB_PATH})
+
+#SET(CMAKE_BUILD_TYPE Debug)
+
+ADD_EXECUTABLE(c_example
+	example.c
+	quick3d.h
+)
+
+SET(QUICK3D_LIBRARY quick3d)
+
+IF(MSVC)
+	SET(QUICK3D_LIBRARY quick3d.dll.lib)
+	# LINK_DIRECTORIES(..) alone is not sufficient for MSVC
+	SET(MSVCLIBPATH "${CMAKE_EXE_LINKER_FLAGS} /LIBPATH:${QUICK3D_LIB_PATH}")
+	SET(CMAKE_EXE_LINKER_FLAGS "${MSVCLIBPATH}")
+ENDIF(MSVC)
+
+TARGET_LINK_LIBRARIES(c_example ${QUICK3D_LIBRARY} ${LUA_LIBRARIES})
+
+# Use C instead of CXX
+SET_TARGET_PROPERTIES(c_example PROPERTIES LINKER_LANGUAGE C)
+
+# This will copy quick3dwrapper.[dll/so] to the parent directory and is used in build.rs
+INSTALL(TARGETS c_example DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/..)

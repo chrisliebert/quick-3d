@@ -25,3 +25,6 @@ script:
   - export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - cargo build --verbose
   - cargo test
+  - cd ../C
+  - cargo build
+  - cargo test
