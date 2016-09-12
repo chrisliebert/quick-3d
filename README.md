@@ -58,9 +58,9 @@ On Windows, quick3d.dll is copied to the current directory if it is not found wh
 **Building the LUA Library**
 
 The LUA wrapper for Quick3D will try to build the debug shared library automatically if no library is present, making the following step optional:
-`cargo build`
+`cargo build` from the `ffi/Lua` directory.
 This should produce quick3dwrapper.so on a Unix system and quick3dwrapper.dll on Windows.
-If this command fails, you can modify the paths/commands in Makefile for LUA and SWIG.
+
 
 **Running the LUA Example**
 
