@@ -1,3 +1,5 @@
+# Copyright (C) 2016 Chris Liebert
+
 [package]
 name = "quick3dwrapper"
 version = "0.1.0"
