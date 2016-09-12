@@ -39,7 +39,7 @@ Make sure the following dependencies are installed, most Linux distributions alr
 
 **Note for Windows Users**
 
-Quick3D can also be built for Windows using the GNU ABI. The MSVC ABI is not tested.
+Quick3D can be built for Windows using the MSVC ABI.
 
 **Building the Rust Library**
 
