@@ -23,6 +23,8 @@ before_install:
   - sudo make install  
   - cd ..
 script:
+  - export LUA_INCLUDE_DIR=/usr/local/include
+  - export LUA_LIBRARY=/usr/local/lib/liblua.a
   - cargo build --verbose
   - cargo test --verbose
   - cd ffi/Lua
