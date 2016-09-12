@@ -1,4 +1,4 @@
-// Copyright 2016 Chris Liebert
+// Copyright (C) 2016 Chris Liebert
 
 extern crate cmake;
 
