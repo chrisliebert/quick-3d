@@ -17,9 +17,6 @@ function build_wrapper()
   if not make_result == 0 then
     os.exit(2)
   end
-  --if isWindows() then
-  --	os.execute("copy target\\debug\\quick3d.dll .")
-  --end
 end
 
 -- Load the shared library
@@ -36,6 +33,65 @@ function quick3d_init()
     end
   end
   return wrapper
+end
+
+function append_shared_lib_ext(filename)
+  if isWindows() then
+    return filename .. ".dll"
+  else
+    return filename .. ".so"
+  end
+end
+
+function prepend_shared_lib_prefix(filename)
+  if isWindows() then
+    return filename
+  else
+    return "lib" .. filename
+  end
+end
+
+-- Clean the shared library residual files
+function quick3d_clean()
+  local quick3d_filename = append_shared_lib_ext("quick3d")
+  local filenames = {
+  	quick3d_filename,
+  	append_shared_lib_ext("quick3dwrapper"),
+  	append_shared_lib_ext("wrapper/quick3d"),
+  	"wrapper/quick3d.i"
+  }
+  
+  if isWindows() then
+    table.insert(filenames, "wrapper/quick3d.dll.exp")
+    table.insert(filenames, "wrapper/quick3d.dll.lib")
+    table.insert(filenames, "wrapper/quick3d.pdb")
+    table.insert(filenames, "../../target/debug/quick3d.dll.exp")
+    table.insert(filenames, "../../target/debug/quick3d.dll.lib")
+    table.insert(filenames, "../../target/debug/quick3d.pdb")
+  else
+    quick3d_filename = prepend_shared_lib_prefix(quick3d_filename)
+    table.insert(filenames, quick3d_filename)
+    table.insert(filenames, "wrapper/" .. quick3d_filename)
+  end
+
+  if not os.execute("cargo clean") == 0 then
+    print("Unable to run cargo clean")
+  end  
+
+  local quick3d_clean_cmd = "cargo clean -p quick3d"
+  local make_result = os.execute("cd ../.. && " .. quick3d_clean_cmd .. " && cd ffi/Lua")
+  if not make_result == 0 then
+    print("Unable to clean quick3d build target")
+    os.exit(3)
+  else
+    print("Executed " .. quick3d_clean_cmd .. " in ../..")
+  end
+  
+  for i, filename in ipairs(filenames) do
+    if os.remove(filename) then
+      print("Removed "..filename)
+    end
+  end
 end
 
 -- Load LUA code from a string

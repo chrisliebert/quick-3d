@@ -28,6 +28,19 @@ use camera::Camera;
 use loader::DBLoader;
 use renderer::Renderer;
 
+
+#[link(name = "tinyobjloader", kind="static")]
+#[link(name = "scenebuilder", kind="static")]
+#[link(name = "stdc++")]
+extern "C" {
+	fn wavefrontToSQLite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char);
+}
+
+#[no_mangle]
+pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
+	unsafe { wavefrontToSQLite(wavefront_file, database_file) };
+}
+
 /// The following methods annotated as #[no_mangle] provide external interfaces
 /// that can be accessed from C and SWIG
 ///

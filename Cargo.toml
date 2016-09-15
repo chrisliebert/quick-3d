@@ -2,7 +2,7 @@
 # This software is available under the "MIT License" see LICENSE
 [package]
 name = "quick3d"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["chrisliebert <liebert@pdx.edu>"]
 keywords = ["3D", "Glium", "OpenGL", "graphics"]
 description = "A 3D rendering framework written in Rust."
@@ -17,6 +17,10 @@ include = [
 readme = "README.md"
 repository = "https://github.com/chrisliebert/quick-3d.git"
 license-file = "LICENSE"
+build = "build.rs"
+
+[build-dependencies]
+cmake = "0.1"
 
 [lib]
 name = "quick3d"

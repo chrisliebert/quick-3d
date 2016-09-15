@@ -6,6 +6,12 @@ package.path = package.path .. ";./?.lua"
 -- Include and initialise the Quick3D LUA API
 require "quick3d"
 
+-- Clean shared libraries if "clean" is the first argument
+if arg[1] == "clean" then
+	print("Cleaning shared libraries")
+	quick3d_clean()
+end
+
 -- Initialize Quick3D
 quick3d = quick3d_init()
 
@@ -13,7 +19,10 @@ screen_width = 800
 screen_height = 600
 display = Display:create(screen_width, screen_height, "My Lua Window")
 camera = Camera:create(screen_width, screen_height)
-renderer = Renderer:create("../../test.db", display)
+wavefront_file = "test.obj"
+database_file = "example.db"
+quick3d.obj2sqlite(wavefront_file, database_file)
+renderer = Renderer:create(database_file, display)
 shader = Shader:create("default", "../../shaders.db", renderer, display)
 console = quick3d.create_console_reader()
 

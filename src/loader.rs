@@ -21,7 +21,7 @@ pub struct DBLoader {
 /// A scene node is used to index data that is loaded from the vertex table
 /// of an SQLite database.
 ///
-pub struct SceneNode {
+pub struct SceneNodeTableRow {
     pub name: String,
     pub material_index: usize,
     pub start_position: i32,
@@ -91,7 +91,7 @@ impl DBLoader {
         let scene_node_iter = scene_node_stmt.query_map(&[], |row| {
                 let material_id: i32 = row.get(1);
                 let material_index: usize = material_id as usize - 1 as usize;
-                SceneNode {
+                SceneNodeTableRow {
                     name: row.get(0),
                     material_index: material_index, // index starts at 1 in database, not 0
                     start_position: row.get(2),

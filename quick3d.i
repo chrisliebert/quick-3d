@@ -62,4 +62,7 @@ extern void window_show(Display display);
 extern void thread_sleep(int ms);
 extern void thread_yield();
 
+/* C/C++ Methods */
+extern void obj2sqlite(const char* wavefront, const char* database);
+
 #endif
