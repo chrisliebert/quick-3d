@@ -44,8 +44,8 @@ ConfigLoader::ConfigLoader(const char* _filename) {
 		std::cerr << "Unable to load " << _filename  << ", writing default configuration" << std::endl;
 		std::ofstream new_file(filePath.c_str(), std::fstream::app);
 		new_file
-			<< "model.directory = ." << std::endl
-			<< "texture.directory = ." << std::endl;
+		<< "model.directory = ." << std::endl
+		<< "texture.directory = ." << std::endl;
 		new_file.close();
 		fileStream.open(filePath.c_str());
 		if (!fileStream.is_open()) {
