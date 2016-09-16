@@ -17,7 +17,7 @@ The goal of Quick3D is to replace the need for C++ in hardware-accelerated 3D gr
 | Example for Android | *Nice to have | A basic example for android |
 
 
-Often applications will need to access large amounts of information that is subject to change. This issue is often addressed by leveraging existing database systems that have been optimized and tested extensively. SQLite is a lightwieght database system that will store arbirary amounts of data in a single file for convenience. Rusqlite is a Rust API that is used to read SQLite databases that can be produced from Wavefront .obj files using a tool called [obj2sqlite](https://github.com/chrisliebert/obj2sqlite).
+Often applications will need to access large amounts of information that is subject to change. This issue is often addressed by leveraging existing database systems that have been optimized and tested extensively. SQLite is a lightwieght database system that will store arbirary amounts of data in a single file for convenience. Rusqlite is a Rust API that is used to read SQLite databases that can be produced from Wavefront .obj files using a C++ tool called obj2sqlite which is included and built automatically as of v0.1.4.
 
 With Quick3D, it is possible to leverage GPU technology in a way that is likely to run on a wide range of devices while maintaining code readability. There is considerable room for optimization in the Quick3D library and future versions have the potential to improve performance of applications written using version 0.1.
 
