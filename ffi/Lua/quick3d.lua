@@ -17,9 +17,45 @@ function build_wrapper()
   if not make_result == 0 then
     os.exit(2)
   end
-  --if isWindows() then
-  --	os.execute("copy target\\debug\\quick3d.dll .")
-  --end
+end
+
+function quick3d_relaunch_with_exported_unix_lib_path()
+  -- Attempt to export the current directory to LD_LIBRARY_PATH on Unix systems
+  local ld_lib_path_exported = os.getenv("QUICK3D_SHARED_LIBRARY_PATH_EXPORTED")
+  if not (ld_lib_path_exported == nil) then
+    if ld_lib_path_exported == "TRUE" then ld_lib_path_exported = true
+    else ld_lib_path_exported = false end
+  else
+    ld_lib_path_exported = false
+  end
+
+  -- Generate command used to launch this file
+  -- See https://www.lua.org/pil/1.4.html
+  local i = 0
+  local rerun_command = ""
+  while not (arg[i] == nil) do
+    rerun_command = arg[i] .. " " .. rerun_command
+    i = i - 1
+  end
+
+  i=1
+  while not (arg[i] == nil) do
+    rerun_command = rerun_command .. arg[i] .. " "
+    i = i + 1
+  end
+
+  -- Update LD_LIBRARY_PATH and QUICK3D_SHARED_LIBRARY_PATH_EXPORTED
+  rerun_command = "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd` && " .. rerun_command
+  rerun_command = "export QUICK3D_SHARED_LIBRARY_PATH_EXPORTED=TRUE && " .. rerun_command
+  
+  if not ld_lib_path_exported then
+    print(rerun_command)
+    if not os.execute(rerun_command) == 0 then
+      print("Failed to set current directory in LD_LIBRARY_PATH")
+    else
+      os.exit(0)
+    end
+  end
 end
 
 -- Load the shared library
@@ -27,15 +63,87 @@ function quick3d_init()
   if pcall(require_shared_library) then
     print "Loaded shared library"
   else
-    print "Building shared library"
+    print "Unable to load shared libraries"
+    -- On Unix systems, attempt to set LD_LIBRARY_PATH in order to find .so files
+    if not isWindows() then
+      print("Attempting to export LD_LIBRARY_PATH")
+      quick3d_relaunch_with_exported_unix_lib_path()
+      if not pcall(require_shared_library) then
+        print "Unable to find shared libraries"
+      else
+        return wrapper
+      end
+    end
+
+    -- Unable to load shared libraries, try to build the wrapper
+    print "Building shared libraries"
     build_wrapper()
     -- try to load the shared library again
     if not pcall(require_shared_library) then
-      print "Unable to load quick3dwrapper shared library"
+      print "Unable to load quick3dwrapper shared libraries"
       os.exit(2)
     end
   end
   return wrapper
+end
+
+function append_shared_lib_ext(filename)
+  if isWindows() then
+    return filename .. ".dll"
+  else
+    return filename .. ".so"
+  end
+end
+
+function prepend_shared_lib_prefix(filename)
+  if isWindows() then
+    return filename
+  else
+    return "lib" .. filename
+  end
+end
+
+-- Clean the shared library residual files
+function quick3d_clean()
+  local quick3d_filename = append_shared_lib_ext("quick3d")
+  local filenames = {
+  	quick3d_filename,
+  	append_shared_lib_ext("quick3dwrapper"),
+  	append_shared_lib_ext("wrapper/quick3d"),
+  	"wrapper/quick3d.i"
+  }
+  
+  if isWindows() then
+    table.insert(filenames, "wrapper/quick3d.dll.exp")
+    table.insert(filenames, "wrapper/quick3d.dll.lib")
+    table.insert(filenames, "wrapper/quick3d.pdb")
+    table.insert(filenames, "../../target/debug/quick3d.dll.exp")
+    table.insert(filenames, "../../target/debug/quick3d.dll.lib")
+    table.insert(filenames, "../../target/debug/quick3d.pdb")
+  else
+    quick3d_filename = prepend_shared_lib_prefix(quick3d_filename)
+    table.insert(filenames, quick3d_filename)
+    table.insert(filenames, "wrapper/" .. quick3d_filename)
+  end
+
+  if not os.execute("cargo clean") == 0 then
+    print("Unable to run cargo clean")
+  end  
+
+  local quick3d_clean_cmd = "cargo clean -p quick3d"
+  local make_result = os.execute("cd ../.. && " .. quick3d_clean_cmd .. " && cd ffi/Lua")
+  if not make_result == 0 then
+    print("Unable to clean quick3d build target")
+    os.exit(3)
+  else
+    print("Executed " .. quick3d_clean_cmd .. " in ../..")
+  end
+  
+  for i, filename in ipairs(filenames) do
+    if os.remove(filename) then
+      print("Removed "..filename)
+    end
+  end
 end
 
 -- Load LUA code from a string
