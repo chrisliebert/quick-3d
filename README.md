@@ -30,12 +30,11 @@ Make sure the following dependencies are installed, most Linux distributions alr
 | Dependency | Website |
 |:-----------|:--------|
 | A C compiler such as GCC or Clang and the `make` tool | https://gcc.gnu.org/ |
-| SQLite developer libraries | https://www.sqlite.org/ |
-| SQLite Browser (Optional, this is a useful tool for reading and writing SQLite databases) | http://sqlitebrowser.org/ |
 | The Rust compiler (1.8 or greater) | https://www.rust-lang.org |
 | LUA version 5.1 or greater with the developer libraries (LuaJIT 2.0 or greater is also supported) | https://www.lua.org/ or http://luajit.org/ |
 | SWIG the Simplified Wrapper Interface Generator | http://www.swig.org/ |
 | CMake 3.0 or greater | https://cmake.org/download/ |
+| SQLite Browser (Optional, this is a useful tool for reading and writing SQLite databases) | http://sqlitebrowser.org/ |
 
 **Note for Windows Users**
 
@@ -49,12 +48,6 @@ Quick3D can be built for Windows using the MSVC ABI.
 
 `cargo run`
 
-**A Note about Shared Libraries**
-
-If you are using Linux, it is likely that your operating system does not know where to find the shared libraries.
-This can be resolved by updating the LD_LIBRARY_PATH environment variable: `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.` The operating system will now search the current directory when attempting to load shared libraries. After building the debug library with `cargo build` it is recommended that you create a symlink to target/debug/libquick3d.so, i.e `ln -s target/debug/libquick3d.so .`
-On Windows, quick3d.dll is copied to the current directory if it is not found when running Quick3D from LUA which is already configured to be in the search path for shared libraries..
-
 **Building the LUA Library**
 
 The LUA wrapper for Quick3D will try to build the debug shared library automatically if no library is present, making the following step optional:
@@ -67,6 +60,15 @@ This should produce quick3dwrapper.so on a Unix system and quick3dwrapper.dll on
 `lua example.lua` or `luajit example.lua`
 
 Once example.lua is running, code can be entered directly into the console including functions, statements and expressions. For example you can type `f = function() print("Hello World") end` and now f will be available in the console as `f()`. If you enter `5+5`, the result will be evaluated and printed. It is also possible to create new variables or access global variables, for example `x = screen_width / screen_height` would store the result of the quotient of global script variables screen_width and screen_height in a new variable x.
+
+After the Quick3D Rust source is updated, the Lua example can be run with the `clean` argument which will rebuild the Rust library without rebuilding the dependencies:
+`lua example.lua clean`
+
+**A Note about Shared Libraries**
+
+If you are using Uinux, it is likely that your operating system does not know where to find the shared libraries.
+This can be resolved by updating the LD_LIBRARY_PATH environment variable: `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.` The operating system will now search the current directory when attempting to load shared libraries. After building the debug library with `cargo build` it is recommended that you create a symlink to target/debug/libquick3d.so, i.e `ln -s target/debug/libquick3d.so .` The Quick3D Lua example will automatically attempt to relaunch with the updated LD_LIBRARY_PATH as of v0.1.2.
+On Windows, quick3d.dll is copied to the current directory if it is not found when running Quick3D from LUA which is already configured to be in the search path for shared libraries.
 
   **License:**
   
