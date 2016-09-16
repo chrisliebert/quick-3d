@@ -19,16 +19,68 @@ function build_wrapper()
   end
 end
 
+function quick3d_relaunch_with_exported_unix_lib_path()
+  -- Attempt to export the current directory to LD_LIBRARY_PATH on Unix systems
+  local ld_lib_path_exported = os.getenv("QUICK3D_SHARED_LIBRARY_PATH_EXPORTED")
+  if not (ld_lib_path_exported == nil) then
+    if ld_lib_path_exported == "TRUE" then ld_lib_path_exported = true
+    else ld_lib_path_exported = false end
+  else
+    ld_lib_path_exported = false
+  end
+
+  -- Generate command used to launch this file
+  -- See https://www.lua.org/pil/1.4.html
+  local i = 0
+  local rerun_command = ""
+  while not (arg[i] == nil) do
+    rerun_command = arg[i] .. " " .. rerun_command
+    i = i - 1
+  end
+
+  i=1
+  while not (arg[i] == nil) do
+    rerun_command = rerun_command .. arg[i] .. " "
+    i = i + 1
+  end
+
+  -- Update LD_LIBRARY_PATH and QUICK3D_SHARED_LIBRARY_PATH_EXPORTED
+  rerun_command = "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd` && " .. rerun_command
+  rerun_command = "export QUICK3D_SHARED_LIBRARY_PATH_EXPORTED=TRUE && " .. rerun_command
+  
+  if not ld_lib_path_exported then
+    print(rerun_command)
+    if not os.execute(rerun_command) == 0 then
+      print("Failed to set current directory in LD_LIBRARY_PATH")
+    else
+      os.exit(0)
+    end
+  end
+end
+
 -- Load the shared library
 function quick3d_init()
   if pcall(require_shared_library) then
     print "Loaded shared library"
   else
-    print "Building shared library"
+    print "Unable to load shared libraries"
+    -- On Unix systems, attempt to set LD_LIBRARY_PATH in order to find .so files
+    if not isWindows() then
+      print("Attempting to export LD_LIBRARY_PATH")
+      quick3d_relaunch_with_exported_unix_lib_path()
+      if not pcall(require_shared_library) then
+        print "Unable to find shared libraries"
+      else
+        return wrapper
+      end
+    end
+
+    -- Unable to load shared libraries, try to build the wrapper
+    print "Building shared libraries"
     build_wrapper()
     -- try to load the shared library again
     if not pcall(require_shared_library) then
-      print "Unable to load quick3dwrapper shared library"
+      print "Unable to load quick3dwrapper shared libraries"
       os.exit(2)
     end
   end
