@@ -151,7 +151,7 @@ function load_string(command)
   -- Load code in a way that supports multiple versions of LUA
   -- See http://stackoverflow.com/questions/9268954/lua-pass-context-into-loadstring
   
-  if setenv and loadstring then
+  if (setenv or setfenv) and loadstring then
     -- Lua 5.1/5.2
     local context = {}
     setmetatable(context, { __index = _G })
@@ -160,7 +160,11 @@ function load_string(command)
     local f = loadstring(command)
     if f == nil then return nil end
     -- The enviroment must be set in order to access the scripts global variables
-    setenv(f, context)
+    if setenv then
+      setenv(f, context)
+    elseif setfenv then
+      setfenv(1, context)
+    end
     return f
   else
     -- Lua >= 5.3
