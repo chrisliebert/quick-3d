@@ -36,16 +36,16 @@ impl Renderer {
     
         let mut vertex_buffers: Vec<glium::vertex::VertexBuffer<common::Vertex8f32>> =
             Vec::with_capacity(scene.meshes.len());
-    
+        
         for i in 0..scene.meshes.len() {
             vertex_buffers.push(glium::vertex::VertexBuffer::new(display, &scene.meshes[i].vertices).unwrap());
         }
         
         let index_buffer: glium::index::NoIndices =
             glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
-    
+        
         let mut textures: HashMap<String, glium::texture::CompressedSrgbTexture2d> = HashMap::new();
-    
+        
         for i in 0..scene.images.len() {
             //TODO: determine image format by name extension if nessisary
             //let image = image::load_from_memory_with_format(&scene.images[i].image, image::PNG).unwrap().to_rgba();
@@ -231,7 +231,6 @@ impl Renderer {
 	                        opengl_texture = &t;
 	                    },
 	                    None => {
-	                        println!("Unable to load {}, using blank texture instead.", diffuse_texname);
 	                        opengl_texture = &default_blank_texture;
 	                    },
 	                }
