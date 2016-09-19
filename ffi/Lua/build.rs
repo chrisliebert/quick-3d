@@ -5,21 +5,33 @@ extern crate cmake;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use std::env;
+use std::str::FromStr;
 
 #[cfg(target_os = "windows")]
-fn copy_quick3d_shared_library_files() -> std::io::Result<()> {
-	try!(fs::copy(Path::new("../../target/debug/quick3d.dll"), Path::new("quick3d.dll")));
-	try!(fs::copy(Path::new("../../target/debug/quick3d.dll"), Path::new("wrapper/quick3d.dll")));
-	try!(fs::copy(Path::new("../../target/debug/quick3d.dll.exp"), Path::new("wrapper/quick3d.dll.exp")));
-	try!(fs::copy(Path::new("../../target/debug/quick3d.dll.lib"), Path::new("wrapper/quick3d.dll.lib")));
-	try!(fs::copy(Path::new("../../target/debug/quick3d.pdb"), Path::new("wrapper/quick3d.pdb")));
+fn copy_quick3d_shared_library_files(debug: bool) -> std::io::Result<()> {
+	let build_type: String = match debug {
+	    true => String::from("debug"),
+		false => String::from("release"),
+	};
+	let build_dir: String = String::from("../../target/") + &build_type;
+	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.dll")), Path::new("quick3d.dll")));
+	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.dll")), Path::new("wrapper/quick3d.dll")));
+	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.dll.exp")), Path::new("wrapper/quick3d.dll.exp")));
+	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.dll.lib")), Path::new("wrapper/quick3d.dll.lib")));
+	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.pdb")), Path::new("wrapper/quick3d.pdb")));
 	Ok(())
 }
 
 #[cfg(not(target_os = "windows"))]
-fn copy_quick3d_shared_library_files() -> std::io::Result<()> {
-	try!(fs::copy(Path::new("../../target/debug/libquick3d.so"), Path::new("libquick3d.so")));
-	try!(fs::copy(Path::new("../../target/debug/libquick3d.so"), Path::new("wrapper/libquick3d.so")));
+fn copy_quick3d_shared_library_files(debug: bool) -> std::io::Result<()> {
+	let build_type: String = match debug {
+	    true => String::from("debug"),
+		false => String::from("release"),
+	};
+	let build_dir: String = String::from("../../target/") + &build_type;
+	try!(fs::copy(Path::new(&(build_dir.clone() + "/libquick3d.so")), Path::new("libquick3d.so")));
+	try!(fs::copy(Path::new(&(build_dir.clone() + "/libquick3d.so")), Path::new("wrapper/libquick3d.so")));
 	Ok(())
 }
 
@@ -31,17 +43,46 @@ fn copy_swig_interface_file() -> std::io::Result<()> {
 }
 
 fn main() {
-	// build Quick3D
-	let build_cmd_output = Command::new("cargo")
-		.arg("build")
-		.current_dir("../../")
-		.output()
-		.unwrap();
+	let debug = bool::from_str(&env::var("DEBUG").unwrap()).unwrap();
 	
-	// Ensure cargo succeeded
+	// Clean quick3d to ensure copy commands don't fail
+	let clean_cmd_status = match debug {
+		true => Command::new("cargo")
+			.arg("clean")
+			.arg("-p")
+			.arg("quick3d")
+			.current_dir("../../")
+			.output()
+			.unwrap(),
+		false => Command::new("cargo")
+			.arg("clean")
+			.arg("-p")
+			.arg("quick3d")
+			.arg("--release")
+			.current_dir("../../")
+			.output()
+			.unwrap(),
+	}.status;
+	assert!(clean_cmd_status.success());
+	
+	// build Quick3D
+	let build_cmd_output = match debug {
+		true => Command::new("cargo")
+				.arg("build")
+				.current_dir("../../")
+				.output()
+				.unwrap(),
+		false => Command::new("cargo")
+				.arg("build")
+				.arg("--release")
+				.current_dir("../../")
+				.output()
+				.unwrap(),
+	};
+		
 	assert!(build_cmd_output.status.success());
 	
-	copy_quick3d_shared_library_files().unwrap();
+	copy_quick3d_shared_library_files(debug).unwrap();
 	copy_swig_interface_file().unwrap();
 
 	// cmake build for language wrappers

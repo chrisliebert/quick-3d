@@ -6,14 +6,20 @@ package.path = package.path .. ";./?.lua"
 -- Include and initialise the Quick3D LUA API
 require "quick3d"
 
+local target_build = "debug"
+
 -- Clean shared libraries if "clean" is the first argument
 if arg[1] == "clean" then
 	print("Cleaning shared libraries")
-	quick3d_clean()
+	if arg[2] == "release" then
+	  target_build = "release"
+	end
+	-- Initialize Quick3D
+	quick3d_clean(target_build)
 end
 
 -- Initialize Quick3D
-quick3d = quick3d_init()
+quick3d = quick3d_init(target_build)
 
 screen_width = 800
 screen_height = 600
@@ -22,7 +28,7 @@ camera = Camera:create(screen_width, screen_height)
 camera:move_backward(6)
 wavefront_file = "test.obj"
 database_file = "example.db"
-quick3d.obj2sqlite(wavefront_file, database_file)
+-- quick3d.obj2sqlite(wavefront_file, database_file)
 renderer = Renderer:create(database_file, display)
 shader = Shader:create("default", "../../shaders.db", renderer, display)
 console = quick3d.create_console_reader()
@@ -35,7 +41,6 @@ function quit()
   quick3d.free_renderer(renderer.struct)
   quick3d.free_display(display.struct)
   quick3d.free_camera(camera.struct)
-  collectgarbage()
   os.exit() -- Removing this call will cause Lua to crash on exit.
 end
 
@@ -91,7 +96,7 @@ while not quick3d.console_is_closed(console) do
   end
 
   if input.closed then
-    quit()
+    break
   end
 end
 

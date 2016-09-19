@@ -11,9 +11,11 @@ function isWindows()
 end
 
 -- Generate the wrapper source and compile the shared libarary
-function build_wrapper()
+function build_wrapper(target_build)
   -- Generate quick3d_wrapper.c -> quick3dwrapper
-  local make_result = os.execute("cargo build")
+  local make_cmd = "cargo build"
+  if target_build == "release" then make_cmd = make_cmd .. " --release" end
+  local make_result = os.execute(make_cmd)
   if not make_result == 0 then
     os.exit(2)
   end
@@ -59,7 +61,7 @@ function quick3d_relaunch_with_exported_unix_lib_path()
 end
 
 -- Load the shared library
-function quick3d_init()
+function quick3d_init(target_build)
   if pcall(require_shared_library) then
     print "Loaded shared library"
   else
@@ -76,8 +78,8 @@ function quick3d_init()
     end
 
     -- Unable to load shared libraries, try to build the wrapper
-    print "Building shared libraries"
-    build_wrapper()
+    print ("Building " .. target_build .. " shared libraries")
+    build_wrapper(target_build)
     -- try to load the shared library again
     if not pcall(require_shared_library) then
       print "Unable to load quick3dwrapper shared libraries"
@@ -104,8 +106,9 @@ function prepend_shared_lib_prefix(filename)
 end
 
 -- Clean the shared library residual files
-function quick3d_clean()
+function quick3d_clean(target_build)  
   local quick3d_filename = append_shared_lib_ext("quick3d")
+  -- filenames contains a list of files that will attempt to be deleted
   local filenames = {
   	quick3d_filename,
   	append_shared_lib_ext("quick3dwrapper"),
@@ -117,9 +120,9 @@ function quick3d_clean()
     table.insert(filenames, "wrapper/quick3d.dll.exp")
     table.insert(filenames, "wrapper/quick3d.dll.lib")
     table.insert(filenames, "wrapper/quick3d.pdb")
-    table.insert(filenames, "../../target/debug/quick3d.dll.exp")
-    table.insert(filenames, "../../target/debug/quick3d.dll.lib")
-    table.insert(filenames, "../../target/debug/quick3d.pdb")
+    table.insert(filenames, "../../target/" .. target_build .. "/quick3d.dll.exp")
+    table.insert(filenames, "../../target/" .. target_build .. "/quick3d.dll.lib")
+    table.insert(filenames, "../../target/" .. target_build .. "/quick3d.pdb")
   else
     quick3d_filename = prepend_shared_lib_prefix(quick3d_filename)
     table.insert(filenames, quick3d_filename)
@@ -131,6 +134,7 @@ function quick3d_clean()
   end  
 
   local quick3d_clean_cmd = "cargo clean -p quick3d"
+  if target_build == "release" then quick3d_clean_cmd = quick3d_clean_cmd .. " --release" end
   local make_result = os.execute("cd ../.. && " .. quick3d_clean_cmd .. " && cd ffi/Lua")
   if not make_result == 0 then
     print("Unable to clean quick3d build target")

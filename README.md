@@ -64,6 +64,9 @@ Once example.lua is running, code can be entered directly into the console inclu
 After the Quick3D Rust source is updated, the Lua example can be run with the `clean` argument which will rebuild the Rust library without rebuilding the dependencies:
 `lua example.lua clean`
 
+As of Lua example v0.1.3, to build the optimized release version of the shared libraries, run with:
+`lua example.lua clean release`
+
 **A Note about Shared Libraries**
 
 If you are using Uinux, it is likely that your operating system does not know where to find the shared libraries.
