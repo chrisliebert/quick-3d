@@ -16,7 +16,7 @@ pub struct Frustum {
 
 impl Frustum {
     /// Create a frustum from 1-dimensional modelview and projection float arrays
-	///
+    ///
     pub fn create_from_1d_array(modl: &[f32; 16], proj: &[f32; 16]) -> Frustum {
                 
         // Combine the two matrices (multiply projection by modelview)
@@ -102,8 +102,8 @@ impl Frustum {
         }
     }
 
-	/// Create a frustum from 2-dimensional modelview and projection float arrays
-	///
+    /// Create a frustum from 2-dimensional modelview and projection float arrays
+    ///
     pub fn create_from_2d_array(modl: &[[f32; 4]; 4], proj: &[[f32; 4]; 4]) -> Frustum {
         let modl_1d: [f32; 16] = [
             modl[0][0],
@@ -146,7 +146,7 @@ impl Frustum {
     }
 
     /// A cube is intersecting the renderable region of the frustum
-	///
+    ///
     pub fn cube_intersecting(&self, x: &f32, y: &f32, z: &f32, size: &f32) -> bool {
         for p in 0..6 {
             if !((self.planes[p][0] * (x - size) + self.planes[p][1] * (y - size) + self.planes[p][2] * (z - size) + self.planes[p][3] > 0.0f32) ||
@@ -163,8 +163,8 @@ impl Frustum {
         true
     }
 
-	/// A point is intersecting the renderable region of the frustum
-	///
+    /// A point is intersecting the renderable region of the frustum
+    ///
     pub fn point_intersecting(&self, x: &f32, y: &f32, z: &f32) -> bool {
         for p in 0..6 {
             if (self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z + self.planes[p][3]) <= 0.0f32 {
@@ -174,8 +174,8 @@ impl Frustum {
         true
     }
 
-	/// A sphere is intersecting the renderable region of the frustum
-	///
+    /// A sphere is intersecting the renderable region of the frustum
+    ///
     pub fn sphere_intersecting(&self, x: &f32, y: &f32, z: &f32, r: &f32) -> bool {
         for p in 0..6 {
             if self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z + self.planes[p][3] <= (0.0f32 - r) {
