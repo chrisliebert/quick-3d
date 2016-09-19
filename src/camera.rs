@@ -22,7 +22,7 @@ pub struct Camera {
     pub roll: f64,
 }
 
-use std::f64::consts::FRAC_PI_2;
+use std::f64::consts::{FRAC_PI_2, PI};
 
 impl Camera {
     /// Create a new perspective `Camera` using screen_width and screen_height to calculate the
@@ -33,7 +33,6 @@ impl Camera {
         let projection_matrix =
             PerspectiveMatrix3::new(screen_width / screen_height, 45.0, 0.1, 1000.0);
         let projection_matrix: Matrix4<f32> = projection_matrix.to_matrix();
-
         let matrix: Matrix4<f32> = Eye::new_identity(4);
         let modelview_matrix_array = *matrix.as_ref();
 
@@ -44,7 +43,7 @@ impl Camera {
             direction: Vector3::new(0.0f32, 0.0f32, 1.0f32),
             right: Vector3::new(1.0f32, 0.0f32, 0.0f32),
             up: Vector3::new(0.0f32, 1.0f32, 0.0f32),
-            pitch: 0.0,
+            pitch: PI,
             yaw: 0.0,
             roll: 0.0,
         };

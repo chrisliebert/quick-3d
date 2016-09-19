@@ -26,6 +26,10 @@ pub struct SceneNodeTableRow {
     pub material_index: usize,
     pub start_position: i32,
     pub end_position: i32,
+    pub radius: f64,
+    pub center_x: f64,
+    pub center_y: f64,
+    pub center_z: f64,
 }
 
 impl DBLoader {
@@ -86,7 +90,7 @@ impl DBLoader {
 
         // Load scene nodes
         let mut scene_node_stmt =
-            conn.prepare("SELECT name, material_id, start_position, end_position FROM scene_node")
+            conn.prepare("SELECT name, material_id, start_position, end_position, radius, center_x, center_y, center_z FROM scene_node")
                 .unwrap();
         let scene_node_iter = scene_node_stmt.query_map(&[], |row| {
                 let material_id: i32 = row.get(1);
@@ -96,6 +100,10 @@ impl DBLoader {
                     material_index: material_index, // index starts at 1 in database, not 0
                     start_position: row.get(2),
                     end_position: row.get(3),
+                    radius: row.get(4),
+                    center_x: row.get(5),
+                    center_y: row.get(6),
+                    center_z: row.get(7),
                 }
             })
             .unwrap();
@@ -106,7 +114,6 @@ impl DBLoader {
 
             for i in sn.start_position as usize..(sn.end_position) as usize {
                 new_vertices.push(vertices[i]);
-
             }
 
             if sn.material_index >= materials.len() {
@@ -119,6 +126,8 @@ impl DBLoader {
                 name: sn.name,
                 material_index: sn.material_index,
                 vertices: new_vertices,
+                radius: sn.radius as f32,
+                center: [sn.center_x as f32, sn.center_y as f32, sn.center_z as f32],
                 matrix: RefCell::new(identity),
             };
             meshes.push(mesh);
@@ -130,7 +139,6 @@ impl DBLoader {
 
         // Free up some memory
         vertices.clear();
-
 
         // Load textures
         let mut texture_stmt = conn.prepare("SELECT name, image FROM texture")
@@ -149,13 +157,9 @@ impl DBLoader {
             textures.push(texture.unwrap());
         }
 
-        // conn.close();
         return Scene {
             materials: materials,
-            // scene_nodes: scene_nodes,
-            // vertices: vertices,
             meshes: meshes,
-            // shaders: shaders,
             images: textures,
         };
     }

@@ -5,12 +5,13 @@
 
 #[derive(Debug)]
 pub struct Frustum {
-    // left right bottom top near and far planes
+    // right left bottom top near and far planes
     planes: [[f32; 4]; 6],
 }
 
 impl Frustum {
-    pub fn create(&self, modl: &[f32; 16], proj: &[f32; 16]) -> Frustum {
+    pub fn create_from_1d_array(modl: &[f32; 16], proj: &[f32; 16]) -> Frustum {
+                
         // Combine the two matrices (multiply projection by modelview)
         let clip: [f32; 16] =
             [modl[0] * proj[0] + modl[1] * proj[4] + modl[2] * proj[8] + modl[3] * proj[12],
@@ -31,7 +32,6 @@ impl Frustum {
              modl[12] * proj[3] + modl[13] * proj[7] + modl[14] * proj[11] + modl[15] * proj[15]];
 
         // Extract the numbers for the RIGHT plane
-
         let rdx: f32 = clip[3] - clip[0];
         let rdy: f32 = clip[7] - clip[4];
         let rdz: f32 = clip[11] - clip[8];
@@ -83,7 +83,7 @@ impl Frustum {
         let ndw: f32 = clip[15] + clip[14];
 
         // Divisor to normilize near plane
-        let nd: f32 = (fdx.powi(2) + fdy.powi(2) + fdz.powi(2)).sqrt();
+        let nd: f32 = (ndx.powi(2) + ndy.powi(2) + ndz.powi(2)).sqrt();
 
         Frustum {
             planes: [[rdx / rd, rdy / rd, rdz / rd, rdw / rd],
@@ -95,7 +95,48 @@ impl Frustum {
         }
     }
 
-    pub fn cube_intersecting(&self, x: f32, y: f32, z: f32, size: f32) -> bool {
+    pub fn create_from_2d_array(modl: &[[f32; 4]; 4], proj: &[[f32; 4]; 4]) -> Frustum {
+        let modl_1d: [f32; 16] = [
+            modl[0][0],
+            modl[0][1],
+            modl[0][2],
+            modl[0][3],
+                modl[1][0],
+                modl[1][1],
+                modl[1][2],
+                modl[1][3],
+                    modl[2][0],
+                    modl[2][1],
+                    modl[2][2],
+                    modl[2][3],
+                        modl[3][0],
+                        modl[3][1],
+                        modl[3][2],
+                        modl[3][3],
+        ];
+        let proj_1d: [f32; 16] = [
+            proj[0][0],
+            proj[0][1],
+            proj[0][2],
+            proj[0][3],
+                proj[1][0],
+                proj[1][1],
+                proj[1][2],
+                proj[1][3],
+                    proj[2][0],
+                    proj[2][1],
+                    proj[2][2],
+                    proj[2][3],
+                        proj[3][0],
+                        proj[3][1],
+                        proj[3][2],
+                        proj[3][3]
+        ];
+        
+        return Frustum::create_from_1d_array(&modl_1d, &proj_1d);
+    }
+
+    pub fn cube_intersecting(&self, x: &f32, y: &f32, z: &f32, size: &f32) -> bool {
         for p in 0..6 {
             if !((self.planes[p][0] * (x - size) + self.planes[p][1] * (y - size) + self.planes[p][2] * (z - size) + self.planes[p][3] > 0.0f32) ||
                  (self.planes[p][0] * (x + size) + self.planes[p][1] * (y - size) + self.planes[p][2] * (z - size) + self.planes[p][3] > 0.0f32) ||
@@ -111,18 +152,18 @@ impl Frustum {
         true
     }
 
-    pub fn point_intersecting(&self, x: f32, y: f32, z: f32) -> bool {
+    pub fn point_intersecting(&self, x: &f32, y: &f32, z: &f32) -> bool {
         for p in 0..6 {
-            if self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z <= 0.0f32 {
+            if (self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z + self.planes[p][3]) <= 0.0f32 {
                 return false;
             }
         }
         true
     }
 
-    pub fn sphere_intersecting(&self, x: f32, y: f32, z: f32, r: f32) -> bool {
+    pub fn sphere_intersecting(&self, x: &f32, y: &f32, z: &f32, r: &f32) -> bool {
         for p in 0..6 {
-            if (self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z) <= -r {
+            if self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z + self.planes[p][3] <= (0.0f32 - r) {
                 return false;
             }
         }

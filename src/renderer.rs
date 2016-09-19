@@ -11,9 +11,12 @@ use camera::Camera;
 use common;
 use common::{Mesh, Scene, Shader, Vertex8f32};
 use loader::DBLoader;
+use frustum::Frustum;
 
 use glium::backend::glutin_backend::GlutinFacade;
 use glium::{Program, Surface, Version};
+
+use nalgebra::Vector4;
 
 implement_vertex!(Vertex8f32, position, normal, texcoord);
 
@@ -199,53 +202,65 @@ impl Renderer {
     /// Draw the `Scene` data consumed by self to the display
     ///
     pub fn render(&self, display: &GlutinFacade, program: &glium::program::Program, camera: &Camera) {
+        
+        let frustum: Frustum = Frustum::create_from_2d_array(
+        	&camera.modelview_matrix,
+        	&camera.projection_matrix,
+        );
+        
         let mut target = display.draw();
         // TODO: generate this texture instead of loading from sqlite
         let default_blank_texture = &self.textures["DEFAULT_BLANK_TEXTURE.png"];
         target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
         for i in 0..self.vertex_buffers.len() as usize {
-            let material_index: usize = self.scene.meshes[i].material_index.clone();
-            let diffuse = self.scene.materials[material_index].diffuse.clone();
-            let diffuse_texname: String =
-                self.scene.materials[material_index].diffuse_texname.clone();
-            let opengl_texture: &glium::texture::CompressedSrgbTexture2d;
-            if diffuse_texname.len() == 0 {
-                opengl_texture = &default_blank_texture;
-            } else {
-                match self.textures.get(&diffuse_texname) {
-                    Some(t) => {
-                        opengl_texture = &t;
-                    },
-                    None => {
-                        println!("Unable to load {}, using blank texture instead.", diffuse_texname);
-                        opengl_texture = &default_blank_texture;
-                    },
-                }
+        	
+        	let matrix = *self.scene.meshes[i].matrix.borrow();
+        	let local_center: Vector4<f32> = Vector4::new(self.scene.meshes[i].center[0].clone(), self.scene.meshes[i].center[1].clone(), self.scene.meshes[i].center[2].clone(), 1.0f32);
+	        let center: Vector4<f32> = matrix * local_center;
+            if frustum.sphere_intersecting(&center.x, &center.y, &center.z, &self.scene.meshes[i].radius) {
+	            let material_index: usize = self.scene.meshes[i].material_index.clone();
+	            let diffuse = self.scene.materials[material_index].diffuse.clone();
+	            let diffuse_texname: String =
+	                self.scene.materials[material_index].diffuse_texname.clone();
+	            let opengl_texture: &glium::texture::CompressedSrgbTexture2d;
+	            if diffuse_texname.len() == 0 {
+	                opengl_texture = &default_blank_texture;
+	            } else {
+	                match self.textures.get(&diffuse_texname) {
+	                    Some(t) => {
+	                        opengl_texture = &t;
+	                    },
+	                    None => {
+	                        println!("Unable to load {}, using blank texture instead.", diffuse_texname);
+	                        opengl_texture = &default_blank_texture;
+	                    },
+	                }
+	            }
+	            let uniforms: glium::uniforms::UniformsStorage<_, _> = uniform! {
+	                projection: camera.projection_matrix,
+	                modelview: camera.modelview_matrix,
+	                light_position_worldspace: [2.0, 10.0, 1.0f32],
+	                diffuse: diffuse,
+	                diffuse_texture: opengl_texture,
+	                model: *(matrix).as_ref(),
+	            };
+	            
+	            let params = glium::DrawParameters {
+	                depth: glium::Depth {
+	                    test: glium::DepthTest::IfLess,
+	                    write: true,
+	                    .. Default::default()
+	                },
+	                .. Default::default()
+	            };
+	            
+	            target.draw(&self.vertex_buffers[i],
+	                &self.index_buffer,
+	                program,
+	                &uniforms,
+	                &params)
+	                .unwrap();
             }
-            let uniforms: glium::uniforms::UniformsStorage<_, _> = uniform! {
-                projection: camera.projection_matrix,
-                modelview: camera.modelview_matrix,
-                light_position_worldspace: [2.0, 10.0, 1.0f32],
-                diffuse: diffuse,
-                diffuse_texture: opengl_texture,
-                model: *(*self.scene.meshes[i].matrix.borrow()).as_ref(),
-            };
-            
-            let params = glium::DrawParameters {
-                depth: glium::Depth {
-                    test: glium::DepthTest::IfLess,
-                    write: true,
-                    .. Default::default()
-                },
-                .. Default::default()
-            };
-            
-            target.draw(&self.vertex_buffers[i],
-                &self.index_buffer,
-                program,
-                &uniforms,
-                &params)
-                .unwrap();
         }
         target.finish().unwrap();
     }

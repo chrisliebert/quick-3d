@@ -37,6 +37,8 @@ fn main() {
         .unwrap();
 
     let mut camera: Camera = Camera::new(screen_width as f32, screen_height as f32);
+    camera = camera.move_backward(6.0);
+    
     let renderer = renderer::Renderer::new(&display, scene);
 
     // Attempt to load GLSL version 330 if it is supported

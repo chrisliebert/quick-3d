@@ -19,6 +19,7 @@ screen_width = 800
 screen_height = 600
 display = Display:create(screen_width, screen_height, "My Lua Window")
 camera = Camera:create(screen_width, screen_height)
+camera:move_backward(6)
 wavefront_file = "test.obj"
 database_file = "example.db"
 quick3d.obj2sqlite(wavefront_file, database_file)

@@ -146,7 +146,7 @@ void SceneBuilder::addWavefront(const char* fileName, glm::mat4 matrix)
 					sceneNode.primativeMode = 6;//GL_TRIANGLES;
 					sceneNode.diffuseTextureId = 0;
 					sceneNode.modelViewMatrix = matrix;
-					sceneNode.boundingSphere = 0.f;
+					sceneNode.radius = 0.f;
 					addSceneNode(&sceneNode);
 					mVertexData.clear();
 				}
@@ -291,25 +291,25 @@ void SceneBuilder::buildScene()
 	//Calculate Bounding Sphere radius
 	for(int i=0; i<sceneNodes.size(); i++)
 	{
-		float lx = 0.f, ly = 0.f, lz = 0.f;
+		float center_x = 0.f, center_y = 0.f, center_z = 0.f;
 		float r = 0.f;
 
 		size_t vertexDataSize = sceneNodes[i].vertexDataSize;
 		//Calculate local origin
 		for(int j=0; j<vertexDataSize; j++)
 		{
-			lx += sceneNodes[i].vertexData[j].vertex[0];
-			ly += sceneNodes[i].vertexData[j].vertex[1];
-			lz += sceneNodes[i].vertexData[j].vertex[2];
+			center_x += sceneNodes[i].vertexData[j].vertex[0];
+			center_y += sceneNodes[i].vertexData[j].vertex[1];
+			center_z += sceneNodes[i].vertexData[j].vertex[2];
 		}
 
-		lx /= (float)vertexDataSize;
-		ly /= (float)vertexDataSize;
-		lz /= (float)vertexDataSize;
+		center_x /= (float)vertexDataSize;
+		center_y /= (float)vertexDataSize;
+		center_z /= (float)vertexDataSize;
 
-		sceneNodes[i].lx = lx;
-		sceneNodes[i].ly = ly;
-		sceneNodes[i].lz = lz;
+		sceneNodes[i].center_x = center_x;
+		sceneNodes[i].center_y = center_y;
+		sceneNodes[i].center_z = center_z;
 
 		for(int j=0; j<sceneNodes[i].vertexDataSize; j++)
 		{
@@ -317,9 +317,9 @@ void SceneBuilder::buildScene()
 			float y = sceneNodes[i].vertexData[j].vertex[1];
 			float z = sceneNodes[i].vertexData[j].vertex[2];
 
-			double nx = x - lx;
-			double ny = y - ly;
-			double nz = z - lz;
+			double nx = x - center_x;
+			double ny = y - center_y;
+			double nz = z - center_z;
 
 			float r2 = (float) sqrt(nx*nx + ny*ny + nz*nz);
 
@@ -333,7 +333,7 @@ void SceneBuilder::buildScene()
 			std::cerr << "Warning, bounding sphere radius = 0 for " << sceneNodes[i].name << std::endl;
 			r = 0.1f;
 		}
-		sceneNodes[i].boundingSphere = r;
+		sceneNodes[i].radius = r;
 	}
 }
 
@@ -407,11 +407,8 @@ void SceneBuilder::saveToDB(const char* dbFile)
 			"DROP TABLE IF EXISTS material;"\
 			"DROP TABLE IF EXISTS texture;"\
 			"CREATE TABLE vertex(id INTEGER PRIMARY KEY AUTOINCREMENT, px REAL NOT NULL, py REAL NOT NULL, pz REAL NOT NULL, nx REAL NOT NULL, ny REAL NOT NULL, nz REAL NOT NULL, tu REAL NOT NULL, tv REAL NOT NULL);"\
-			"CREATE TABLE scene_node(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, material_id INTEGER, start_position INTEGER NOT NULL, end_position INTEGER NOT NULL,\
-             boundingSphere REAL NOT NULL, lx REAL NOT NULL, ly INTEGER NOT NULL, lz REAL NOT NULL);"\
-			 "CREATE TABLE material(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, normal_texname TEXT, dissolve REAL, diffuse_r REAL, diffuse_g REAL, diffuse_b REAL,\
-            transmittance_r REAL, transmittance_g REAL, transmittance_b REAL, emission_r REAL, emission_g REAL, emission_b REAL, shininess REAL, specular_texname TEXT,\
-            specular_r REAL, specular_g REAL, specular_b REAL, diffuse_texname TEXT, ambient_r REAL, ambient_g REAL, ambient_b REAL, ior INTEGER, ambient_texname TEXT, illum INTEGER);" \
+			"CREATE TABLE scene_node(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, material_id INTEGER, start_position INTEGER NOT NULL, end_position INTEGER NOT NULL, radius REAL NOT NULL, center_x REAL NOT NULL, center_y REAL NOT NULL, center_z REAL NOT NULL);"\
+			"CREATE TABLE material(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, normal_texname TEXT, dissolve REAL, diffuse_r REAL, diffuse_g REAL, diffuse_b REAL, transmittance_r REAL, transmittance_g REAL, transmittance_b REAL, emission_r REAL, emission_g REAL, emission_b REAL, shininess REAL, specular_texname TEXT, specular_r REAL, specular_g REAL, specular_b REAL, diffuse_texname TEXT, ambient_r REAL, ambient_g REAL, ambient_b REAL, ior INTEGER, ambient_texname TEXT, illum INTEGER);" \
 			"CREATE TABLE texture(name TEXT PRIMARY KEY NOT NULL, image BLOB NOT NULL);";
 
 	rc = sqlite3_open(dbFile, &db);
@@ -457,7 +454,7 @@ void SceneBuilder::saveToDB(const char* dbFile)
 
 	for(size_t i=0; i<sceneNodes.size(); i++)
 	{
-		string sceneNodeInsertSQL = "INSERT INTO scene_node(name, material_id, start_position, end_position, boundingSphere, lx, ly, lz) VALUES (";
+		string sceneNodeInsertSQL = "INSERT INTO scene_node(name, material_id, start_position, end_position, radius, center_x, center_y, center_z) VALUES (";
 		sceneNodeInsertSQL += "'" + sceneNodes.at(i).name + "'";
 		sceneNodeInsertSQL += ",";
 		sceneNodeInsertSQL += intToStr(getMaterialId(sceneNodes.at(i).material));
@@ -466,13 +463,13 @@ void SceneBuilder::saveToDB(const char* dbFile)
 		sceneNodeInsertSQL += ",";
 		sceneNodeInsertSQL += intToStr(sceneNodes.at(i).endPosition);
 		sceneNodeInsertSQL += ",";
-		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).boundingSphere);
+		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).radius);
 		sceneNodeInsertSQL += ",";
-		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).lx);
+		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).center_x);
 		sceneNodeInsertSQL += ",";
-		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).ly);
+		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).center_y);
 		sceneNodeInsertSQL += ",";
-		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).lz);
+		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).center_z);
 		sceneNodeInsertSQL += ");";
 		rc = sqlite3_exec(db, sceneNodeInsertSQL.c_str(), 0, 0, &error_msg);
 		if (rc != SQLITE_OK)

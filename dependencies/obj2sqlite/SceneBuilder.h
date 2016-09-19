@@ -74,8 +74,8 @@ typedef struct SceneNode
     unsigned diffuseTextureId;
     unsigned normalTextureId;
     unsigned specularTextureId;
-    float boundingSphere;
-    float lx, ly, lz; // position of center
+    float radius;
+    float center_x, center_y, center_z; // position of center
 } SceneNode;
 
 

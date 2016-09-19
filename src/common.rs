@@ -24,6 +24,8 @@ pub struct Mesh {
     pub name: String,
     pub vertices: Vec<Vertex8f32>,
     pub material_index: usize,
+    pub radius: f32,
+    pub center: [f32; 3],
     pub matrix: RefCell<Matrix4<f32>>,
 }
 
