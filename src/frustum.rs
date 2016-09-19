@@ -3,6 +3,11 @@
 // Frustum extracting and testing algorithm used from
 // http://www.racer.nl/reference/vfc_markmorley.htm
 
+
+/// `Frustum`
+///
+/// A data structure for six planes of the view frustum
+///
 #[derive(Debug)]
 pub struct Frustum {
     // right left bottom top near and far planes
@@ -10,6 +15,8 @@ pub struct Frustum {
 }
 
 impl Frustum {
+    /// Create a frustum from 1-dimensional modelview and projection float arrays
+	///
     pub fn create_from_1d_array(modl: &[f32; 16], proj: &[f32; 16]) -> Frustum {
                 
         // Combine the two matrices (multiply projection by modelview)
@@ -49,7 +56,7 @@ impl Frustum {
         // Divisor to normilize left plane
         let ld: f32 = (ldx.powi(2) + ldy.powi(2) + ldz.powi(2)).sqrt();
 
-        // Extract the BOTTOM plane */
+        // Extract the BOTTOM plane
         let bdx: f32 = clip[3] + clip[1];
         let bdy: f32 = clip[7] + clip[5];
         let bdz: f32 = clip[11] + clip[9];
@@ -58,7 +65,7 @@ impl Frustum {
         // Divisor to normilize bottom plane
         let bd: f32 = (bdx.powi(2) + bdy.powi(2) + bdz.powi(2)).sqrt();
 
-        // Extract the TOP plane */
+        // Extract the TOP plane
         let tdx: f32 = clip[3] - clip[1];
         let tdy: f32 = clip[7] - clip[5];
         let tdz: f32 = clip[11] - clip[9];
@@ -67,7 +74,7 @@ impl Frustum {
         // Divisor to normilize top plane
         let td: f32 = (tdx.powi(2) + tdy.powi(2) + tdz.powi(2)).sqrt();
 
-        // Extract the FAR plane */
+        // Extract the FAR plane
         let fdx: f32 = clip[3] - clip[2];
         let fdy: f32 = clip[7] - clip[6];
         let fdz: f32 = clip[11] - clip[10];
@@ -76,7 +83,7 @@ impl Frustum {
         // Divisor to normilize far plane
         let fd: f32 = (fdx.powi(2) + fdy.powi(2) + fdz.powi(2)).sqrt();
 
-        // Extract the NEAR plane */
+        // Extract the NEAR plane
         let ndx: f32 = clip[3] + clip[2];
         let ndy: f32 = clip[7] + clip[6];
         let ndz: f32 = clip[11] + clip[10];
@@ -95,6 +102,8 @@ impl Frustum {
         }
     }
 
+	/// Create a frustum from 2-dimensional modelview and projection float arrays
+	///
     pub fn create_from_2d_array(modl: &[[f32; 4]; 4], proj: &[[f32; 4]; 4]) -> Frustum {
         let modl_1d: [f32; 16] = [
             modl[0][0],
@@ -136,6 +145,8 @@ impl Frustum {
         return Frustum::create_from_1d_array(&modl_1d, &proj_1d);
     }
 
+    /// A cube is intersecting the renderable region of the frustum
+	///
     pub fn cube_intersecting(&self, x: &f32, y: &f32, z: &f32, size: &f32) -> bool {
         for p in 0..6 {
             if !((self.planes[p][0] * (x - size) + self.planes[p][1] * (y - size) + self.planes[p][2] * (z - size) + self.planes[p][3] > 0.0f32) ||
@@ -152,6 +163,8 @@ impl Frustum {
         true
     }
 
+	/// A point is intersecting the renderable region of the frustum
+	///
     pub fn point_intersecting(&self, x: &f32, y: &f32, z: &f32) -> bool {
         for p in 0..6 {
             if (self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z + self.planes[p][3]) <= 0.0f32 {
@@ -161,6 +174,8 @@ impl Frustum {
         true
     }
 
+	/// A sphere is intersecting the renderable region of the frustum
+	///
     pub fn sphere_intersecting(&self, x: &f32, y: &f32, z: &f32, r: &f32) -> bool {
         for p in 0..6 {
             if self.planes[p][0] * x + self.planes[p][1] * y + self.planes[p][2] * z + self.planes[p][3] <= (0.0f32 - r) {
