@@ -28,7 +28,7 @@ camera = Camera:create(screen_width, screen_height)
 camera:move_backward(6)
 wavefront_file = "test.obj"
 database_file = "example.db"
--- quick3d.obj2sqlite(wavefront_file, database_file)
+quick3d.obj2sqlite(wavefront_file, database_file)
 renderer = Renderer:create(database_file, display)
 shader = Shader:create("default", "../../shaders.db", renderer, display)
 console = quick3d.create_console_reader()
