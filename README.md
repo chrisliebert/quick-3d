@@ -56,6 +56,7 @@ This should produce quick3dwrapper.so on a Unix system and quick3dwrapper.dll on
 
 
 **Running the LUA Example**
+`cd ffi/Lua`
 
 `lua example.lua` or `luajit example.lua`
 
@@ -66,6 +67,7 @@ After the Quick3D Rust source is updated, the Lua example can be run with the `c
 
 As of Lua example v0.1.3, to build the optimized release version of the shared libraries, run with:
 `lua example.lua clean release`
+
 
 **A Note about Shared Libraries**
 

@@ -20,6 +20,7 @@ jnilib: swig_jni_wrapper
 
 swig_jni_wrapper:
 	cp ../../quick3d.i .
+	cp ../../quick3d.h .
 	${REMOVE} quick3d_wrap.c
 	swig -java quick3d.i
 

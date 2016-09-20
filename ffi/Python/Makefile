@@ -19,6 +19,7 @@ pylib: swig_py_wrapper
 
 swig_py_wrapper:
 	cp ../../quick3d.i .
+	cp ../../quick3d.h .
 	${REMOVE} quick3d_wrap.c	
 	swig -python quick3d.i
 

@@ -24,9 +24,7 @@ fn copy_quick3d_shared_library_files() -> std::io::Result<()> {
 }
 
 fn copy_swig_interface_file() -> std::io::Result<()> {
-	let quick3d_i_src = Path::new("../../quick3d.i");
-	let quick3d_i_dst = Path::new("src/quick3d.i");
-	try!(fs::copy(quick3d_i_src, quick3d_i_dst));
+	try!(fs::copy(Path::new("../../quick3d.h"), Path::new("src/quick3d.h")));
 	Ok(())
 }
 

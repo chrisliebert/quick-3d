@@ -7,28 +7,62 @@ package.path = package.path .. ";./?.lua"
 require "quick3d"
 
 local target_build = "debug"
+local use_luajitffi = (type(jit) == 'table')
 
--- Clean shared libraries if "clean" is the first argument
-if arg[1] == "clean" then
-	print("Cleaning shared libraries")
-	if arg[2] == "release" then
-	  target_build = "release"
-	end
-	-- Initialize Quick3D
-	quick3d_clean(target_build)
+-- Parse program arguments
+local i = 1
+while arg[i] do
+  if arg[i] == "--noluajitffi" then
+    use_luajitffi = false
+  -- Clean shared libraries if "clean" is the first argument
+  elseif arg[i] == "clean" then
+    print("Cleaning shared libraries")
+    if arg[i] == "release" then
+      target_build = "release"
+    end
+    -- Initialize Quick3D
+    quick3d_clean(target_build)
+  elseif arg[i] == "release" then
+    if use_luajitffi then
+      target_build = "release"
+    else
+      print("Did you mean `clean release`? `release` is only valid when using the LuaJIT FFI")
+    end
+  end
+  i = i + 1
 end
 
+local quick3d = nil
+
+if use_luajitffi then
+  quick3d = quick3d_init_luajitffi(target_build)
+else
 -- Initialize Quick3D
-quick3d = quick3d_init(target_build)
+  quick3d = quick3d_init(target_build)
+end
 
 screen_width = 800
 screen_height = 600
 display = Display:create(screen_width, screen_height, "My Lua Window")
 camera = Camera:create(screen_width, screen_height)
 camera:move_backward(6)
-wavefront_file = "test.obj"
-database_file = "example.db"
-quick3d.obj2sqlite(wavefront_file, database_file)
+
+-- Load ../../test.db unless a file ending in .obj or .db is specified as an argument
+database_file = "../../test.db"
+local i = 1
+-- Parse program arguments ending in ".db" or ".obj"
+while arg[i] do
+  if string.sub(arg[i], -3) == ".db" then
+    database_file = arg[i]
+    break
+  elseif string.sub(arg[i], -4) == ".obj" then
+    local wavefront_file = arg[i]
+    database_file = wavefront_file .. ".db"
+    quick3d.obj2sqlite(arg[i], database_file)
+  end
+  i = i + 1
+end
+
 renderer = Renderer:create(database_file, display)
 shader = Shader:create("default", "../../shaders.db", renderer, display)
 console = quick3d.create_console_reader()
@@ -41,7 +75,6 @@ function quit()
   quick3d.free_renderer(renderer.struct)
   quick3d.free_display(display.struct)
   quick3d.free_camera(camera.struct)
-  os.exit() -- Removing this call will cause Lua to crash on exit.
 end
 
 function demo()
@@ -66,7 +99,7 @@ while not quick3d.console_is_closed(console) do
     camera:aim(input.mouse_dx * mouse_factor, input.mouse_dy * mouse_factor)
   end
   -- Read from console buffer
-  console_command = quick3d.read_console_buffer(console)
+  console_command = quick3d_read_console_buffer(console)
   if string.len(console_command) > 0 then	
     local success, errormsg = pcall(eval, console_command)
     if not success then
@@ -102,3 +135,5 @@ end
 
 quick3d.wait_console_quit(console)
 quit()
+collectgarbage()
+os.exit() -- Removing this call will cause Lua to crash on exit.
