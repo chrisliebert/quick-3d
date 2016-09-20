@@ -132,8 +132,8 @@ while not quick3d.console_is_closed(console) do
 
   if input.closed then
     quick3d.free_event(input)
-	quit()
-	break
+    quit()
+    break
   end
   
   quick3d.free_event(input)
