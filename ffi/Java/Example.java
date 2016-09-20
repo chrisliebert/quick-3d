@@ -18,7 +18,6 @@ class Example {
 		}
 		
 		public void finalize() {
-			System.err.println("Freeing display");
 			quick3dwrapper.free_display(data);
 		}
 	}
@@ -33,14 +32,23 @@ class Example {
 		void poll(Display display) {
 			data = quick3dwrapper.poll_event(display.data);
 		}
+		
+		public void finalize() {
+			quick3dwrapper.free_event(data);
+		}
 	}
 
 	public static void main(String[] args) {
 		int screenWidth = 640, screenHeight = 480;
 		Display display = new Display(screenWidth, screenHeight, "My JNI Window");
 		WindowInput input = new WindowInput();
-		while(!input.data.getEscape()) {
+		boolean done = false;
+		while(!done) {
 			input.poll(display);
+			if(input.data.getEscape() || input.data.getClosed()) {
+				done = true;
+			}
+			input.finalize();
 		}
 		display.finalize();
 	}

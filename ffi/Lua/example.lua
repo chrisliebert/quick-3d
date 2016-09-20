@@ -75,6 +75,8 @@ function quit()
   quick3d.free_renderer(renderer.struct)
   quick3d.free_display(display.struct)
   quick3d.free_camera(camera.struct)
+  collectgarbage()
+  os.exit() -- Removing this call will cause Lua to crash on exit.
 end
 
 function demo()
@@ -129,11 +131,13 @@ while not quick3d.console_is_closed(console) do
   end
 
   if input.closed then
-    break
+    quick3d.free_event(input)
+	quit()
+	break
   end
+  
+  quick3d.free_event(input)
 end
 
 quick3d.wait_console_quit(console)
 quit()
-collectgarbage()
-os.exit() -- Removing this call will cause Lua to crash on exit.

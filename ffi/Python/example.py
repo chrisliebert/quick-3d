@@ -36,7 +36,7 @@ def main():
 	            exec(console_command)
 	        except:
 	            print("Invalid command: " + console_command)
-    
+        q3d.free_event(event)
     #clean up
     destroy(display, camera)
 

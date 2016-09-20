@@ -310,6 +310,16 @@ pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
     drop(box_ptr)
 }
 
+/// Free an event
+///
+/// `extern void free_event(Input* input);`
+///
+#[no_mangle]
+pub extern "C" fn free_event(ptr: *mut Input) {
+	let box_ptr: Box<Input> = unsafe { Box::from_raw(ptr) };
+    drop(box_ptr)
+}
+
 /// `extern void free_display(Display memory);`
 ///
 #[no_mangle]
@@ -354,7 +364,7 @@ pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char,
 /// `extern Input poll_event(Display display);`
 ///
 #[no_mangle]
-pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
+pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Box<Input> {
     static mut mouse_last_x: i32 = 0;
     static mut mouse_last_y: i32 = 0;
     static mut _mouse_dx: i32 = 0;
@@ -720,7 +730,7 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
             _ => () // All events that arent matched are consumed here
         }
     }
-    Input {
+    Box::new(Input {
         key_1: key_1,
         key_2: key_2,
         key_3: key_3,
@@ -772,7 +782,7 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Input {
         mouse_y: mouse_last_y,
         mouse_left: left_button_pressed,
         mouse_right: right_button_pressed,
-    }
+    })
 }
 
 /// `extern char* read_console_buffer(ConsoleInput console);`
