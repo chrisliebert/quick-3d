@@ -1,0 +1,6 @@
+[submodule "dependencies/libgamepad"]
+	path = dependencies/libgamepad
+	url = https://github.com/mtwilliams/libgamepad.git
+[submodule "dependencies/tinyobjloader"]
+	path = dependencies/tinyobjloader
+	url = https://github.com/syoyo/tinyobjloader.git
