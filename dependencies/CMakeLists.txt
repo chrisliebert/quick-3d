@@ -6,12 +6,6 @@ PROJECT(quick3d-dependencies)
 
 SET(CMAKE_BUILD_TYPE Debug)
 
-# Dummy stdc++ library for MSVC
-# Rust MSVC does not need to be linked with stdc++
-IF(MSVC)
-	ADD_LIBRARY(stdc++ support/msvc-stdc++.cpp)
-ENDIF(MSVC)
-
 FIND_PACKAGE(SQLITE3 QUIET)
 
 # If SQLite3 is not found, build the buildled version
@@ -59,10 +53,8 @@ ELSEIF(NOT SQLITE3_FOUND)
 ENDIF(NOT SQLITE3_FOUND)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/tinyobjloader)
-ADD_LIBRARY(tinyobjloader STATIC
-	tinyobjloader/tiny_obj_loader.cc
-	tinyobjloader/tiny_obj_loader.h
-)
+
+ADD_SUBDIRECTORY(tinybobjloader)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/obj2sqlite)
 
@@ -72,6 +64,26 @@ ADD_LIBRARY(scenebuilder
 	obj2sqlite/SceneBuilder.cpp
 	obj2sqlite/SceneBuilder.h
 )
+
+ADD_DEFINITIONS(-DGAMEPAD_STATIC_LIB)
+ADD_LIBRARY(gamepad STATIC
+	libgamepad/gamepad.c
+	libgamepad/gamepad.h
+)
+
+IF(UNIX)
+	TARGET_LINK_LIBRARIES(gamepad c m udev)
+ENDIF(UNIX)
+
+IF(MSVC)
+	ADD_LIBRARY(stdc++ STATIC support/dummy.cpp)
+	INSTALL(TARGETS stdc++ DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
+ENDIF(MSVC)
+
+IF(WIN32)
+	ADD_LIBRARY(udev STATIC	support/dummy.cpp)
+	INSTALL(TARGETS udev DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
+ENDIF(WIN32)
 
 ADD_EXECUTABLE(obj2sqlite
 	obj2sqlite/obj2sqlite.cpp
@@ -86,9 +98,4 @@ INSTALL(TARGETS ${SQLITE3_LIBRARY} tinyobjloader scenebuilder DESTINATION ${CMAK
 
 # Install obj2sqlite binary to parent directory
 INSTALL(TARGETS obj2sqlite DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/..)
-
-# Install stdc++.lib on MSVC
-IF(MSVC)
-	INSTALL(TARGETS stdc++ DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
-ENDIF(MSVC)
-
+INSTALL(TARGETS gamepad DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})

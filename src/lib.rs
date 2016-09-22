@@ -28,22 +28,181 @@ use camera::Camera;
 use loader::DBLoader;
 use renderer::Renderer;
 
+/// The following methods annotated as #[no_mangle] provide external interfaces
+/// that can be accessed from C and SWIG
+///
 
 #[link(name = "tinyobjloader", kind="static")]
 #[link(name = "scenebuilder", kind="static")]
 #[link(name = "stdc++")]
 extern "C" {
-	fn wavefrontToSQLite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char);
+	fn _obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char);
 }
 
 #[no_mangle]
-pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
-	unsafe { wavefrontToSQLite(wavefront_file, database_file) };
+pub unsafe extern "C" fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
+	_obj2sqlite(wavefront_file, database_file)
 }
 
-/// The following methods annotated as #[no_mangle] provide external interfaces
-/// that can be accessed from C and SWIG
+#[link(name = "gamepad", kind="static")]
+#[link(name = "udev")]
+extern "C" {
+	fn GamepadInit();
+	fn GamepadShutdown();
+	fn GamepadUpdate();
+	fn GamepadIsConnected(device: libc::c_int) -> libc::c_int;
+	fn GamepadButtonDown(device: libc::c_int, button: libc::c_int) -> libc::c_int;
+	fn GamepadButtonTriggered(device: libc::c_int, button: libc::c_int) -> libc::c_int;
+	fn GamepadButtonReleased(device: libc::c_int, button: libc::c_int) -> libc::c_int;
+	fn GamepadTriggerValue(device: libc::c_int, trigger: libc::c_int) -> libc::c_int;
+	fn GamepadTriggerLength(device: libc::c_int, trigger: libc::c_int) -> libc::c_float;
+	fn GamepadTriggerDown(device: libc::c_int, trigger: libc::c_int) -> libc::c_int;
+	fn GamepadTriggerTriggered(device: libc::c_int, trigger: libc::c_int) -> libc::c_int;
+	fn GamepadTriggerReleased(device: libc::c_int, trigger: libc::c_int) -> libc::c_int;
+	fn GamepadSetRumble(device: libc::c_int, left: libc::c_float, right: libc::c_float);
+	fn GamepadStickXY(device: libc::c_int, stick: libc::c_int, out_x: *mut libc::c_int, out_y: *mut libc::c_int);
+	fn GamepadStickNormXY(device: libc::c_int, stick: libc::c_int, out_x: *mut libc::c_float, out_y: *mut libc::c_float);
+	fn GamepadStickLength(device: libc::c_int, stick: libc::c_int) -> libc::c_float;
+	fn GamepadStickAngle(device: libc::c_int, stick: libc::c_int) -> libc::c_float;
+	fn GamepadStickDir(device: libc::c_int, stick: libc::c_int) -> libc::c_int;
+	fn GamepadStickDirTriggered(device: libc::c_int, stick: libc::c_int, dir: libc::c_int) -> libc::c_int;
+}
+
+
+/// `extern `
 ///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_init() {
+	GamepadInit();
+}
+
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_shutdown() {
+	GamepadShutdown();
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_update() {
+	GamepadUpdate();
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_is_connected(device: libc::c_int) -> bool {
+	1 == GamepadIsConnected(device)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_button_down(device: libc::c_int, button: libc::c_int) -> bool {
+	1 == GamepadButtonDown(device, button)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_button_triggered(device: libc::c_int, button: libc::c_int) -> bool {
+	1 == GamepadButtonTriggered(device, button)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_button_released(device: libc::c_int, button: libc::c_int) -> bool {
+	0 != GamepadButtonReleased(device, button)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_trigger_value(device: libc::c_int, trigger: libc::c_int) -> libc::c_int {
+	GamepadTriggerValue(device, trigger)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_trigger_length(device: libc::c_int, trigger: libc::c_int) -> libc::c_float {
+	GamepadTriggerLength(device, trigger)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_trigger_down(device: libc::c_int, trigger: libc::c_int) -> bool {
+	1 == GamepadTriggerDown(device, trigger)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_trigger_triggered(device: libc::c_int, trigger: libc::c_int) -> bool {
+	1 == GamepadTriggerTriggered(device, trigger)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_trigger_released(device: libc::c_int, trigger: libc::c_int) -> bool{
+	1 == GamepadTriggerReleased(device, trigger)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_set_rumble(device: libc::c_int, left: libc::c_float, right: libc::c_float) {
+	GamepadSetRumble(device, left, right);
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_stick_xy(device: libc::c_int, stick: libc::c_int, out_x: *mut libc::c_int, out_y: *mut libc::c_int) {
+	GamepadStickXY(device, stick, out_x, out_y);
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_stick_norm_xy(device: libc::c_int, stick: libc::c_int, out_x: *mut libc::c_float, out_y: *mut libc::c_float) {
+	GamepadStickNormXY(device, stick, out_x, out_y);
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_stick_length(device: libc::c_int, stick: libc::c_int) -> libc::c_float {
+	GamepadStickLength(device, stick)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_stick_angle(device: libc::c_int, stick: libc::c_int) -> libc::c_float {
+	GamepadStickAngle(device, stick)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_stick_dir(device: libc::c_int, stick: libc::c_int) -> libc::c_int {
+	GamepadStickDir(device, stick)
+}
+
+/// `extern `
+///
+#[no_mangle]
+pub unsafe extern "C" fn gamepad_stick_dir_triggered(device: libc::c_int, stick: libc::c_int, dir: libc::c_int) -> bool {
+	1 == GamepadStickDirTriggered(device, stick, dir)
+}
+
 
 /// Structure for querying stdin console input
 ///

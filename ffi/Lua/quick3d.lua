@@ -309,7 +309,16 @@ function Display.show(self)
   wrapper.window_show(self.struct)
 end
 
-
+local window_hidden = false
+function Display.toggle(self)
+  if not window_hidden then
+	self:hide()
+	window_hidden = true
+  else
+	self:show()
+	window_hidden = false
+  end
+end
 -- Renderer object wrapper
 Renderer = {}
 Renderer.__index = Renderer

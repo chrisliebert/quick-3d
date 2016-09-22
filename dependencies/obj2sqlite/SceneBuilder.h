@@ -102,6 +102,6 @@ private:
     ConfigLoader* cfg;
 };
 
-extern "C" void wavefrontToSQLite(const char* wavefront, const char* database);
+extern "C" void _obj2sqlite(const char* wavefront, const char* database);
 
 #endif //_SCENE_BUILDER_H_
