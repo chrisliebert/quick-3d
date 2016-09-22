@@ -53,8 +53,11 @@ ELSEIF(NOT SQLITE3_FOUND)
 ENDIF(NOT SQLITE3_FOUND)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/tinyobjloader)
-
-ADD_SUBDIRECTORY(tinyobjloader)
+ADD_LIBRARY(tinyobjloader STATIC
+	tinyobjloader/tiny_obj_loader.cc
+	tinyobjloader/tiny_obj_loader.h
+)
+INSTALL(TARGETS tinyobjloader DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/obj2sqlite)
 
