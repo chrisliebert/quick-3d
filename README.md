@@ -37,6 +37,7 @@ Make sure the following dependencies are installed, most Linux distributions alr
 | SQLite Browser (Optional, this is a useful tool for reading and writing SQLite databases) | http://sqlitebrowser.org/ |
 
 **Accessing the Quick3D Source**
+
 `git clone http://github.com/chrisliebert/quick-3d.git --recursive`
 The `--recursive` switch is required to fetch the third-party git submodule dependencies.
 
