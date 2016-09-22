@@ -16,6 +16,6 @@ int main(int argc, char** argv)
 	}
 	string inputFileName(argv[1]);
 	string outFileName(inputFileName.substr(0, strlen(argv[1]) - 4) + ".db");
-	wavefrontToSQLite(inputFileName.c_str(), outFileName.c_str());
+	_obj2sqlite(inputFileName.c_str(), outFileName.c_str());
 	return 0;
 }

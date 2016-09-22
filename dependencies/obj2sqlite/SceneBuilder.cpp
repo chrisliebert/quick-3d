@@ -599,7 +599,7 @@ void SceneBuilder::saveToDB(const char* dbFile)
 	cout << "Done writing database" << endl;
 }
 
-void wavefrontToSQLite(const char* wavefront, const char* database) {
+void _obj2sqlite(const char* wavefront, const char* database) {
 	SceneBuilder sceneBuilder;
 	sceneBuilder.addWavefront(wavefront, glm::translate(glm::mat4(1.f), glm::vec3(0.0, 0.0, 0.0)));
 	sceneBuilder.buildScene();

@@ -65,12 +65,24 @@ end
 
 renderer = Renderer:create(database_file, display)
 shader = Shader:create("default", "../../shaders.db", renderer, display)
+
+-- Initialize Gamepad Joystick Controller (XBOX controller)
+quick3d.gamepad_init()
+quick3d.gamepad_update()
+local gamepad_player_number = 0
+if quick3d.gamepad_is_connected(gamepad_player_number) then
+  print("Gamepad " .. gamepad_player_number .. " Connected")
+else
+  print("Gamepad " .. gamepad_player_number .. " Not Connected")
+end
+
 console = quick3d.create_console_reader()
 
 camera_speed = 0.01
 mouse_factor = 0.01
 
 function quit()
+  quick3d.gamepad_shutdown()
   quick3d.free_shader(shader.struct)
   quick3d.free_renderer(renderer.struct)
   quick3d.free_display(display.struct)
@@ -93,6 +105,7 @@ function demo()
    end
 end
 
+local window_hidden = false
 local console_command = ""
 while not quick3d.console_is_closed(console) do
   renderer:render(shader, camera, display)
@@ -135,7 +148,36 @@ while not quick3d.console_is_closed(console) do
     quit()
     break
   end
-  
+
+  quick3d.gamepad_update()
+  if quick3d.gamepad_is_connected(gamepad_player_number) then
+    local start_button_released = quick3d.gamepad_button_released(gamepad_player_number, 4)	-- BUTTON_START = 4
+    local back_button_triggered = quick3d.gamepad_button_triggered(gamepad_player_number, 5)	-- BUTTON_BACK = 5
+    local left_trigger = quick3d.gamepad_trigger_length(gamepad_player_number, 0)		-- TRIGGER_LEFT = 0
+    local right_trigger = quick3d.gamepad_trigger_length(gamepad_player_number, 1)		-- TRIGGER_RIGHT = 1
+    local right_bumper_triggered = quick3d.gamepad_button_triggered(gamepad_player_number, 9)    -- BUTTON_RIGHT_SHOULDER = 9
+    -- Hide the window if the start button is pressed
+    if start_button_released then
+      display:toggle()
+    end
+
+    if back_button_triggered then
+      print("Gamepad back button triggered")
+    end
+
+    if right_bumper_triggered then
+      quick3d.free_event(input)
+      quit()
+      break
+    end
+
+    -- Move the camera forward and backward the right and left triggers
+    if left_trigger > 0.0 or right_trigger > 0.0 then
+      camera:move_backward(camera_speed * left_trigger)
+      camera:move_forward(camera_speed * right_trigger)
+    end
+  end  
+
   quick3d.free_event(input)
 end
 

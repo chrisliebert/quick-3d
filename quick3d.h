@@ -50,3 +50,71 @@ extern void thread_yield();
 
 /* C/C++ Methods */
 extern void obj2sqlite(const char* wavefront, const char* database);
+
+/* Libgamepad Enum and Wrapper Methods */
+typedef enum GAMEPAD_DEVICE {
+	GAMEPAD_0,
+	GAMEPAD_1,
+	GAMEPAD_2,
+	GAMEPAD_3,
+	GAMEPAD_COUNT
+};
+
+typedef enum GAMEPAD_BUTTON {
+	BUTTON_DPAD_UP,
+	BUTTON_DPAD_DOWN,
+	BUTTON_DPAD_LEFT,
+	BUTTON_DPAD_RIGHT,
+	BUTTON_START,
+	BUTTON_BACK,
+	BUTTON_LEFT_THUMB,
+	BUTTON_RIGHT_THUMB,
+	BUTTON_LEFT_SHOULDER,
+	BUTTON_RIGHT_SHOULDER,
+	BUTTON_A,
+	BUTTON_B,
+	BUTTON_X,
+	BUTTON_Y,
+	BUTTON_COUNT
+};
+
+typedef enum GAMEPAD_TRIGGER {
+	TRIGGER_LEFT,
+	TRIGGER_RIGHT,
+	TRIGGER_COUNT
+};
+
+typedef enum GAMEPAD_STICK {
+	STICK_LEFT,
+	STICK_RIGHT,
+	STICK_COUNT
+};
+
+typedef enum GAMEPAD_STICKDIR {
+	STICKDIR_CENTER,
+	STICKDIR_UP,
+	STICKDIR_DOWN,
+	STICKDIR_LEFT,
+	STICKDIR_RIGHT,
+	STICKDIR_COUNT
+};
+
+extern void gamepad_init();
+extern void gamepad_shutdown();
+extern void gamepad_update();
+extern bool gamepad_is_connected(int device);
+extern bool gamepad_button_down(int device, int button);
+extern bool gamepad_button_triggered(int device, int button);
+extern bool gamepad_button_released(int device, int button);
+extern int gamepad_trigger_value(int device, int trigger);
+extern float gamepad_trigger_length(int device, int trigger);
+extern bool gamepad_trigger_down(int device, int trigger);
+extern bool gamepad_trigger_triggered(int device, int trigger);
+extern bool gamepad_trigger_released(int device, int trigger);
+extern void gamepad_set_rumble(int device, float left, float right);
+extern void gamepad_stick_xy(int device, int stick, int* out_x, int* out_y);
+extern void gamepad_stick_norm_xy(int device, int stick, float* out_x, float* out_y);
+extern float gamepad_stick_length(int device, int stick);
+extern float gamepad_stick_angle(int device, int stick);
+extern int gamepad_stick_dir(int device, int stick);
+extern bool gamepad_stick_dir_triggered(int device, int stick, int dir);
