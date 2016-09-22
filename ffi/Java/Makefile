@@ -25,5 +25,4 @@ swig_jni_wrapper:
 	swig -java quick3d.i
 
 clean:
-	${REMOVE} quick3d_wrap.c ${QUICK3D_LIB} ${QUICK3D_WRAPPER_LIB} c_example
-	cargo clean
+	${REMOVE} quick3d_wrap.c ${QUICK3D_LIB} ${QUICK3D_WRAPPER_LIB} 
