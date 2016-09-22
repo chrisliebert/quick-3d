@@ -28,3 +28,6 @@ script:
   - cd ../C
   - cargo build
   - cargo test
+  - cd ../CSharp
+  - cargo build
+  - cargo test

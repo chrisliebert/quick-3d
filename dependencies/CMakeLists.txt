@@ -14,12 +14,14 @@ ENDIF(MSVC)
 
 FIND_PACKAGE(SQLITE3 QUIET)
 
-# If SQLite3 is not found, build the buildled version
-IF(NOT SQLITE3_FOUND)
-	INCLUDE(FindPkgConfig)
-	PKG_SEARCH_MODULE(SQLITE3 sqlite3)
-ENDIF(NOT SQLITE3_FOUND)
-
+IF(NOT(MSVC))
+	# If SQLite3 is not found, see if it can be found with pkg-config
+	IF(NOT SQLITE3_FOUND)
+		INCLUDE(FindPkgConfig)
+		PKG_SEARCH_MODULE(SQLITE3 sqlite3)
+	ENDIF(NOT SQLITE3_FOUND)
+ENDIF(NOT(MSVC))
+	
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 # If SQLite3 is not found, build the buildled version
