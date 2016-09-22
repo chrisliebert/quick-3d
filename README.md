@@ -36,6 +36,10 @@ Make sure the following dependencies are installed, most Linux distributions alr
 | CMake 3.0 or greater | https://cmake.org/download/ |
 | SQLite Browser (Optional, this is a useful tool for reading and writing SQLite databases) | http://sqlitebrowser.org/ |
 
+**Accessing the Quick3D Source**
+`git clone http://github.com/chrisliebert/quick-3d.git --recursive`
+The `--recursive` switch is required to fetch the third-party git submodule dependencies.
+
 **Note for Windows Users**
 
 Quick3D can be built for Windows using the MSVC ABI.
