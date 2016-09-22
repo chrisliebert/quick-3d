@@ -51,7 +51,54 @@ extern void thread_yield();
 /* C/C++ Methods */
 extern void obj2sqlite(const char* wavefront, const char* database);
 
-/* libgamepad_ Wrapper Methods */
+/* Libgamepad Enum and Wrapper Methods */
+typedef enum GAMEPAD_DEVICE {
+	GAMEPAD_0,
+	GAMEPAD_1,
+	GAMEPAD_2,
+	GAMEPAD_3,
+	GAMEPAD_COUNT
+};
+
+typedef enum GAMEPAD_BUTTON {
+	BUTTON_DPAD_UP,
+	BUTTON_DPAD_DOWN,
+	BUTTON_DPAD_LEFT,
+	BUTTON_DPAD_RIGHT,
+	BUTTON_START,
+	BUTTON_BACK,
+	BUTTON_LEFT_THUMB,
+	BUTTON_RIGHT_THUMB,
+	BUTTON_LEFT_SHOULDER,
+	BUTTON_RIGHT_SHOULDER,
+	BUTTON_A,
+	BUTTON_B,
+	BUTTON_X,
+	BUTTON_Y,
+	BUTTON_COUNT
+};
+
+typedef enum GAMEPAD_TRIGGER {
+	TRIGGER_LEFT,
+	TRIGGER_RIGHT,
+	TRIGGER_COUNT
+};
+
+typedef enum GAMEPAD_STICK {
+	STICK_LEFT,
+	STICK_RIGHT,
+	STICK_COUNT
+};
+
+typedef enum GAMEPAD_STICKDIR {
+	STICKDIR_CENTER,
+	STICKDIR_UP,
+	STICKDIR_DOWN,
+	STICKDIR_LEFT,
+	STICKDIR_RIGHT,
+	STICKDIR_COUNT
+};
+
 extern void gamepad_init();
 extern void gamepad_shutdown();
 extern void gamepad_update();

@@ -44,28 +44,86 @@ pub unsafe extern "C" fn obj2sqlite(wavefront_file: *const libc::c_char, databas
 	_obj2sqlite(wavefront_file, database_file)
 }
 
+#[repr(C)]
+pub enum GAMEPAD_DEVICE {
+	GAMEPAD_0,
+	GAMEPAD_1,
+	GAMEPAD_2,
+	GAMEPAD_3,
+	GAMEPAD_COUNT,
+}
+
+#[repr(C)]
+pub enum GAMEPAD_BUTTON {
+	BUTTON_DPAD_UP,
+	BUTTON_DPAD_DOWN,
+	BUTTON_DPAD_LEFT,
+	BUTTON_DPAD_RIGHT,
+	BUTTON_START,
+	BUTTON_BACK,
+	BUTTON_LEFT_THUMB,
+	BUTTON_RIGHT_THUMB,
+	BUTTON_LEFT_SHOULDER,
+	BUTTON_RIGHT_SHOULDER,
+	BUTTON_A,
+	BUTTON_B,
+	BUTTON_X,
+	BUTTON_Y,
+	BUTTON_COUNT,
+}
+
+#[repr(C)]
+pub enum GAMEPAD_TRIGGER {
+	TRIGGER_LEFT,
+	TRIGGER_RIGHT,
+	TRIGGER_COUNT,
+}
+
+#[repr(C)]
+pub enum GAMEPAD_STICK {
+	STICK_LEFT,
+	STICK_RIGHT,
+	STICK_COUNT,
+}
+
+#[repr(C)]
+pub enum GAMEPAD_STICKDIR {
+	STICKDIR_CENTER,
+	STICKDIR_UP,
+	STICKDIR_DOWN,
+	STICKDIR_LEFT,
+	STICKDIR_RIGHT,
+	STICKDIR_COUNT,
+}
+
+#[repr(C)]
+pub enum GAMEPAD_BOOL {
+	GAMEPAD_FALSE,
+	GAMEPAD_TRUE,
+}
+
 #[link(name = "gamepad", kind="static")]
 #[link(name = "udev")]
 extern "C" {
 	fn GamepadInit();
 	fn GamepadShutdown();
 	fn GamepadUpdate();
-	fn GamepadIsConnected(device: libc::c_int) -> libc::c_int;
-	fn GamepadButtonDown(device: libc::c_int, button: libc::c_int) -> libc::c_int;
-	fn GamepadButtonTriggered(device: libc::c_int, button: libc::c_int) -> libc::c_int;
-	fn GamepadButtonReleased(device: libc::c_int, button: libc::c_int) -> libc::c_int;
-	fn GamepadTriggerValue(device: libc::c_int, trigger: libc::c_int) -> libc::c_int;
-	fn GamepadTriggerLength(device: libc::c_int, trigger: libc::c_int) -> libc::c_float;
-	fn GamepadTriggerDown(device: libc::c_int, trigger: libc::c_int) -> libc::c_int;
-	fn GamepadTriggerTriggered(device: libc::c_int, trigger: libc::c_int) -> libc::c_int;
-	fn GamepadTriggerReleased(device: libc::c_int, trigger: libc::c_int) -> libc::c_int;
-	fn GamepadSetRumble(device: libc::c_int, left: libc::c_float, right: libc::c_float);
-	fn GamepadStickXY(device: libc::c_int, stick: libc::c_int, out_x: *mut libc::c_int, out_y: *mut libc::c_int);
-	fn GamepadStickNormXY(device: libc::c_int, stick: libc::c_int, out_x: *mut libc::c_float, out_y: *mut libc::c_float);
-	fn GamepadStickLength(device: libc::c_int, stick: libc::c_int) -> libc::c_float;
-	fn GamepadStickAngle(device: libc::c_int, stick: libc::c_int) -> libc::c_float;
-	fn GamepadStickDir(device: libc::c_int, stick: libc::c_int) -> libc::c_int;
-	fn GamepadStickDirTriggered(device: libc::c_int, stick: libc::c_int, dir: libc::c_int) -> libc::c_int;
+	fn GamepadIsConnected(device: GAMEPAD_DEVICE) -> GAMEPAD_BOOL;
+	fn GamepadButtonDown(device: GAMEPAD_DEVICE, button: GAMEPAD_BUTTON) -> GAMEPAD_BOOL;
+	fn GamepadButtonTriggered(device: GAMEPAD_DEVICE, button: GAMEPAD_BUTTON) -> GAMEPAD_BOOL;
+	fn GamepadButtonReleased(device: GAMEPAD_DEVICE, button: GAMEPAD_BUTTON) -> GAMEPAD_BOOL;
+	fn GamepadTriggerValue(device: GAMEPAD_DEVICE, trigger: GAMEPAD_TRIGGER) -> libc::c_int;
+	fn GamepadTriggerLength(device: GAMEPAD_DEVICE, trigger: GAMEPAD_TRIGGER) -> libc::c_float;
+	fn GamepadTriggerDown(device: GAMEPAD_DEVICE, trigger: GAMEPAD_TRIGGER) -> GAMEPAD_BOOL;
+	fn GamepadTriggerTriggered(device: GAMEPAD_DEVICE, trigger: GAMEPAD_TRIGGER) -> GAMEPAD_BOOL;
+	fn GamepadTriggerReleased(device: GAMEPAD_DEVICE, trigger: GAMEPAD_TRIGGER) -> GAMEPAD_BOOL;
+	fn GamepadSetRumble(device: GAMEPAD_DEVICE, left: libc::c_float, right: libc::c_float);
+	fn GamepadStickXY(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK, out_x: *mut libc::c_int, out_y: *mut libc::c_int);
+	fn GamepadStickNormXY(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK, out_x: *mut libc::c_float, out_y: *mut libc::c_float);
+	fn GamepadStickLength(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK) -> libc::c_float;
+	fn GamepadStickAngle(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK) -> libc::c_float;
+	fn GamepadStickDir(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK) -> GAMEPAD_STICKDIR;
+	fn GamepadStickDirTriggered(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK, dir: GAMEPAD_STICKDIR) -> GAMEPAD_BOOL;
 }
 
 
@@ -94,113 +152,137 @@ pub unsafe extern "C" fn gamepad_update() {
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_is_connected(device: libc::c_int) -> bool {
-	1 == GamepadIsConnected(device)
+pub unsafe extern "C" fn gamepad_is_connected(device: GAMEPAD_DEVICE) -> bool {
+	match GamepadIsConnected(device) {
+		GAMEPAD_BOOL::GAMEPAD_TRUE => true,
+		GAMEPAD_BOOL::GAMEPAD_FALSE => false,
+	} 
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_button_down(device: libc::c_int, button: libc::c_int) -> bool {
-	1 == GamepadButtonDown(device, button)
+pub unsafe extern "C" fn gamepad_button_down(device: GAMEPAD_DEVICE, button: GAMEPAD_BUTTON) -> bool {
+	match GamepadButtonDown(device, button) {
+		GAMEPAD_BOOL::GAMEPAD_TRUE => true,
+		GAMEPAD_BOOL::GAMEPAD_FALSE => false,
+	} 
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_button_triggered(device: libc::c_int, button: libc::c_int) -> bool {
-	1 == GamepadButtonTriggered(device, button)
+pub unsafe extern "C" fn gamepad_button_triggered(device: GAMEPAD_DEVICE, button: GAMEPAD_BUTTON) -> bool {
+	match GamepadButtonTriggered(device, button) {
+		GAMEPAD_BOOL::GAMEPAD_TRUE => true,
+		GAMEPAD_BOOL::GAMEPAD_FALSE => false,
+	} 
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_button_released(device: libc::c_int, button: libc::c_int) -> bool {
-	0 != GamepadButtonReleased(device, button)
+pub unsafe extern "C" fn gamepad_button_released(device: GAMEPAD_DEVICE, button: GAMEPAD_BUTTON) -> bool {
+	match GamepadButtonReleased(device, button) {
+		GAMEPAD_BOOL::GAMEPAD_TRUE => true,
+		GAMEPAD_BOOL::GAMEPAD_FALSE => false,
+	} 
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_trigger_value(device: libc::c_int, trigger: libc::c_int) -> libc::c_int {
+pub unsafe extern "C" fn gamepad_trigger_value(device: GAMEPAD_DEVICE, trigger: GAMEPAD_TRIGGER) -> libc::c_int {
 	GamepadTriggerValue(device, trigger)
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_trigger_length(device: libc::c_int, trigger: libc::c_int) -> libc::c_float {
+pub unsafe extern "C" fn gamepad_trigger_length(device: GAMEPAD_DEVICE, trigger: GAMEPAD_TRIGGER) -> libc::c_float {
 	GamepadTriggerLength(device, trigger)
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_trigger_down(device: libc::c_int, trigger: libc::c_int) -> bool {
-	1 == GamepadTriggerDown(device, trigger)
+pub unsafe extern "C" fn gamepad_trigger_down(device: GAMEPAD_DEVICE, trigger: GAMEPAD_TRIGGER) -> bool {
+	match GamepadTriggerDown(device, trigger) {
+		GAMEPAD_BOOL::GAMEPAD_TRUE => true,
+		GAMEPAD_BOOL::GAMEPAD_FALSE => false,
+	} 
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_trigger_triggered(device: libc::c_int, trigger: libc::c_int) -> bool {
-	1 == GamepadTriggerTriggered(device, trigger)
+pub unsafe extern "C" fn gamepad_trigger_triggered(device: GAMEPAD_DEVICE, trigger: GAMEPAD_TRIGGER) -> bool {
+	match GamepadTriggerTriggered(device, trigger) {
+		GAMEPAD_BOOL::GAMEPAD_TRUE => true,
+		GAMEPAD_BOOL::GAMEPAD_FALSE => false,
+	} 
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_trigger_released(device: libc::c_int, trigger: libc::c_int) -> bool{
-	1 == GamepadTriggerReleased(device, trigger)
+pub unsafe extern "C" fn gamepad_trigger_released(device: GAMEPAD_DEVICE, trigger: GAMEPAD_TRIGGER) -> bool{
+	match GamepadTriggerReleased(device, trigger) {
+		GAMEPAD_BOOL::GAMEPAD_TRUE => true,
+		GAMEPAD_BOOL::GAMEPAD_FALSE => false,
+	} 
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_set_rumble(device: libc::c_int, left: libc::c_float, right: libc::c_float) {
+pub unsafe extern "C" fn gamepad_set_rumble(device: GAMEPAD_DEVICE, left: libc::c_float, right: libc::c_float) {
 	GamepadSetRumble(device, left, right);
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_stick_xy(device: libc::c_int, stick: libc::c_int, out_x: *mut libc::c_int, out_y: *mut libc::c_int) {
+pub unsafe extern "C" fn gamepad_stick_xy(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK, out_x: *mut libc::c_int, out_y: *mut libc::c_int) {
 	GamepadStickXY(device, stick, out_x, out_y);
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_stick_norm_xy(device: libc::c_int, stick: libc::c_int, out_x: *mut libc::c_float, out_y: *mut libc::c_float) {
+pub unsafe extern "C" fn gamepad_stick_norm_xy(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK, out_x: *mut libc::c_float, out_y: *mut libc::c_float) {
 	GamepadStickNormXY(device, stick, out_x, out_y);
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_stick_length(device: libc::c_int, stick: libc::c_int) -> libc::c_float {
+pub unsafe extern "C" fn gamepad_stick_length(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK) -> libc::c_float {
 	GamepadStickLength(device, stick)
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_stick_angle(device: libc::c_int, stick: libc::c_int) -> libc::c_float {
+pub unsafe extern "C" fn gamepad_stick_angle(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK) -> libc::c_float {
 	GamepadStickAngle(device, stick)
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_stick_dir(device: libc::c_int, stick: libc::c_int) -> libc::c_int {
+pub unsafe extern "C" fn gamepad_stick_dir(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK) -> GAMEPAD_STICKDIR {
 	GamepadStickDir(device, stick)
 }
 
 /// `extern `
 ///
 #[no_mangle]
-pub unsafe extern "C" fn gamepad_stick_dir_triggered(device: libc::c_int, stick: libc::c_int, dir: libc::c_int) -> bool {
-	1 == GamepadStickDirTriggered(device, stick, dir)
+pub unsafe extern "C" fn gamepad_stick_dir_triggered(device: GAMEPAD_DEVICE, stick: GAMEPAD_STICK, dir: GAMEPAD_STICKDIR) -> bool {
+	match GamepadStickDirTriggered(device, stick, dir) {
+		GAMEPAD_BOOL::GAMEPAD_TRUE => true,
+		GAMEPAD_BOOL::GAMEPAD_FALSE => false,
+	} 
 }
 
 
