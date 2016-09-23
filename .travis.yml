@@ -15,7 +15,7 @@ addons:
       - cmake-data
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential liblua5.1-dev lua5.1
+  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential liblua5.1-dev lua5.1 openjdk-7-jdk
 script:
   - cargo build
   - cargo test
@@ -29,5 +29,9 @@ script:
   - cargo build
   - cargo test
   - cd ../CSharp
+  - cargo build
+  - cargo test
+  - cd ../Java
+  - export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-x86_64
   - cargo build
   - cargo test
