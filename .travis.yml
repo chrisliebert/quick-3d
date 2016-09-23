@@ -32,6 +32,6 @@ script:
   - cargo build
   - cargo test
   - cd ../Java
-  - export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-x86_64
+  - export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
   - cargo build
   - cargo test
