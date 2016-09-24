@@ -29,9 +29,12 @@ script:
   - export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - cargo build --verbose
   - cargo test
+  - export LD_LIBRARY_PATH=`pwd`
+  - lua5.1 test.lua
   - cd ../C
   - cargo build
   - cargo test
+  - ./c_test
   - cd ../CSharp
   - cargo build
   - cargo test
@@ -39,6 +42,11 @@ script:
   - export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
   - cargo build
   - cargo test
+  - export LD_LIBRARY_PATH=`pwd`
+  - javac *.java
+  - java Quick3DTests
   - cd ../Python
   - cargo build
   - cargo test
+  - export LD_LIBRARY_PATH=`pwd`
+  - python test.py

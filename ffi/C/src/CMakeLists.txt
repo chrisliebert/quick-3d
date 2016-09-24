@@ -7,6 +7,7 @@ SET(QUICK3D_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 LINK_DIRECTORIES(${QUICK3D_LIB_PATH})
 
 ADD_EXECUTABLE(c_example example.c quick3d.h)
+ADD_EXECUTABLE(c_test test.c quick3d.h)
 
 SET(QUICK3D_LIBRARY quick3d stdc++ sqlite3 dl util pthread gcc_s c m rt)
 
@@ -18,9 +19,10 @@ IF(MSVC)
 ENDIF(MSVC)
 
 TARGET_LINK_LIBRARIES(c_example ${QUICK3D_LIBRARY})
+TARGET_LINK_LIBRARIES(c_test ${QUICK3D_LIBRARY})
 
 # Use C instead of CXX
 SET_TARGET_PROPERTIES(c_example PROPERTIES LINKER_LANGUAGE C)
 
-# This will copy quick3dwrapper.[dll/so] to the parent directory and is used in build.rs
 INSTALL(TARGETS c_example DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/..)
+INSTALL(TARGETS c_test DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/..)
