@@ -15,7 +15,8 @@ addons:
       - cmake-data
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential libxxf86dga1 libxxf86dga-dev libxxf86misc1 libxxf86misc-dev libxxf86vm1 libxxf86vm-dev mesa-utils libgl1-mesa-swx11 libgl1-mesa-swx11-dev xvfb liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
+  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential libgl1-mesa-dri libgles2-mesa-dev freeglut3-dev libfreetype6-dev xorg-dev xserver-xorg-input-void xserver-xorg-video-dummy xpra libosmesa6-dev xvfb liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
+  - "export LIBGL_DEBUG=1"
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start" # start virtual framebuffer
   - sleep 3 # give xvfb time to start
@@ -28,13 +29,13 @@ script:
   - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - cargo build --verbose
-  - cargo test
+  - xvfb-run cargo test
   - export LD_LIBRARY_PATH=`pwd`
-  - lua test.lua
+  - xvfb-run lua test.lua
   - cd ../C
   - cargo build
   - cargo test
-  - ./c_test
+  - xvfb-run ./c_test
   - cd ../CSharp
   - cargo build
   - cargo test
@@ -44,9 +45,9 @@ script:
   - cargo test
   - export LD_LIBRARY_PATH=`pwd`
   - javac *.java
-  - java Quick3DTests
+  - xvfb-run java Quick3DTests
   - cd ../Python
   - cargo build
   - cargo test
   - export LD_LIBRARY_PATH=`pwd`
-  - python test.py
+  - xvfb-run python test.py
