@@ -11,8 +11,15 @@ build:
     - install-packages:
         packages: curl file build-essential
     - script:
-        name: quick3dtests
+        name: install-rust
         code: |
-            curl -sSf https://static.rust-lang.org/rustup.sh | sh
+            curl -sSf https://static.rust-lang.org/rustup.sh
+            sh rustup.sh --disable-sudo
+    - script:
+        name: build-quick3d
+        code: |
             cargo build
+    - script:
+        name: test-quick3d
+        code: |
             cargo test --verbose
