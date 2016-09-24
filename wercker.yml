@@ -30,9 +30,10 @@ build:
         code: |
             cd ffi/CSharp
             cargo build
+            mcs *.cs
             cd ../..
-        name: build-ffi-java
     - script:
+        name: build-ffi-java
         code: |
             cd ffi/Java
             export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
@@ -42,9 +43,9 @@ build:
         name: build-ffi-lua
         code: |
             cd ffi/Lua
-            - export LUA_INCLUDE_DIR=/usr/include/lua5.1
-            - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
-            - export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
+            export LUA_INCLUDE_DIR=/usr/include/lua5.1
+            export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
+            export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
             cargo build
             cd ../..
     - script:
@@ -57,23 +58,42 @@ build:
         name: test-quick3d
         code: |
             cargo test --verbose
+    - script:
+        name: test-ffi-c
+        code: |
             cd ffi/C
-            cargo test --verbose
+            cargo test
             ./c_example
-            cd ../CSharp
-            cargo test --verbose
-            mcs *.cs
-            cd ../Java
-            cargo test --verbose
+            cd ../..
+    - script:
+        name: test-ffi-csharp
+        code: |
+            cd ffi/CSharp
+            cargo test
+            cd ../..
+    - script:
+        name: test-ffi-java
+        code: |
+            cd ffi/Java
             export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+            cargo test
             export LD_LIBRARY_PATH=`pwd`
             javac *.java
             java Quick3DTests
-            cd ../Lua
-            cargo test --verbose
+            cd ../..
+    - script:
+        name: test-ffi-lua
+        code: |
+            cd ffi/Lua
+            cargo test
             export LD_LIBRARY_PATH=`pwd`
             lua5.1 test.lua
-            cd ../Python
-            cargo test --verbose
+            cd ../..
+    - script:
+        name: test-ffi-python
+        code: |
+            cd ffi/Python
+            cargo test
             export LD_LIBRARY_PATH=`pwd`
             python test.py
+            cd ../..
