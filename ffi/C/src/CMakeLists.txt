@@ -8,7 +8,7 @@ LINK_DIRECTORIES(${QUICK3D_LIB_PATH})
 
 ADD_EXECUTABLE(c_example example.c quick3d.h)
 
-SET(QUICK3D_LIBRARY quick3d stdc++ sqlite3 dl pthread m)
+SET(QUICK3D_LIBRARY quick3d stdc++ sqlite3 dl util pthread gcc_s c m rt)
 
 IF(MSVC)
 	SET(QUICK3D_LIBRARY quick3d opengl32 user32 gdi32 dwmapi dbghelp shell32 sqlite3 advapi32 msvcrt kernel32 ws2_32 userenv shell32 advapi32)
