@@ -9,7 +9,7 @@ box: debian
 build:
   steps:
     - install-packages:
-        packages: curl file build-essential
+        packages: curl file build-essential cmake swig liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev mono-mcs
     - script:
         name: install-rust
         code: |
@@ -19,7 +19,25 @@ build:
         name: build-quick3d
         code: |
             cargo build
+            cd ffi/C
+            cargo build
+            cd ../CSharp
+            cargo build
+            cd ../Java
+            cargo build
+            cd ../Python
+            cargo build
     - script:
         name: test-quick3d
         code: |
+            cargo test --verbose
+            cd ffi/C
+            cargo test --verbose
+            cd ../CSharp
+            cargo test --verbose
+            cd ../Java
+            cargo test --verbose
+            cd ../Lua
+            cargo test --verbose
+            cd ../Python
             cargo test --verbose
