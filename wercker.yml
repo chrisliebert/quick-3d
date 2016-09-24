@@ -6,7 +6,7 @@
 # http://devcenter.wercker.com/docs/containers/index.html
 box: debian
 
-build:
+testbuild:
   steps:
     - install-packages:
         packages: xvfb curl file build-essential cmake swig liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev mono-mcs
