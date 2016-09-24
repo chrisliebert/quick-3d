@@ -9,45 +9,45 @@ matrix:
 addons:
   apt:
     sources:
-        - george-edison55-precise-backports
+      - george-edison55-precise-backports
     packages:
-        - cmake
-        - cmake-data
+      - cmake
+      - cmake-data
 before_install:
-    - sudo apt-get -qq update
-    - export LIBGL_DEBUG=1
-    - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential libgl1-mesa-dri libgles2-mesa-dev freeglut3-dev libfreetype6-dev xorg-dev xserver-xorg-input-void xserver-xorg-video-dummy xpra libosmesa6-dev xvfb liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
-    - export DISPLAY=:99.0
-    -start-stop-daemon --start --quiet --pidfile /tmp/xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
-    -sleep 3
+  - sudo apt-get -qq update
+  - export LIBGL_DEBUG=1
+  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential libgl1-mesa-dri libgles2-mesa-dev freeglut3-dev libfreetype6-dev xorg-dev xserver-xorg-input-void xserver-xorg-video-dummy xpra libosmesa6-dev xvfb liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
+  - export DISPLAY=:99.0
+  -start-stop-daemon --start --quiet --pidfile /tmp/xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
+  -sleep 3
 script:
-    - export RUST_BACKTRACE=1
-    - cargo build
-    - cargo test
-    - cd ffi/Lua
-    - export LUA_INCLUDE_DIR=/usr/include/lua5.1
-    - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
-    - export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
-    - cargo build
-    - cargo test
-    - export LD_LIBRARY_PATH=`pwd`
-    - lua test.lua
-    - cd ../C
-    - cargo build
-    - cargo test
-    - ./c_test
-    - cd ../CSharp
-    - cargo build
-    - cargo test
-    - cd ../Java
-    - export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
-    - cargo build
-    - cargo test
-    - export LD_LIBRARY_PATH=`pwd`
-    - javac *.java
-    - java Quick3DTests
-    - cd ../Python
-    - cargo build
-    - cargo test
-    - export LD_LIBRARY_PATH=`pwd`
-    - python test
+  - export RUST_BACKTRACE=1
+  - cargo build
+  - cargo test
+  - cd ffi/Lua
+  - export LUA_INCLUDE_DIR=/usr/include/lua5.1
+  - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
+  - export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
+  - cargo build
+  - cargo test
+  - export LD_LIBRARY_PATH=`pwd`
+  - lua test.lua
+  - cd ../C
+  - cargo build
+  - cargo test
+  - ./c_test
+  - cd ../CSharp
+  - cargo build
+  - cargo test
+  - cd ../Java
+  - export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+  - cargo build
+  - cargo test
+  - export LD_LIBRARY_PATH=`pwd`
+  - javac *.java
+  - java Quick3DTests
+  - cd ../Python
+  - cargo build
+  - cargo test
+  - export LD_LIBRARY_PATH=`pwd`
+  - python test
