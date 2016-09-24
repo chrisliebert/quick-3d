@@ -15,36 +15,28 @@ addons:
       - cmake-data
 before_install:
   - sudo apt-get -qq update
-  - export LIBGL_DEBUG=1
-  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential libgl1-mesa-dri libgles2-mesa-dev freeglut3-dev libfreetype6-dev xorg-dev xserver-xorg-input-void xserver-xorg-video-dummy xpra libosmesa6-dev xvfb liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
+  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
 script:
   - export RUST_BACKTRACE=1
   - cargo build
-  - #xvfb-run -a cargo test
   - cd ffi/Lua
   - export LUA_INCLUDE_DIR=/usr/include/lua5.1
   - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - cargo build
   - cargo test
-  - export LD_LIBRARY_PATH=`pwd`
-  - #xvfb-run -a lua test.lua
   - cd ../C
   - cargo build
   - cargo test
-  - #xvfb-run -a ./c_test
   - cd ../CSharp
   - cargo build
   - cargo test
   - cd ../Java
-  - export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
   - cargo build
   - cargo test
   - export LD_LIBRARY_PATH=`pwd`
   - javac *.java
-  - #xvfb-run -a java Quick3DTests
   - cd ../Python
   - cargo build
   - cargo test
   - export LD_LIBRARY_PATH=`pwd`
-  - #xvfb-run -a python test.py
