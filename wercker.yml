@@ -10,7 +10,5 @@ build:
         name: rust-install
         code: |
             curl -sSf https://static.rust-lang.org/rustup.sh | sh
-    - script: quick3d-build
-        code: |
             cargo build
             cargo test --verbose
