@@ -9,7 +9,7 @@ box: debian
 build:
   steps:
     - install-packages:
-        packages: curl
+        packages: curl file build-essential
     - script:
         name: quick3dtests
         code: |
