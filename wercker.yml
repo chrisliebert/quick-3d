@@ -72,7 +72,7 @@ build:
         code: |
             cd ffi/C
             cargo test
-            ./c_example
+            ./c_test
             cd ../..
     - script:
         name: test-ffi-csharp
