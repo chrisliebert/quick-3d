@@ -8,10 +8,11 @@ box: debian
 
 build:
   steps:
+    - install-packages:
+        packages: curl
     - script:
         name: quick3dtests
         code: |
-            apt-get install curl build-essential
             curl -sSf https://static.rust-lang.org/rustup.sh | sh
             cargo build
             cargo test --verbose
