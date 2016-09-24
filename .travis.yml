@@ -18,8 +18,8 @@ before_install:
   - export LIBGL_DEBUG=1
   - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential libgl1-mesa-dri libgles2-mesa-dev freeglut3-dev libfreetype6-dev xorg-dev xserver-xorg-input-void xserver-xorg-video-dummy xpra libosmesa6-dev xvfb liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
   - export DISPLAY=:99.0
-  -start-stop-daemon --start --quiet --pidfile /tmp/xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
-  -sleep 3
+  - start-stop-daemon --start --quiet --pidfile /tmp/xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
+  - sleep 3
 script:
   - export RUST_BACKTRACE=1
   - cargo build
