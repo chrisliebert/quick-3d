@@ -866,10 +866,15 @@ pub extern "C" fn window_show(display: &GlutinFacade) {
 
 #[cfg(test)]
 mod tests {
+	use std::time::Duration;
+	use std::thread;
     use glium::glutin;
     use glium::backend::glutin_backend::GlutinFacade;
     use glium::DisplayBuild;
     use loader;
+	use loader::DBLoader;
+	use camera::Camera;
+	use renderer::Renderer;
     use common::Scene;
 
     fn create_test_display() -> GlutinFacade {
@@ -892,6 +897,53 @@ mod tests {
         let scene: Scene = load_test_scene();
         assert!(scene.meshes.len() > 0);
         assert!(scene.materials.len() > 0);
+    }
+	
+	#[test]
+	fn display_creation() {
+		// Opens a window for 100 miliseconds
+		let display = create_test_display();
+		let window = match display.get_window() {
+			Some(w) => {
+				w
+			}
+			None => {
+				panic!("Error retrieving window");
+			}
+		};
+		window.show();
+		thread::sleep(Duration::from_millis(100));
+    }
+	
+	#[test]
+	fn renderer() {
+		// Opens a window for 100 miliseconds and draws the contents of test.db
+		let display = create_test_display();
+		let window = match display.get_window() {
+			Some(w) => {
+				w
+			}
+			None => {
+				panic!("Error retrieving window");
+			}
+		};
+		window.show();
+		let window_size = window.get_inner_size().unwrap();
+		let screen_width = window_size.0;
+		let screen_height = window_size.1;
+		let mut camera = Camera::new(screen_width as f32, screen_height as f32);
+		camera = camera.move_backward(6.0);		
+		
+		let scene = load_test_scene();
+		let renderer = Renderer::new(&display, scene);
+		
+		let shader_dbloader = DBLoader::new("shaders.db");
+		let shader_name = "default";
+		let shader_program = renderer.create_shader_program(&shader_name, &shader_dbloader, &display);
+		
+		renderer.render(&display, &shader_program, &camera);
+		
+		thread::sleep(Duration::from_millis(100));
     }
 
 }
