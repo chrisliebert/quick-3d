@@ -165,12 +165,9 @@ function quick3d_clean(target_build)
   }
   
   if isWindows() then
-    table.insert(filenames, "wrapper/quick3d.dll.exp")
-    table.insert(filenames, "wrapper/quick3d.dll.lib")
-    table.insert(filenames, "wrapper/quick3d.pdb")
-    table.insert(filenames, "../../target/" .. target_build .. "/quick3d.dll.exp")
-    table.insert(filenames, "../../target/" .. target_build .. "/quick3d.dll.lib")
-    table.insert(filenames, "../../target/" .. target_build .. "/quick3d.pdb")
+    table.insert(filenames, "wrapper/quick3d.lib")
+    table.insert(filenames, "wrapper/sqlite3.lib")
+    table.insert(filenames, "../../target/" .. target_build .. "/quick3d.lib")
   else
     quick3d_filename = prepend_shared_lib_prefix(quick3d_filename)
     table.insert(filenames, quick3d_filename)

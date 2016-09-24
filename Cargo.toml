@@ -25,7 +25,7 @@ cmake = "0.1"
 [lib]
 name = "quick3d"
 path = "src/lib.rs"
-crate-type = ["dylib", "rlib"]
+crate-type = ["dylib", "staticlib", "rlib"]
 
 [[bin]]
 name = "example"

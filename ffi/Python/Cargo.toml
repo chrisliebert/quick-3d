@@ -1,8 +1,8 @@
 # Copyright (C) 2016 Chris Liebert
 
 [package]
-name = "quick3d-c_example"
-version = "0.1.1"
+name = "quick3dwrapper"
+version = "0.1.0"
 authors = ["Chris Liebert <liebert@pdx.edu>"]
 build = "build.rs"
 
@@ -12,5 +12,5 @@ cmake = "0.1"
 [dependencies]
 
 [lib]
-name = "testlib"
+name = "quick3dwrappertest"
 path = "test.rs"

@@ -1,5 +1,5 @@
 // Copyright(C) 2016 Chris Liebert
-#![crate_type = "dylib"]
+#![crate_type = "lib"]
 #![crate_name = "quick3d"]
 #![allow(dead_code)]
 #[macro_use]

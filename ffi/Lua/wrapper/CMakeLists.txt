@@ -25,11 +25,12 @@ SWIG_ADD_MODULE(quick3dwrapper lua quick3d.i)
 SET(QUICK3D_LIBRARY quick3d)
 
 IF(MSVC)
-	SET(QUICK3D_LIBRARY quick3d.dll.lib)
+	SET(QUICK3D_LIBRARY quick3d opengl32 user32 gdi32 dwmapi dbghelp shell32 sqlite3 advapi32 msvcrt kernel32 ws2_32 userenv shell32 advapi32)
 	# LINK_DIRECTORIES(..) alone is not sufficient for MSVC
 	SET(MSVCLIBPATH "${CMAKE_EXE_LINKER_FLAGS} /LIBPATH:${QUICK3D_LIB_PATH}")
 	SET(CMAKE_EXE_LINKER_FLAGS "${MSVCLIBPATH}")
 ENDIF(MSVC)
+
 
 SWIG_LINK_LIBRARIES(quick3dwrapper ${QUICK3D_LIBRARY} ${LUA_LIBRARIES})
 

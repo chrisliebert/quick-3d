@@ -6,23 +6,18 @@ SET(QUICK3D_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 
 LINK_DIRECTORIES(${QUICK3D_LIB_PATH})
 
-#SET(CMAKE_BUILD_TYPE Debug)
+ADD_EXECUTABLE(c_example example.c quick3d.h)
 
-ADD_EXECUTABLE(c_example
-	example.c
-	quick3d.h
-)
-
-SET(QUICK3D_LIBRARY quick3d)
+SET(QUICK3D_LIBRARY quick3d stdc++ sqlite3 dl pthread m)
 
 IF(MSVC)
-	SET(QUICK3D_LIBRARY quick3d.dll.lib)
+	SET(QUICK3D_LIBRARY quick3d opengl32 user32 gdi32 dwmapi dbghelp shell32 sqlite3 advapi32 msvcrt kernel32 ws2_32 userenv shell32 advapi32)
 	# LINK_DIRECTORIES(..) alone is not sufficient for MSVC
 	SET(MSVCLIBPATH "${CMAKE_EXE_LINKER_FLAGS} /LIBPATH:${QUICK3D_LIB_PATH}")
 	SET(CMAKE_EXE_LINKER_FLAGS "${MSVCLIBPATH}")
 ENDIF(MSVC)
 
-TARGET_LINK_LIBRARIES(c_example ${QUICK3D_LIBRARY} ${LUA_LIBRARIES})
+TARGET_LINK_LIBRARIES(c_example ${QUICK3D_LIBRARY})
 
 # Use C instead of CXX
 SET_TARGET_PROPERTIES(c_example PROPERTIES LINKER_LANGUAGE C)

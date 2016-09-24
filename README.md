@@ -10,7 +10,7 @@ The goal of Quick3D is to replace the need for C++ in hardware-accelerated 3D gr
 | Update and Render Geometry | Supported |  *Currently the ability to update OpenGL uniforms is only availible in Rust |
 | Diffuse Texture Maps | Supported | Diffuse texture maps are loaded from image blobs stored in SQLite |
 | Multiple Hardware Profiles | Supported | Multiple GLSL hardware profiles to support different shader versions on multiple platforms. Different versions of the shader programs are stored in the SQLite database.|
-| LUA Scripting | Supported | Scripting integration, an API is exposed to C and SWIG. There is an LUA Example that demonstrates a console with dynamic instrumentation to enable rapid prototyping |
+| LUA Scripting | Supported | Scripting integration, an API is exposed to C and SWIG. There is an LUA Example that demonstrates a console with dynamic instrumentation to enable rapid prototyping in addition to examples for C, Java and Python. |
 | Tests | *In-Progress | Unit test, benchmark and integration tests |
 | Optimizations | Planned | Utilize uniform buffer objects on systems that support them and switch to a single vertex buffer object of possible.|
 | Example usage | Included | A basic example of how to use quick-3d in Rust, LUA and C|

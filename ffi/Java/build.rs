@@ -15,11 +15,9 @@ fn copy_quick3d_shared_library_files(debug: bool) -> std::io::Result<()> {
 		false => String::from("release"),
 	};
 	let build_dir: String = String::from("../../target/") + &build_type;
-	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.dll")), Path::new("quick3d.dll")));
-	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.dll")), Path::new("wrapper/quick3d.dll")));
-	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.dll.exp")), Path::new("wrapper/quick3d.dll.exp")));
-	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.dll.lib")), Path::new("wrapper/quick3d.dll.lib")));
-	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.pdb")), Path::new("wrapper/quick3d.pdb")));
+	try!(fs::copy(Path::new(&(build_dir.clone() + "/quick3d.lib")), Path::new("wrapper/quick3d.lib")));
+	let dependencies_dir: String = String::from("../../dependencies/");
+	try!(fs::copy(Path::new(&(dependencies_dir.clone() + "/sqlite3.lib")), Path::new("wrapper/sqlite3.lib")));
 	Ok(())
 }
 
@@ -30,8 +28,9 @@ fn copy_quick3d_shared_library_files(debug: bool) -> std::io::Result<()> {
 		false => String::from("release"),
 	};
 	let build_dir: String = String::from("../../target/") + &build_type;
-	try!(fs::copy(Path::new(&(build_dir.clone() + "/libquick3d.so")), Path::new("libquick3d.so")));
-	try!(fs::copy(Path::new(&(build_dir.clone() + "/libquick3d.so")), Path::new("wrapper/libquick3d.so")));
+	try!(fs::copy(Path::new(&(build_dir.clone() + "/libquick3d.a")), Path::new("wrapper/libquick3d.a")));
+	let dependencies_dir: String = String::from("../../dependencies/");
+	try!(fs::copy(Path::new(&(dependencies_dir.clone() + "/libsqlite3.a")), Path::new("wrapper/libsqlite3.a")));
 	Ok(())
 }
 
