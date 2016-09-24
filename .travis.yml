@@ -15,7 +15,7 @@ addons:
       - cmake-data
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
+  - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential mesa-utils libgl1-mesa-swx11 libgl1-mesa-swx11-dev xvfb liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start" # start virtual framebuffer
   - sleep 3 # give xvfb time to start
