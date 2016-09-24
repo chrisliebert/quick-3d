@@ -16,20 +16,20 @@ addons:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential libgl1-mesa-dri libgles2-mesa-dev freeglut3-dev libfreetype6-dev xorg-dev xserver-xorg-input-void xserver-xorg-video-dummy xpra libosmesa6-dev xvfb liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
+script:
   - "export LIBGL_DEBUG=1"
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start" # start virtual framebuffer
   - sleep 3 # give xvfb time to start
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
-script:
   - cargo build
-  - cargo test
+  - xvfb-run cargo test
   - cd ffi/Lua
   - export LUA_INCLUDE_DIR=/usr/include/lua5.1
   - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - cargo build --verbose
-  - xvfb-run cargo test
+  - cargo test
   - export LD_LIBRARY_PATH=`pwd`
   - xvfb-run lua test.lua
   - cd ../C
