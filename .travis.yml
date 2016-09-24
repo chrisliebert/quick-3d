@@ -17,7 +17,6 @@ before_install:
   - sudo apt-get -qq update
   - export LIBGL_DEBUG=1
   - sudo apt-get install -y libsqlite3-dev swig2.0 build-essential libgl1-mesa-dri libgles2-mesa-dev freeglut3-dev libfreetype6-dev xorg-dev xserver-xorg-input-void xserver-xorg-video-dummy xpra libosmesa6-dev xvfb liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev
-  - export LIBGL_ALWAYS_SOFTWARE=1
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
   - sleep 3 # give xvfb time to start
@@ -31,13 +30,13 @@ script:
   - export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
   - cargo build --verbose
-  - cargo test
+  - xvfb-run -a cargo test
   - export LD_LIBRARY_PATH=`pwd`
-  - xvfb-run lua test.lua
+  - xvfb-run -a lua test.lua
   - cd ../C
   - cargo build
   - cargo test
-  - xvfb-run ./c_test
+  - xvfb-run -a ./c_test
   - cd ../CSharp
   - cargo build
   - cargo test
@@ -47,9 +46,9 @@ script:
   - cargo test
   - export LD_LIBRARY_PATH=`pwd`
   - javac *.java
-  - xvfb-run java Quick3DTests
+  - xvfb-run -a java Quick3DTests
   - cd ../Python
   - cargo build
   - cargo test
   - export LD_LIBRARY_PATH=`pwd`
-  - xvfb-run python test.py
+  - xvfb-run -a python test.py
