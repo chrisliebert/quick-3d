@@ -107,3 +107,7 @@ build:
             export LD_LIBRARY_PATH=`pwd`
             python test.py
             cd ../..
+    - script:
+        name: cleanup
+        code: |
+            cargo clean
