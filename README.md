@@ -1,6 +1,5 @@
 Copyright(C) 2016 Chris Liebert
 
-quick-3d  
 [![Build Status](https://travis-ci.org/chrisliebert/quick-3d.svg?branch=master)](https://travis-ci.org/chrisliebert/quick-3d) 
 [![wercker status](https://app.wercker.com/status/57dce6bad65185424701112d1613acb3/m/master "wercker status")](https://app.wercker.com/project/byKey/57dce6bad65185424701112d1613acb3)
 ===================

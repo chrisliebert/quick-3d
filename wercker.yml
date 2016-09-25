@@ -86,7 +86,8 @@ build:
             cd ffi/Java
             export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
             cargo test
-            export LD_LIBRARY_PATH=LD_LIBRARY_PATH:/usr/lib/debug/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/amd64/headless:`pwd`
+            export LD_LIBRARY_PATH=LD_LIBRARY_PATH:`pwd`
+            update-alternatives --config java
             javac *.java
             java Quick3DTests
             cd ../..
