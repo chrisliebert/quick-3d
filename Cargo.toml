@@ -22,6 +22,13 @@ build = "build.rs"
 [build-dependencies]
 cmake = "0.1"
 
+[features]
+# no features by default
+default = []
+
+# obj2sqlite uses stdc++ 
+obj2sqlite = []
+
 [lib]
 name = "quick3d"
 path = "src/lib.rs"

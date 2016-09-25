@@ -29,6 +29,7 @@ use loader::DBLoader;
 use renderer::Renderer;
 
 
+#[cfg(feature = "obj2sqlite")]
 #[link(name = "tinyobjloader", kind="static")]
 #[link(name = "scenebuilder", kind="static")]
 #[link(name = "stdc++")]
@@ -36,14 +37,32 @@ extern "C" {
 	fn wavefrontToSQLite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char);
 }
 
+/// The following methods annotated as #[no_mangle] provide external interfaces
+/// that can be accessed from C and SWIG
+///
+
+/// `extern void obj2sqlite(const char* wavefront, const char* database);`
+///
+/// If the obj2sqlite feature is enabled, a bundled c++ library is used.
+///
+#[cfg(feature = "obj2sqlite")]
 #[no_mangle]
 pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
 	unsafe { wavefrontToSQLite(wavefront_file, database_file) };
 }
 
-/// The following methods annotated as #[no_mangle] provide external interfaces
-/// that can be accessed from C and SWIG
+/// `extern void obj2sqlite(const char* wavefront, const char* database);`
 ///
+/// When the obj2sqlite feature is disabled, the method is still availible 
+/// so that the FFI wrappers will still build without modification the user
+/// is notified that the feature is disabled.
+#[cfg(not(feature = "obj2sqlite"))]
+#[no_mangle]
+pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
+	let filename1 = unsafe { CString::from_raw(wavefront_file as *mut libc::c_char).into_string().unwrap() };
+	let filename2 = unsafe { CString::from_raw(database_file as *mut libc::c_char).into_string().unwrap() };
+	println!("Unable to convert {} to {}, the obj2sqlite feature is not enabled.", filename1, filename2);
+}
 
 /// Structure for querying stdin console input
 ///
