@@ -84,7 +84,7 @@ build:
         name: test-ffi-java
         code: |
             cd ffi/Java
-            export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+            export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-amd64
             cargo test
             export LD_LIBRARY_PATH=LD_LIBRARY_PATH:`pwd`
             sudo update-alternatives --set java $(update-alternatives --list java|grep java-7)
