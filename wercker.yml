@@ -9,7 +9,7 @@ box: debian
 build:
   steps:
     - install-packages:
-        packages: xvfb curl file build-essential cmake swig liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev mono-mcs
+        packages: xvfb curl file build-essential cmake swig liblua5.1-dev lua5.1 openjdk-7-jdk python-all-dev mono-mcs libxrender1 libxtst6 libxi6
     - script:
         name: Enable virtual display
         code: |-
