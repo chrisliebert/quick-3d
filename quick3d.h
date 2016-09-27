@@ -28,6 +28,8 @@ extern Camera create_camera(float screen_width, float screen_height);
 extern ConsoleInput create_console_reader();
 extern DBLoader create_db_loader(const char* filename);
 extern Display create_display(int screen_width, int screen_height, const char* title);
+extern Renderer create_renderer_from_binary(const char* filename, Display display);
+extern Renderer create_renderer_from_compressed_binary(const char* filename, Display display);
 extern Renderer create_renderer_from_db_loader(DBLoader loader, Display display);
 extern bool console_is_closed(ConsoleInput console);
 
@@ -50,3 +52,5 @@ extern void thread_yield();
 
 /* C/C++ Methods */
 extern void obj2sqlite(const char* wavefront, const char* database);
+extern void obj2bin(const char* wavefront, const char* filename);
+extern void obj2compressed(const char* wavefront, const char* filename);

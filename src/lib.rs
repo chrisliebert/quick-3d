@@ -4,6 +4,9 @@
 #![allow(dead_code)]
 #[macro_use]
 extern crate glium;
+extern crate rustc_serialize;
+extern crate bincode;
+extern crate flate2;
 
 pub mod frustum;
 pub mod common;
@@ -16,7 +19,6 @@ extern crate nalgebra;
 extern crate libc;
 
 use std::ffi::CStr;
-use std::os::raw::c_char;
 use std::sync::{Arc, Mutex};
 
 use glium::glutin;
@@ -27,14 +29,14 @@ use glium::backend::glutin_backend::GlutinFacade;
 use camera::Camera;
 use loader::DBLoader;
 use renderer::Renderer;
-
+use common::Scene;
 
 #[cfg(feature = "obj2sqlite")]
 #[link(name = "tinyobjloader", kind="static")]
 #[link(name = "scenebuilder", kind="static")]
 #[link(name = "stdc++")]
 extern "C" {
-	fn wavefrontToSQLite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char);
+    fn wavefrontToSQLite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char);
 }
 
 /// The following methods annotated as #[no_mangle] provide external interfaces
@@ -48,7 +50,7 @@ extern "C" {
 #[cfg(feature = "obj2sqlite")]
 #[no_mangle]
 pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
-	unsafe { wavefrontToSQLite(wavefront_file, database_file) };
+    unsafe { wavefrontToSQLite(wavefront_file, database_file) };
 }
 
 /// `extern void obj2sqlite(const char* wavefront, const char* database);`
@@ -59,9 +61,49 @@ pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const lib
 #[cfg(not(feature = "obj2sqlite"))]
 #[no_mangle]
 pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
-	let filename1 = unsafe { CString::from_raw(wavefront_file as *mut libc::c_char).into_string().unwrap() };
-	let filename2 = unsafe { CString::from_raw(database_file as *mut libc::c_char).into_string().unwrap() };
-	println!("Unable to convert {} to {}, the obj2sqlite feature is not enabled.", filename1, filename2);
+    let filename1: String = unsafe{ CStr::from_ptr(wavefront_file).to_string_lossy().into_owned() };
+    let filename2: String = unsafe{ CStr::from_ptr(database_file).to_string_lossy().into_owned() };
+    println!("Unable to convert {} to {}, the obj2sqlite feature is not enabled.", filename1, filename2);
+}
+
+/// `extern void obj2bin(const char* wavefront, const char* database);`
+///
+/// This will print an error if the obj2sqlite feature is disabled
+///
+
+#[no_mangle]
+pub fn obj2bin(wavefront_file: *const libc::c_char, binfile: *const libc::c_char) {
+    let filename: String = unsafe{ CStr::from_ptr(wavefront_file.clone()).to_string_lossy().into_owned() };
+    let binfile_str: String = unsafe{ CStr::from_ptr(binfile.clone()).to_string_lossy().into_owned() };
+    let mut database_file: String = filename.clone();
+    database_file.push_str(&String::from(".db"));
+    let sqlite_file = CString::new(database_file.clone()).unwrap();
+    obj2sqlite(wavefront_file, sqlite_file.clone().into_raw());
+    let scene: Scene = DBLoader::new(&(sqlite_file.into_string().unwrap())).load_scene();
+    match scene.to_binary_file(binfile_str.clone()) {
+        Ok(()) => println!("Saved {}", binfile_str),
+        Err(e) => panic!("Unable to save binary file {}: {:?}", binfile_str, e),
+    };
+}
+
+/// `extern void obj2compressed(const char* wavefront, const char* database);`
+///
+/// This will print an error if the obj2sqlite feature is disabled
+///
+
+#[no_mangle]
+pub fn obj2compressed(wavefront_file: *const libc::c_char, binfile: *const libc::c_char) {
+    let filename: String = unsafe{ CStr::from_ptr(wavefront_file.clone()).to_string_lossy().into_owned() };
+    let binfile_str: String = unsafe{ CStr::from_ptr(binfile.clone()).to_string_lossy().into_owned() };
+    let mut database_file: String = filename.clone();
+    database_file.push_str(&String::from(".db"));
+    let sqlite_file = CString::new(database_file.clone()).unwrap();
+    obj2sqlite(wavefront_file, sqlite_file.clone().into_raw());
+    let scene: Scene = DBLoader::new(&(sqlite_file.into_string().unwrap())).load_scene();
+    match scene.to_compressed_binary_file(binfile_str.clone()) {
+        Ok(()) => println!("Saved {}", binfile_str),
+        Err(e) => panic!("Unable to save compressed binary file {}: {:?}", binfile_str, e),
+    };
 }
 
 /// Structure for querying stdin console input
@@ -260,7 +302,7 @@ pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
 /// `extern DBLoader create_db_loader(const char* filename);`
 ///
 #[no_mangle]
-pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader> {
+pub extern "C" fn create_db_loader(filename_cstr: *const libc::c_char) -> Box<DBLoader> {
     unsafe {
         let filename: String = CStr::from_ptr(filename_cstr).to_string_lossy().into_owned();
         let dbloader: DBLoader = DBLoader::new(&filename);
@@ -274,7 +316,7 @@ pub extern "C" fn create_db_loader(filename_cstr: *const c_char) -> Box<DBLoader
 #[no_mangle]
 pub extern "C" fn create_display(screen_width: libc::int32_t,
                                  screen_height: libc::int32_t,
-                                 title: *const c_char)
+                                 title: *const libc::c_char)
                                  -> Box<GlutinFacade> {
     let w: u32 = screen_width as u32;
     let h: u32 = screen_height as u32;
@@ -303,7 +345,41 @@ pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
                                                  -> Box<Renderer> {
     Box::new(renderer::Renderer::new(display, dbloader.load_scene()))
 }
+
+                                                
+/// `extern Renderer create_renderer_from_compressed_binary(const char* filename, Display display);`
+///
+#[no_mangle]
+pub extern "C" fn create_renderer_from_compressed_binary(file: *const libc::c_char,
+                                                 display: &GlutinFacade)
+                                                 -> Box<Renderer> {
+    let filename: String = unsafe{ CStr::from_ptr(file).to_string_lossy().into_owned() };                                             
+    match Scene::from_compressed_binary_file(filename.clone()) {
+        Ok(s) => {
+            println!("Loaded compressed binary: {}", filename);
+            return Box::new(renderer::Renderer::new(display, s));
+        },
+        Err(e) => panic!("Unable to load compressed binary file {}: {:?}", filename, e),
+    };
+}
                                                  
+/// `extern Renderer create_renderer_from_binary(const char* filename, Display display);`
+///
+#[no_mangle]
+pub extern "C" fn create_renderer_from_binary(file: *const libc::c_char,
+                                                 display: &GlutinFacade)
+                                                 -> Box<Renderer> {
+    let filename: String = unsafe{ CStr::from_ptr(file).to_string_lossy().into_owned() };                                             
+    match Scene::from_binary_file(filename.clone()) {
+        Ok(s) => {
+            println!("Loaded binary: {}", filename);
+            return Box::new(renderer::Renderer::new(display, s));
+        },
+        Err(e) => panic!("Unable to load binary file {}: {:?}", filename, e),
+    };
+}
+                                                 
+
 /// `extern bool console_is_closed(ConsoleInput console);`
 ///
 #[no_mangle]
@@ -335,7 +411,7 @@ pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
 ///
 #[no_mangle]
 pub extern "C" fn free_event(ptr: *mut Input) {
-	let box_ptr: Box<Input> = unsafe { Box::from_raw(ptr) };
+    let box_ptr: Box<Input> = unsafe { Box::from_raw(ptr) };
     drop(box_ptr)
 }
 
@@ -366,7 +442,7 @@ pub extern "C" fn free_shader(ptr: *mut glium::program::Program) {
 /// `extern Shader get_shader_from_db_loader(const char* name, DBLoader dbloader, Renderer renderer, Display display);`
 ///
 #[no_mangle]
-pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const c_char,
+pub extern "C" fn get_shader_from_db_loader(shader_name_cstr: *const libc::c_char,
                                             dbloader: &DBLoader,
                                             renderer: &Renderer,
                                             display: &GlutinFacade)
@@ -859,14 +935,14 @@ pub extern "C" fn wait_console_quit(handle: *mut ConsoleInput) {
 ///
 #[no_mangle]
 pub extern "C" fn window_hide(display: &GlutinFacade) {
-	match display.get_window() {
-	    Some(w) => {
-	        w.hide();
-	    }
-	    None => {
-	        panic!("Error retrieving window");
-	    }
-	};
+    match display.get_window() {
+        Some(w) => {
+            w.hide();
+        }
+        None => {
+            panic!("Error retrieving window");
+        }
+    };
 }
 
 /// `extern void window_show(Display display);`
@@ -885,15 +961,15 @@ pub extern "C" fn window_show(display: &GlutinFacade) {
 
 #[cfg(test)]
 mod tests {
-	use std::time::Duration;
-	use std::thread;
+    use std::time::Duration;
+    use std::thread;
     use glium::glutin;
     use glium::backend::glutin_backend::GlutinFacade;
     use glium::DisplayBuild;
     use loader;
-	use loader::DBLoader;
-	use camera::Camera;
-	use renderer::Renderer;
+    use loader::DBLoader;
+    use camera::Camera;
+    use renderer::Renderer;
     use common::Scene;
 
     fn create_test_display() -> GlutinFacade {
@@ -917,52 +993,97 @@ mod tests {
         assert!(scene.meshes.len() > 0);
         assert!(scene.materials.len() > 0);
     }
-	
-	#[test]
-	fn display_creation() {
-		// Opens a window for 100 miliseconds
-		let display = create_test_display();
-		let window = match display.get_window() {
-			Some(w) => {
-				w
-			}
-			None => {
-				panic!("Error retrieving window");
-			}
-		};
-		window.show();
-		thread::sleep(Duration::from_millis(100));
+    
+    #[test]
+    fn display_creation() {
+        // Opens a window for 100 miliseconds
+        let display = create_test_display();
+        let window = match display.get_window() {
+            Some(w) => {
+                w
+            }
+            None => {
+                panic!("Error retrieving window");
+            }
+        };
+        window.show();
+        thread::sleep(Duration::from_millis(100));
     }
-	
-	#[test]
-	fn renderer() {
-		// Opens a window for 100 miliseconds and draws the contents of test.db
-		let display = create_test_display();
-		let window = match display.get_window() {
-			Some(w) => {
-				w
-			}
-			None => {
-				panic!("Error retrieving window");
-			}
-		};
-		window.show();
-		let window_size = window.get_inner_size().unwrap();
-		let screen_width = window_size.0;
-		let screen_height = window_size.1;
-		let mut camera = Camera::new(screen_width as f32, screen_height as f32);
-		camera = camera.move_backward(6.0);		
-		
-		let scene = load_test_scene();
-		let renderer = Renderer::new(&display, scene);
-		
-		let shader_dbloader = DBLoader::new("shaders.db");
-		let shader_name = "default";
-		let shader_program = renderer.create_shader_program(&shader_name, &shader_dbloader, &display);
-		
-		renderer.render(&display, &shader_program, &camera);
-		
-		thread::sleep(Duration::from_millis(100));
+    
+    #[test]
+    fn renderer() {
+        // Opens a window for 100 miliseconds and draws the contents of test.db
+        let display = create_test_display();
+        let window = match display.get_window() {
+            Some(w) => {
+                w
+            }
+            None => {
+                panic!("Error retrieving window");
+            }
+        };
+        window.show();
+        let window_size = window.get_inner_size().unwrap();
+        let screen_width = window_size.0;
+        let screen_height = window_size.1;
+        let mut camera = Camera::new(screen_width as f32, screen_height as f32);
+        camera = camera.move_backward(6.0);        
+        
+        let scene = load_test_scene();
+        let renderer = Renderer::new(&display, scene);
+        
+        let shader_dbloader = DBLoader::new("shaders.db");
+        let shader_name = "default";
+        let shader_program = renderer.create_shader_program(&shader_name, &shader_dbloader, &display);
+        
+        renderer.render(&display, &shader_program, &camera);
+        
+        thread::sleep(Duration::from_millis(100));
     }
 
+    #[test]
+    fn test_compressed_binary_scene() {
+        // Opens a window for 100 miliseconds and draws the contents of test.db
+        let display = create_test_display();
+        let window = match display.get_window() {
+            Some(w) => {
+                w
+            }
+            None => {
+                panic!("Error retrieving window");
+            }
+        };
+        window.show();
+        let window_size = window.get_inner_size().unwrap();
+        let screen_width = window_size.0;
+        let screen_height = window_size.1;
+        let mut camera = Camera::new(screen_width as f32, screen_height as f32);
+        camera = camera.move_backward(6.0);        
+        
+        let scene = load_test_scene();
+        
+        let binfile_name = String::from("test.bin");
+        match scene.to_compressed_binary_file(binfile_name.clone()) {
+            Ok(_) => (),
+            Err(e) => panic!("Unable to save binary file {}: {:?}", binfile_name.clone(), e),
+        };
+        
+        let scene_binary: Scene =  match Scene::from_compressed_binary_file(binfile_name.clone()) {
+            Ok(s) => s,
+            Err(e) => panic!("Unable to load binary scene from {}: {:?}", binfile_name.clone(), e),
+        };
+        
+        assert!(scene == scene_binary);
+        drop(scene);
+        
+        let renderer = Renderer::new(&display, scene_binary);
+        
+        let shader_dbloader = DBLoader::new("shaders.db");
+        let shader_name = "default";
+        let shader_program = renderer.create_shader_program(&shader_name, &shader_dbloader, &display);
+        
+        renderer.render(&display, &shader_program, &camera);
+
+        thread::sleep(Duration::from_millis(100));
+    }
 }

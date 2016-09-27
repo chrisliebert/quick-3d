@@ -311,7 +311,21 @@ end
 Renderer = {}
 Renderer.__index = Renderer
 
-function Renderer.create(self, db_filename, display)
+function Renderer.create_from_binary(self, bin_filename, display)
+  local renderer = {}
+  setmetatable(renderer, Renderer)
+  self.struct = wrapper.create_renderer_from_binary(bin_filename, display.struct)
+  return renderer
+end
+
+function Renderer.create_from_compressed_binary(self, bin_filename, display)
+  local renderer = {}
+  setmetatable(renderer, Renderer)
+  self.struct = wrapper.create_renderer_from_compressed_binary(bin_filename, display.struct)
+  return renderer
+end
+
+function Renderer.create_from_database(self, db_filename, display)
   local renderer = {}
   setmetatable(renderer, Renderer)
   local dbloader = wrapper.create_db_loader(db_filename)

@@ -9,6 +9,8 @@ require "quick3d"
 local target_build = "debug"
 local use_luajitffi = (type(jit) == 'table')
 
+local quit_after_start = false
+
 -- Parse program arguments
 local i = 1
 while arg[i] do
@@ -28,7 +30,10 @@ while arg[i] do
     else
       print("Did you mean `clean release`? `release` is only valid when using the LuaJIT FFI")
     end
+  elseif arg[i] == "--quit" then
+    quit_after_start = true
   end
+
   i = i + 1
 end
 
@@ -44,31 +49,46 @@ end
 screen_width = 800
 screen_height = 600
 display = Display:create(screen_width, screen_height, "My Lua Window")
+display:hide()
 camera = Camera:create(screen_width, screen_height)
 camera:move_backward(6)
 
 -- Load ../../test.db unless a file ending in .obj or .db is specified as an argument
+
 database_file = "../../test.db"
-local i = 1
--- Parse program arguments ending in ".db" or ".obj"
-while arg[i] do
-  if string.sub(arg[i], -3) == ".db" then
-    database_file = arg[i]
-    break
-  elseif string.sub(arg[i], -4) == ".obj" then
-    local wavefront_file = arg[i]
-    database_file = wavefront_file .. ".db"
-    quick3d.obj2sqlite(arg[i], database_file)
+
+function create_renderer()
+  local i = 1
+  -- Parse program arguments ending in ".db" or ".obj"
+  while arg[i] do
+    if string.sub(arg[i], -3) == ".db" then
+      database_file = arg[i]
+      return Renderer:create_from_database(database_file, display)
+    elseif string.sub(arg[i], -4) == ".obj" then
+      local wavefront_file = arg[i]
+      -- If the argument specified after the .obj file is '--compressed', use compression
+      if arg[i + 1] == "--compressed" then
+        local bin_file = wavefront_file .. ".bin.gz"
+        quick3d.obj2compressed(arg[i], bin_file)
+        return Renderer:create_from_compressed_binary(bin_file, display)
+      else
+        local bin_file = wavefront_file .. ".bin"
+        quick3d.obj2bin(arg[i], bin_file)
+        return Renderer:create_from_binary(bin_file, display)
+      end
+    elseif string.sub(arg[i], -4) == ".bin" then
+      return Renderer:create_from_binary(arg[i], display)
+    elseif string.sub(arg[i], -3) == ".gz" then
+      return Renderer:create_from_compressed_binary(arg[i], display)
+    end
+    i = i + 1
   end
-  i = i + 1
+  return Renderer:create_from_database(database_file, display)
 end
 
-renderer = Renderer:create(database_file, display)
-shader = Shader:create("default", "../../shaders.db", renderer, display)
-console = quick3d.create_console_reader()
+renderer = create_renderer()
 
-camera_speed = 0.01
-mouse_factor = 0.01
+shader = Shader:create("default", "../../shaders.db", renderer, display)
 
 function quit()
   quick3d.free_shader(shader.struct)
@@ -78,6 +98,13 @@ function quit()
   collectgarbage()
   os.exit() -- Removing this call will cause Lua to crash on exit.
 end
+
+if quit_after_start then quit() end
+
+console = quick3d.create_console_reader()
+
+camera_speed = 0.01
+mouse_factor = 0.01
 
 function demo()
   -- Make the camera move in a circle, user can abort by pressing space
@@ -93,6 +120,7 @@ function demo()
    end
 end
 
+display:show()
 local console_command = ""
 while not quick3d.console_is_closed(console) do
   renderer:render(shader, camera, display)
