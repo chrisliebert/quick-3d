@@ -36,7 +36,7 @@ camera = Camera:create(screen_width, screen_height)
 camera:move_backward(6)
 
 database_file = "../../test.db"
-renderer = Renderer:create(database_file, display)
+renderer = Renderer:create_from_database(database_file, display)
 shader = Shader:create("default", "../../shaders.db", renderer, display)
 
 renderer:render(shader, camera, display)
