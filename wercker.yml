@@ -29,7 +29,7 @@ build:
     - script:
         name: build-quick3d
         code: |
-            cargo build
+            cargo build --features sqlite
     - script:
         name: build-ffi-c
         code: |
@@ -68,7 +68,7 @@ build:
     - script:
         name: test-quick3d
         code: |
-            cargo test --verbose
+            cargo test --verbose --features sqlite
     - script:
         name: test-ffi-c
         code: |

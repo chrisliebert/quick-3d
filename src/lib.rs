@@ -31,7 +31,7 @@ use loader::DBLoader;
 use renderer::Renderer;
 use common::Scene;
 
-#[cfg(feature = "obj2sqlite")]
+#[cfg(feature = "sqlite")]
 #[link(name = "tinyobjloader", kind="static")]
 #[link(name = "scenebuilder", kind="static")]
 #[link(name = "stdc++")]
@@ -47,7 +47,7 @@ extern "C" {
 ///
 /// If the obj2sqlite feature is enabled, a bundled c++ library is used.
 ///
-#[cfg(feature = "obj2sqlite")]
+#[cfg(feature = "sqlite")]
 #[no_mangle]
 pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
     unsafe { wavefrontToSQLite(wavefront_file, database_file) };
@@ -55,20 +55,20 @@ pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const lib
 
 /// `extern void obj2sqlite(const char* wavefront, const char* database);`
 ///
-/// When the obj2sqlite feature is disabled, the method is still availible 
+/// When the sqlite feature is disabled, the method is still availible 
 /// so that the FFI wrappers will still build without modification the user
 /// is notified that the feature is disabled.
-#[cfg(not(feature = "obj2sqlite"))]
+#[cfg(not(feature = "sqlite"))]
 #[no_mangle]
 pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
     let filename1: String = unsafe{ CStr::from_ptr(wavefront_file).to_string_lossy().into_owned() };
     let filename2: String = unsafe{ CStr::from_ptr(database_file).to_string_lossy().into_owned() };
-    println!("Unable to convert {} to {}, the obj2sqlite feature is not enabled.", filename1, filename2);
+    panic!("Unable to convert {} to {}, the obj2sqlite feature is not enabled.", filename1, filename2);
 }
 
 /// `extern void obj2bin(const char* wavefront, const char* database);`
 ///
-/// This will print an error if the obj2sqlite feature is disabled
+/// This will print an error if the sqlite feature is disabled
 ///
 
 #[no_mangle]
