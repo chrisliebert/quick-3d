@@ -19,6 +19,8 @@ build:
             start-stop-daemon --start --quiet --pidfile /tmp/xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset
             # Give xvfb time to start. 3 seconds is the default for all xvfb-run commands.
             sleep 3
+            # Limit Rust Cargo tests from running concurrently
+            export RUST_TEST_TASKS=1
     - script:
         name: install-rust
         code: |
@@ -27,7 +29,7 @@ build:
     - script:
         name: build-quick3d
         code: |
-            cargo build
+            cargo build --features sqlite
     - script:
         name: build-ffi-c
         code: |
@@ -66,7 +68,7 @@ build:
     - script:
         name: test-quick3d
         code: |
-            cargo test --verbose
+            cargo test --verbose --features sqlite
     - script:
         name: test-ffi-c
         code: |

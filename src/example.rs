@@ -19,11 +19,13 @@ use quick3d::renderer;
 fn main() {
     let screen_width = 600;
     let screen_height = 400;
-    let db_file: &str = "test.db";
 
-    let dbloader: DBLoader = DBLoader::new(db_file);
     let shader_dbloader: DBLoader = DBLoader::new("shaders.db");
-    let scene: Scene = dbloader.load_scene();
+    let bin_filename = String::from("test.bin");
+    let scene: Scene = match Scene::from_compressed_binary_file(bin_filename.clone()) {
+        Ok(s) => s,
+        Err(e) => panic!("Unable to load {}: {:?}", bin_filename, e)
+    };
 
     let display = glutin::WindowBuilder::new()
         //.resizable()

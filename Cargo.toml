@@ -26,8 +26,8 @@ cmake = "0.1"
 # no features by default
 default = []
 
-# obj2sqlite uses stdc++ 
-obj2sqlite = []
+# obj2sqlite/scenebuilder uses stdc++ and sqlite
+sqlite = []
 
 [lib]
 name = "quick3d"
@@ -45,3 +45,6 @@ rusqlite = "0.7.3"
 time = "0.1.35"
 image = "0.10.3"
 libc = "0.2.15"
+rustc-serialize = "*"
+bincode = "*"
+flate2 = "*"

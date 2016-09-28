@@ -7,9 +7,9 @@ The goal of Quick3D is to replace the need for C++ in hardware-accelerated 3D gr
 
 | Feature     | Status | Description   |
 | :------- | :----: | :---- |
-| Load Data from SQLite | Supported | Graphics data is loaded from an SQLite database. (obj2sqlite is a tool that can be used to generate databases from wavefront .obj files) |
-| Update and Render Geometry | Supported |  *Currently the ability to update OpenGL uniforms is only availible in Rust |
-| Diffuse Texture Maps | Supported | Diffuse texture maps are loaded from image blobs stored in SQLite |
+| Load 3D objects from binary files. | SQLite databases are supported as feature (disabled by default) and used as an intermediate representation | Graphics data is loaded from processed sources (obj2sqlite is a tool that can be used to generate databases from wavefront .obj files. Once a scene is loaded it can be serialized to a binary file with optional compression.) |
+| Update and Render Geometry | Supported |  *Currently the ability to update OpenGL uniforms is only available in Rust |
+| Diffuse Texture Maps | Supported | Diffuse texture maps are loaded from image blobs stored in SQLite or serialized binaries |
 | Multiple Hardware Profiles | Supported | Multiple GLSL hardware profiles to support different shader versions on multiple platforms. Different versions of the shader programs are stored in the SQLite database.|
 | LUA Scripting | Supported | Scripting integration, an API is exposed to C and SWIG. There is an LUA Example that demonstrates a console with dynamic instrumentation to enable rapid prototyping in addition to examples for C, Java and Python. |
 | Tests | *In-Progress | Unit test, benchmark and integration tests |
