@@ -10,6 +10,7 @@ use nalgebra::{Eye, Matrix4};
 use std::cell::RefCell;
 use std::ffi::CStr;
 use std::io::Error;
+use std::io::ErrorKind;
 use std::path::Path;
 
 use common::{ImageBlob, Material, Mesh, Vertex8f32};
@@ -19,6 +20,12 @@ use shader::Shader;
 /// A struct representing an SQLite database loader
 pub struct DBLoader {
     filename: String,
+}
+
+#[derive(Debug)]
+pub enum DBLoaderError {
+    IoError(Error),
+    DBError(self::rusqlite::Error),
 }
 
 /// A node to index geometric data loaded from SQLite
@@ -37,16 +44,13 @@ pub struct SceneNodeTableRow {
     pub center_z: f64,
 }
 
-#[derive(Debug)]
-pub enum DBLoaderError {
-    IoError(Error),
-    DBError(self::rusqlite::Error),
-}
-
 impl DBLoader {
     /// Create a new DBLoader object
-    pub fn new(filename: &str) -> DBLoader {
-        DBLoader { filename: String::from(filename) }
+    pub fn new(filename: &str) -> Result<DBLoader, DBLoaderError> {
+        if !Path::new(filename.clone()).exists() {
+            return Err(DBLoaderError::IoError(Error::new(ErrorKind::NotFound, format!("Unable to load {}", filename) )));
+        }
+        Ok(DBLoader { filename: String::from(filename) })
     }
 
     /// Load the contents of an SQLite datbase into a `Scene` data structure.
@@ -247,7 +251,7 @@ pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
 pub extern "C" fn create_db_loader(filename_cstr: *const libc::c_char) -> Box<DBLoader> {
     unsafe {
         let filename: String = CStr::from_ptr(filename_cstr).to_string_lossy().into_owned();
-        let dbloader: DBLoader = DBLoader::new(&filename);
+        let dbloader: DBLoader = DBLoader::new(&filename).unwrap();
         println!("Loaded {}", &filename);
         Box::new(dbloader)
     }

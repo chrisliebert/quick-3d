@@ -80,7 +80,7 @@ pub fn obj2bin(wavefront_file: *const libc::c_char, binfile: *const libc::c_char
     database_file.push_str(&String::from(".db"));
     let sqlite_file = CString::new(database_file.clone()).unwrap();
     obj2sqlite(wavefront_file, sqlite_file.clone().into_raw());
-    let scene: Scene = match DBLoader::new(&(sqlite_file.into_string().unwrap())).load_scene() {
+    let scene: Scene = match DBLoader::new(&(sqlite_file.into_string().unwrap())).unwrap().load_scene() {
         Ok(s) => s,
         Err(e) => panic!("Unable to load scene from SQLite: {:?}", e),
     };
@@ -103,7 +103,7 @@ pub fn obj2compressed(wavefront_file: *const libc::c_char, binfile: *const libc:
     database_file.push_str(&String::from(".db"));
     let sqlite_file = CString::new(database_file.clone()).unwrap();
     obj2sqlite(wavefront_file, sqlite_file.clone().into_raw());
-    let scene: Scene = match DBLoader::new(&(sqlite_file.into_string().unwrap())).load_scene() {
+    let scene: Scene = match DBLoader::new(&(sqlite_file.into_string().unwrap())).unwrap().load_scene() {
         Ok(s) => s,
         Err(e) => panic!("Unable to load scene from SQLite: {:?}", e),
     };
@@ -219,8 +219,7 @@ mod tests {
     }
 
     #[test]
-    fn loader_load_db_not_empty() {
-        println!("Running loader_load_db_not_empty test");
+    fn test_scene_not_empty() {
         let scene: Scene = load_test_scene();
         assert!(scene.meshes.len() > 0);
         assert!(scene.materials.len() > 0);
@@ -264,7 +263,7 @@ mod tests {
         let scene = load_test_scene();
         let renderer = Renderer::new(&display, scene).unwrap();
         
-        let shader_dbloader = DBLoader::new("shaders.db");
+        let shader_dbloader = DBLoader::new("shaders.db").unwrap();
         let shader_name = "default";
         let shader_program = Shader::from_dbloader(&shader_name, &shader_dbloader, &display).unwrap();
         
@@ -310,7 +309,7 @@ mod tests {
         
         let renderer: Renderer = Renderer::new(&display, scene_binary).unwrap();
         
-        let shader_dbloader = DBLoader::new("shaders.db");
+        let shader_dbloader = DBLoader::new("shaders.db").unwrap();
         let shader_name = "default";
         let shader_program = Shader::from_dbloader(&shader_name, &shader_dbloader, &display).unwrap();
         

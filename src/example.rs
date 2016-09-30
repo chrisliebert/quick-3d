@@ -22,7 +22,7 @@ fn main() {
     let screen_width = 600;
     let screen_height = 400;
 
-    let shader_dbloader: DBLoader = DBLoader::new("shaders.db");
+    let shader_dbloader: DBLoader = DBLoader::new("shaders.db").unwrap();
     let bin_filename = String::from("test.bin.gz");
     let scene: Scene = match Scene::from_compressed_binary_file(bin_filename.clone()) {
         Ok(s) => s,
