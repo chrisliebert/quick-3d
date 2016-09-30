@@ -1,15 +1,19 @@
 // Copyright(C) 2016 Chris Liebert
+
 extern crate rusqlite;
 extern crate time;
+extern crate libc;
 
 use self::rusqlite::Connection;
 use nalgebra::{Eye, Matrix4};
 
 use std::cell::RefCell;
+use std::ffi::CStr;
 use std::path::Path;
 
-use common::{ImageBlob, Material, Mesh, Scene, Shader, Vertex8f32};
-
+use common::{ImageBlob, Material, Mesh, Vertex8f32};
+use scene::Scene;
+use shader::Shader;
 
 /// A struct representing an SQLite database loader
 pub struct DBLoader {
@@ -199,5 +203,25 @@ impl DBLoader {
             vertex_source: vertex_source,
             fragment_source: fragment_source,
         }
+    }
+}
+
+/// `extern void free_db_loader(DBLoader dbloader);`
+///
+#[no_mangle]
+pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
+    let box_ptr: Box<DBLoader> = unsafe { Box::from_raw(ptr) };
+    drop(box_ptr)
+}
+
+/// `extern DBLoader create_db_loader(const char* filename);`
+///
+#[no_mangle]
+pub extern "C" fn create_db_loader(filename_cstr: *const libc::c_char) -> Box<DBLoader> {
+    unsafe {
+        let filename: String = CStr::from_ptr(filename_cstr).to_string_lossy().into_owned();
+        let dbloader: DBLoader = DBLoader::new(&filename);
+        println!("Loaded {}", &filename);
+        Box::new(dbloader)
     }
 }

@@ -49,13 +49,12 @@ end
 screen_width = 800
 screen_height = 600
 display = Display:create(screen_width, screen_height, "My Lua Window")
-display:hide()
 camera = Camera:create(screen_width, screen_height)
 camera:move_backward(6)
 
 -- Load ../../test.db unless a file ending in .obj or .db is specified as an argument
 
-database_file = "../../test.db"
+scene_file = "../../test.bin.gz"
 
 function create_renderer()
   local i = 1
@@ -83,12 +82,12 @@ function create_renderer()
     end
     i = i + 1
   end
-  return Renderer:create_from_database(database_file, display)
+  return Renderer:create_from_compressed_binary(scene_file, display)
 end
 
 renderer = create_renderer()
 
-shader = Shader:create("default", "../../shaders.db", renderer, display)
+shader = Shader:create("default", "../../shaders.db", display)
 
 function quit()
   quick3d.free_shader(shader.struct)

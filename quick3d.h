@@ -40,7 +40,7 @@ extern void free_event(Input* memory);
 extern void free_renderer(Renderer renderer);
 extern void free_shader(Shader shader);
 
-extern Shader get_shader_from_db_loader(const char* name, DBLoader dbloader, Renderer renderer, Display display);
+extern Shader get_shader_from_dbloader(const char* name, DBLoader dbloader, Display display);
 extern Input* poll_event(Display display);
 extern char* read_console_buffer(ConsoleInput console);
 extern void render(Renderer renderer, Shader shader, Camera camera, Display display);

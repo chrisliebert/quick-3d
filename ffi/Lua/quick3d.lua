@@ -343,11 +343,11 @@ end
 Shader = {}
 Shader.__index = Shader
 
-function Shader.create(self, name, db_filename, renderer, display)
+function Shader.create(self, name, db_filename, display)
   local shader = {}
   setmetatable(shader, Shader)
   local dbloader = wrapper.create_db_loader(db_filename)
-  self.struct = wrapper.get_shader_from_db_loader(name, dbloader, renderer.struct, display.struct)
+  self.struct = wrapper.get_shader_from_dbloader(name, dbloader, display.struct)
   wrapper.free_db_loader(dbloader)
   return shader
 end

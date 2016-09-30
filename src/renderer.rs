@@ -1,20 +1,24 @@
 // Copyright(C) 2016 Chris Liebert
+
 extern crate glium;
 extern crate image;
+extern crate libc;
 extern crate nalgebra;
 
 use std::collections::HashMap;
+use std::ffi::CStr;
 use std::io::Error;
 use std::io::ErrorKind;
 
 use camera::Camera;
 use common;
-use common::{Mesh, Scene, Shader, Vertex8f32};
-use loader::DBLoader;
+use common::{Mesh,Vertex8f32};
+use dbloader::DBLoader;
 use frustum::Frustum;
+use scene::Scene;
 
 use glium::backend::glutin_backend::GlutinFacade;
-use glium::{Program, Surface, Version};
+use glium::Surface;
 
 use nalgebra::Vector4;
 
@@ -76,127 +80,6 @@ impl Renderer {
             }
         }
         return Err(Error::new(ErrorKind::NotFound, "Unable to load mesh"));
-    }
-    
-    /// Create a `glium::program::Program` object from a `DBLoader` that contains the shader and shader_version tables in SQLite
-    ///
-    #[allow(unused_assignments)]
-    pub fn create_shader_program(&self, shader_name: &str, dbloader: &DBLoader, display: &GlutinFacade) -> glium::program::Program {
-        let supported_glsl_version: Version = display.get_supported_glsl_version();
-        let api: glium::Api = supported_glsl_version.0;
-        let major_version : u8 = supported_glsl_version.1;
-        let minor_version : u8 = supported_glsl_version.2;
-        let mut glsl_version_string: String = major_version.to_string();
-        glsl_version_string.push_str(&minor_version.to_string());
-        glsl_version_string.push('0');
-        let mut use_gles: bool = false;// Use OpenGLES instead of OpenGL (for mobile devices)
-        
-        match api {
-                glium::Api::Gl => {
-                    use_gles = false;
-                },
-                glium::Api::GlEs => {
-                    use_gles = true;
-                    glsl_version_string.push_str(" es");
-                },
-        };
-        
-        let glsl_version_number: u32 = match glsl_version_string.parse() {
-            Ok(s) => s,
-            Err(e) =>  {
-                // This is not likely to happen
-                panic!("Unable to parse supported glsl version string: {}", e);
-            },
-        };
-        
-        println!("Using glsl version {}", &glsl_version_string);
-    
-        let shader: Shader = dbloader.load_shader(shader_name, &glsl_version_string);
-    
-        let program: Program;
-        
-        if use_gles {
-            program = program!(display,
-                glsl_version_number es => {
-                    vertex: &shader.vertex_source,
-                    fragment: &shader.fragment_source,
-                },
-            )
-            .unwrap();
-        } else {
-            program = program!(display,
-                glsl_version_number => {
-                    vertex: &shader.vertex_source,
-                    fragment: &shader.fragment_source,
-                },
-            )
-            .unwrap();
-        }
-            
-        // Shader compilation no longer required
-        display.release_shader_compiler();
-        return program;
-    }
-    
-    /// Create a `glium::program::Program` object from a `DBLoader` that has a specific shader version
-    ///
-    pub fn create_shader_program_with_version(&self, shader_name: &str, dbloader: &DBLoader, glsl_version: &Version, display: &GlutinFacade) -> Result<glium::program::Program, Error> {
-        if !display.is_glsl_version_supported(&glsl_version) {
-            return Err(Error::new(ErrorKind::InvalidData, "Unsupported GLSL version"));
-        }
-        
-        let api: glium::Api = glsl_version.0;
-        let major_version : u8 = glsl_version.1;
-        let minor_version : u8 = glsl_version.2;
-        let mut glsl_version_string: String = major_version.to_string();
-        glsl_version_string.push_str(&minor_version.to_string());
-        glsl_version_string.push('0');
-        let mut _use_gles: bool = false;// Use OpenGLES instead of OpenGL (for mobile devices)
-        
-        match api {
-                glium::Api::Gl => {
-                    _use_gles = false;
-                },
-                glium::Api::GlEs => {
-                    _use_gles = true;
-                    glsl_version_string.push_str(" es");
-                },
-        };
-        
-        let glsl_version_number: u32 = match glsl_version_string.parse() {
-            Ok(s) => s,
-            Err(e) =>  {
-                // This is not likely to happen
-                panic!("Unable to parse supported glsl version string: {}", e);
-            },
-        };
-        
-        println!("Using glsl version {}", &glsl_version_string);
-    
-        let shader: Shader = dbloader.load_shader(shader_name, &glsl_version_string);
-    
-        let program;
-        
-        if _use_gles {
-            program = program!(display,
-                glsl_version_number es => {
-                    vertex: &shader.vertex_source,
-                    fragment: &shader.fragment_source,
-                },
-            )
-        } else {
-            program = program!(display,
-                glsl_version_number => {
-                    vertex: &shader.vertex_source,
-                    fragment: &shader.fragment_source,
-                },
-            )
-        }
-        
-        match program {
-            Ok(p) => Ok(p),
-            Err(e) => Err(Error::new(ErrorKind::InvalidData, e)),
-        }
     }
     
     /// Draw the `Scene` data consumed by self to the display
@@ -263,4 +146,64 @@ impl Renderer {
         }
         target.finish().unwrap();
     }
+}
+
+/// `extern Renderer create_renderer_from_db_loader(DBLoader loader, Display display);`
+///
+#[no_mangle]
+pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
+                                                 display: &GlutinFacade)
+                                                 -> Box<Renderer> {
+    Box::new(Renderer::new(display, dbloader.load_scene()))
+}
+
+                                                
+/// `extern Renderer create_renderer_from_compressed_binary(const char* filename, Display display);`
+///
+#[no_mangle]
+pub extern "C" fn create_renderer_from_compressed_binary(file: *const libc::c_char,
+                                                 display: &GlutinFacade)
+                                                 -> Box<Renderer> {
+    let filename: String = unsafe{ CStr::from_ptr(file).to_string_lossy().into_owned() };
+    match Scene::from_compressed_binary_file(filename.clone()) {
+        Ok(s) => {
+            println!("Loaded compressed binary: {}", filename);
+            return Box::new(Renderer::new(display, s));
+        },
+        Err(e) => panic!("Unable to load compressed binary file {}: {:?}", filename, e),
+    };
+}
+                                                 
+/// `extern Renderer create_renderer_from_binary(const char* filename, Display display);`
+///
+#[no_mangle]
+pub extern "C" fn create_renderer_from_binary(file: *const libc::c_char,
+                                                 display: &GlutinFacade)
+                                                 -> Box<Renderer> {
+    let filename: String = unsafe{ CStr::from_ptr(file).to_string_lossy().into_owned() };
+    match Scene::from_binary_file(filename.clone()) {
+        Ok(s) => {
+            println!("Loaded binary: {}", filename);
+            return Box::new(Renderer::new(display, s));
+        },
+        Err(e) => panic!("Unable to load binary file {}: {:?}", filename, e),
+    };
+}
+                                                 
+/// `extern void free_renderer(Renderer renderer);`
+///
+#[no_mangle]
+pub extern "C" fn free_renderer(ptr: *mut Renderer) {
+    let box_ptr: Box<Renderer> = unsafe { Box::from_raw(ptr) };
+    drop(box_ptr)
+}
+
+/// `extern void render(Renderer renderer, Shader shader, Camera camera, Display display);`
+///
+#[no_mangle]
+pub extern "C" fn render(renderer: &Renderer,
+                         shader_program: &glium::program::Program,
+                         camera: &Camera,
+                         display: &GlutinFacade) {
+    renderer.render(display, shader_program, camera);
 }

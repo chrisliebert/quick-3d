@@ -1,14 +1,7 @@
 // Copyright(C) 2016 Chris Liebert
+
 use std::cell::RefCell;
 use nalgebra::Matrix4;
-use bincode::rustc_serialize::{encode_into, decode_from, EncodingError, DecodingError};
-use bincode::SizeLimit::Infinite;
-use std::fs::File;
-use std::io::{BufWriter, BufReader};
-
-use flate2::write::ZlibEncoder;
-use flate2::read::ZlibDecoder;
-use flate2::Compression;
 
 /// A representation of a binary image and it's name
 ///
@@ -47,57 +40,7 @@ pub struct Material {
     pub diffuse: [f32; 3],
     pub diffuse_texname: String,
 }
-
-/// Geometry and material information that can be rendered
-///
-/// A `Scene` contains geometry that will be rendered along with reference materials and
-/// textures
-///
-#[derive(PartialEq, RustcEncodable, RustcDecodable)]
-pub struct Scene {
-    pub materials: Vec<Material>,
-    pub meshes: Vec<Mesh>,
-    pub images: Vec<ImageBlob>,
-}
-
-impl Scene {
-	pub fn from_binary_file(filename: String) -> Result<Scene, DecodingError> {
-	    let mut reader = BufReader::new(File::open(filename).unwrap());
-		let scene_result: Result<Scene, _> = decode_from(&mut reader, Infinite);
-		scene_result
-	}
 	
-	pub fn to_binary_file(&self, filename: String) -> Result<(), EncodingError>  {
-		let mut writer = BufWriter::new(File::create(filename).unwrap());
-		encode_into(&self, &mut writer, Infinite)
-	}
-	
-	pub fn from_compressed_binary_file(filename: String) -> Result<Scene, DecodingError> {
-	    let reader = BufReader::new(File::open(filename).unwrap());
-		let mut decoder = ZlibDecoder::new(reader);
-		let scene_result: Result<Scene, _> = decode_from(&mut decoder, Infinite);
-		scene_result
-	}
-	
-	pub fn to_compressed_binary_file(&self, filename: String) -> Result<(), EncodingError>  {
-		let writer = BufWriter::new(File::create(filename).unwrap());
-		let mut encoder = ZlibEncoder::new(writer, Compression::Best);
-		encode_into(&self, &mut encoder, Infinite)
-	}
-}
-
-/// A representation for a GPU program
-///
-/// Shader programs contain the source for a vertex and fragment shader
-/// in addition to a name
-///
-#[derive(Debug)]
-pub struct Shader {
-    pub name: String,
-    pub vertex_source: String,
-    pub fragment_source: String,
-}
-
 /// `Vertex8f32` - The default implementation of a vertex which is buffered to
 /// the graphics processing unit.
 ///

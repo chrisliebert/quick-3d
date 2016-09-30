@@ -35,9 +35,9 @@ display = Display:create(screen_width, screen_height, "My Lua Window")
 camera = Camera:create(screen_width, screen_height)
 camera:move_backward(6)
 
-database_file = "../../test.db"
-renderer = Renderer:create_from_database(database_file, display)
-shader = Shader:create("default", "../../shaders.db", renderer, display)
+scene_file = "../../test.bin.gz"
+renderer = Renderer:create_from_compressed_binary(scene_file, display)
+shader = Shader:create("default", "../../shaders.db", display)
 
 renderer:render(shader, camera, display)
 quick3d.thread_sleep(100)

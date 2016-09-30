@@ -1,5 +1,7 @@
 // Copyright (C) 2016 Chris Liebert
 
+extern crate libc;
+
 use nalgebra;
 use nalgebra::{Eye, Isometry3, Matrix4, PerspectiveMatrix3, ToHomogeneous, Vector3};
 
@@ -145,4 +147,69 @@ impl Camera {
             roll: self.roll,
         }
     }
+}
+
+/// `extern void camera_aim(Camera camera, double x, double y);`
+///
+#[no_mangle]
+pub extern "C" fn camera_aim(camera: *mut Camera, x: libc::c_double, y: libc::c_double) -> Box<Camera> {
+    let camera: Box<Camera> = unsafe { Box::from_raw(camera) };
+    let new_camera = Box::new(camera.aim(x as f64, y as f64));
+    drop(camera);
+    new_camera
+}
+
+/// `extern void camera_move_forward(Camera camera, float amount);`
+///
+#[no_mangle]
+pub extern "C" fn camera_move_forward(camera: *mut Camera, amount: libc::c_float) -> Box<Camera> {
+    let camera: Box<Camera> = unsafe { Box::from_raw(camera) };
+    let new_camera = Box::new(camera.move_forward(amount as f32));
+    drop(camera);
+    new_camera
+}
+
+/// `extern void camera_move_backward(Camera camera, float amount);`
+///
+#[no_mangle]
+pub extern "C" fn camera_move_backward(camera: *mut Camera, amount: libc::c_float) -> Box<Camera> {
+    let camera: Box<Camera> = unsafe { Box::from_raw(camera) };
+    let new_camera = Box::new(camera.move_backward(amount as f32));
+    drop(camera);
+    new_camera
+}
+
+/// `extern void camera_move_left(Camera camera, float amount);`
+///
+#[no_mangle]
+pub extern "C" fn camera_move_left(camera: *mut Camera, amount: libc::c_float) -> Box<Camera> {
+    let camera: Box<Camera> = unsafe { Box::from_raw(camera) };    
+    let new_camera = Box::new(camera.move_left(amount as f32));
+    drop(camera);
+    new_camera
+}
+
+/// `extern void camera_move_right(Camera camera, float amount);`
+///
+#[no_mangle]
+pub extern "C" fn camera_move_right(camera: *mut Camera, amount: libc::c_float) -> Box<Camera> {
+    let camera: Box<Camera> = unsafe { Box::from_raw(camera) };   
+    let new_camera = Box::new(camera.move_right(amount as f32));
+    drop(camera);
+    new_camera
+}
+
+/// `extern Camera create_camera(float screen_width, float screen_height);`
+///
+#[no_mangle]
+pub extern "C" fn create_camera(screen_width: f32, screen_height: f32) -> Box<Camera> {
+    Box::new(Camera::new(screen_width, screen_height))
+}
+
+/// `extern void free_camera(Camera memory);`
+///
+#[no_mangle]
+pub extern "C" fn free_camera(ptr: *mut Camera) {
+    let box_ptr: Box<Camera> = unsafe { Box::from_raw(ptr) };
+    drop(box_ptr)
 }

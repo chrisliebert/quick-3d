@@ -14,11 +14,9 @@ def init():
     display = q3d.create_display(screen_width, screen_height, "PyQuick3D")
     camera = q3d.create_camera(screen_width, screen_height)
     camera = q3d.camera_move_backward(camera, 6)
-    dbloader = q3d.create_db_loader("../../test.db")
-    renderer = q3d.create_renderer_from_db_loader(dbloader, display)
-    q3d.free_db_loader(dbloader)
+    renderer = q3d.create_renderer_from_compressed_binary("../../test.bin.gz", display)
     shaderloader = q3d.create_db_loader("../../shaders.db")
-    shader = q3d.get_shader_from_db_loader("default", shaderloader, renderer, display)
+    shader = q3d.get_shader_from_dbloader("default", shaderloader, display)
     q3d.free_db_loader(shaderloader)
     console_reader = q3d.create_console_reader()
     return display, camera, renderer, shader, console_reader

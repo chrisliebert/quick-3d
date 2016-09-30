@@ -12,19 +12,21 @@ use nalgebra::Matrix4;
 use std::io::Error;
 
 use quick3d::camera::Camera;
-use quick3d::common::{Mesh, Scene};
-use quick3d::loader::DBLoader;
+use quick3d::common::Mesh;
+use quick3d::dbloader::DBLoader;
 use quick3d::renderer;
+use quick3d::shader::Shader;
+use quick3d::scene::Scene;
 
 fn main() {
     let screen_width = 600;
     let screen_height = 400;
 
     let shader_dbloader: DBLoader = DBLoader::new("shaders.db");
-    let bin_filename = String::from("test.bin");
+    let bin_filename = String::from("test.bin.gz");
     let scene: Scene = match Scene::from_compressed_binary_file(bin_filename.clone()) {
         Ok(s) => s,
-        Err(e) => panic!("Unable to load {}: {:?}", bin_filename, e)
+        Err(e) => panic!("Unable to load {}: {:?}", bin_filename, e),
     };
 
     let display = glutin::WindowBuilder::new()
@@ -40,20 +42,20 @@ fn main() {
 
     let mut camera: Camera = Camera::new(screen_width as f32, screen_height as f32);
     camera = camera.move_backward(6.0);
-    
+
     let renderer = renderer::Renderer::new(&display, scene);
 
     // Attempt to load GLSL version 330 if it is supported
     let desired_glsl_version = glium::Version(glium::Api::Gl, 3, 3);
     let shader_name = "default";
-    let shader_program = match renderer.create_shader_program_with_version(&shader_name,
-                                                                           &shader_dbloader,
-                                                                           &desired_glsl_version,
-                                                                           &display) {
+    let shader_program = match Shader::from_dbloader_with_version(&shader_name,
+                                                                  &shader_dbloader,
+                                                                  &desired_glsl_version,
+                                                                  &display) {
         Ok(p) => p,
         Err(e) => {
             println!("Unable to load {:?}: {}", desired_glsl_version, e);
-            renderer.create_shader_program(&shader_name, &shader_dbloader, &display)
+            Shader::from_dbloader(&shader_name, &shader_dbloader, &display)
         }
     };
 
@@ -92,7 +94,7 @@ fn main() {
 
     let screen_center_x: i32 = (screen_width / 2) as i32;
     let screen_center_y: i32 = (screen_height / 2) as i32;
-    
+
     let mouse_grab_margin: i32 = screen_center_y / 2;
 
     'running: loop {
@@ -112,10 +114,10 @@ fn main() {
                     _camera_forward_speed = 0.0;
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::A)) => {
-                     camera = camera.move_left(1.0);
+                    camera = camera.move_left(1.0);
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::S)) => {
-                     camera = camera.move_backward(1.0);
+                    camera = camera.move_backward(1.0);
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::D)) => {
                     camera = camera.move_right(1.0);
@@ -163,7 +165,8 @@ fn main() {
                             let _ = window.set_cursor_position(screen_center_x, y);
                             mouse_last_x = screen_center_x;
                             _mouse_dx = 0;
-                        } else if y + mouse_grab_margin >= screen_height as i32 || y <= mouse_grab_margin {
+                        } else if y + mouse_grab_margin >= screen_height as i32 ||
+                                  y <= mouse_grab_margin {
                             let _ = window.set_cursor_position(x, screen_center_y);
                             mouse_last_y = screen_center_y;
                             _mouse_dy = 0;
