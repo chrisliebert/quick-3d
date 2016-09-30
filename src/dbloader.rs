@@ -9,6 +9,7 @@ use nalgebra::{Eye, Matrix4};
 
 use std::cell::RefCell;
 use std::ffi::CStr;
+use std::io::Error;
 use std::path::Path;
 
 use common::{ImageBlob, Material, Mesh, Vertex8f32};
@@ -36,6 +37,12 @@ pub struct SceneNodeTableRow {
     pub center_z: f64,
 }
 
+#[derive(Debug)]
+pub enum DBLoaderError {
+    IoError(Error),
+    DBError(self::rusqlite::Error),
+}
+
 impl DBLoader {
     /// Create a new DBLoader object
     pub fn new(filename: &str) -> DBLoader {
@@ -43,13 +50,19 @@ impl DBLoader {
     }
 
     /// Load the contents of an SQLite datbase into a `Scene` data structure.
-    pub fn load_scene(&self) -> Scene {
-        let conn = Connection::open(Path::new(&self.filename)).unwrap();
+    pub fn load_scene(&self) -> Result<Scene, DBLoaderError> {
+        let conn = try!(
+            Connection::open(Path::new(&self.filename))
+                .map_err(DBLoaderError::DBError)
+        );
 
         // Load vertices
-        let mut vertex_stmt = conn.prepare("SELECT px, py, pz, nx, ny, nz, tu, tv FROM vertex")
-            .unwrap();
-        let vertex_iter = vertex_stmt.query_map(&[], |row| {
+        let mut vertex_stmt = try!(
+            conn.prepare("SELECT px, py, pz, nx, ny, nz, tu, tv FROM vertex")
+               .map_err(DBLoaderError::DBError)
+        );
+        let vertex_iter = try!(
+            vertex_stmt.query_map(&[], |row| {
                 Vertex8f32::from_f64(row.get(0),
                                      row.get(1),
                                      row.get(2),
@@ -58,21 +71,22 @@ impl DBLoader {
                                      row.get(5),
                                      row.get(6),
                                      row.get(7))
-            })
-            .unwrap();
+            }).map_err(DBLoaderError::DBError)
+        );
 
         let mut vertices: Vec<Vertex8f32> = Vec::new();
 
         for vertex in vertex_iter {
-            vertices.push(vertex.unwrap());
+            vertices.push(try!(vertex.map_err(DBLoaderError::DBError)));
         }
 
         // Load materials
-        let mut material_stmt =
+        let mut material_stmt = try!(
             conn.prepare("SELECT name, diffuse_r, diffuse_g, diffuse_b, diffuse_texname FROM \
-                          material")
-                .unwrap();
-        let material_iter = material_stmt.query_map(&[], |row| {
+                          material").map_err(DBLoaderError::DBError)
+        );
+        let material_iter = try!(
+            material_stmt.query_map(&[], |row| {
                 let diffuse_r: f64 = row.get(1);
                 let diffuse_g: f64 = row.get(2);
                 let diffuse_b: f64 = row.get(3);
@@ -81,22 +95,24 @@ impl DBLoader {
                     diffuse: [diffuse_r as f32, diffuse_g as f32, diffuse_b as f32],
                     diffuse_texname: row.get(4),
                 }
-            })
-            .unwrap();
+            }).map_err(DBLoaderError::DBError)
+        );
 
         let mut materials: Vec<Material> = Vec::new();
 
         for material in material_iter {
-            materials.push(material.unwrap());
+            materials.push(try!(material.map_err(DBLoaderError::DBError)));
         }
 
         let mut meshes: Vec<Mesh> = Vec::new();
 
         // Load scene nodes
-        let mut scene_node_stmt =
+        let mut scene_node_stmt = try!(
             conn.prepare("SELECT name, material_id, start_position, end_position, radius, center_x, center_y, center_z FROM scene_node")
-                .unwrap();
-        let scene_node_iter = scene_node_stmt.query_map(&[], |row| {
+                .map_err(DBLoaderError::DBError)
+        );
+        let scene_node_iter = try!(
+            scene_node_stmt.query_map(&[], |row| {
                 let material_id: i32 = row.get(1);
                 let material_index: usize = material_id as usize - 1 as usize;
                 SceneNodeTableRow {
@@ -110,10 +126,11 @@ impl DBLoader {
                     center_z: row.get(7),
                 }
             })
-            .unwrap();
+            .map_err(DBLoaderError::DBError)
+        );
 
         for scene_node in scene_node_iter {
-            let sn = scene_node.unwrap();
+            let sn = try!(scene_node.map_err(DBLoaderError::DBError));
             let mut new_vertices: Vec<Vertex8f32> = Vec::new();
 
             for i in sn.start_position as usize..(sn.end_position) as usize {
@@ -145,38 +162,45 @@ impl DBLoader {
         vertices.clear();
 
         // Load textures
-        let mut texture_stmt = conn.prepare("SELECT name, image FROM texture")
-            .unwrap();
-        let texture_iter = texture_stmt.query_map(&[], |row| {
+        let mut texture_stmt = try!(
+            conn.prepare("SELECT name, image FROM texture")
+                .map_err(DBLoaderError::DBError)
+        );
+        let texture_iter = try!(
+            texture_stmt.query_map(&[], |row| {
                 ImageBlob {
                     name: row.get(0),
                     image: row.get(1),
                 }
-            })
-            .unwrap();
-
+            }).map_err(DBLoaderError::DBError)
+        );
         let mut textures: Vec<ImageBlob> = Vec::new();
 
         for texture in texture_iter {
-            textures.push(texture.unwrap());
+            textures.push(try!(texture.map_err(DBLoaderError::DBError)));
         }
 
-        return Scene {
+        Ok(Scene {
             materials: materials,
             meshes: meshes,
             images: textures,
-        };
+        })
     }
 
     /// Load a shader from an SQLite database
-    pub fn load_shader(&self, name: &str, glsl_version_string: &str) -> Shader {
-        let conn = Connection::open(Path::new(&self.filename)).unwrap();
+    pub fn load_shader(&self, name: &str, glsl_version_string: &str) -> Result<Shader, DBLoaderError> {
+        let conn = try!(
+            Connection::open(Path::new(&self.filename))
+                .map_err(DBLoaderError::DBError)
+        );
         let mut id_sql: String = "SELECT id FROM shader WHERE name = '".to_owned();
         id_sql.push_str(name);
         id_sql.push('\'');
 
-        let shader_id: i32 = conn.query_row(&id_sql, &[], |row| row.get(0))
-            .unwrap();
+        let shader_id: i32 = try!(
+            conn.query_row(&id_sql, &[], |row| row.get(0))
+                .map_err(DBLoaderError::DBError)
+        );
 
         let mut base_query: String = "SELECT source FROM shader_version WHERE shader_id="
             .to_owned();
@@ -192,17 +216,20 @@ impl DBLoader {
         vertex_source_sql.push_str("vertex';");
         fragment_source_sql.push_str("fragment';");
 
-        let vertex_source: String = conn.query_row(&vertex_source_sql, &[], |row| row.get(0))
-            .unwrap();
-
-        let fragment_source: String = conn.query_row(&fragment_source_sql, &[], |row| row.get(0))
-            .unwrap();
-
-        Shader {
+        let vertex_source: String = try!(
+            conn.query_row(&vertex_source_sql, &[], |row| row.get(0))
+                .map_err(DBLoaderError::DBError)
+        );
+        let fragment_source: String = try!(
+            conn.query_row(&fragment_source_sql, &[], |row| row.get(0))
+                .map_err(DBLoaderError::DBError)
+        );
+        
+        Ok(Shader {
             name: String::from(name),
             vertex_source: vertex_source,
             fragment_source: fragment_source,
-        }
+        })
     }
 }
 

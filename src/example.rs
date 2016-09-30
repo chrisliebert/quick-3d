@@ -43,20 +43,26 @@ fn main() {
     let mut camera: Camera = Camera::new(screen_width as f32, screen_height as f32);
     camera = camera.move_backward(6.0);
 
-    let renderer = renderer::Renderer::new(&display, scene);
+    let renderer: renderer::Renderer = match renderer::Renderer::new(&display, scene) {
+        Ok(r) => r,
+        Err(e) => panic!("Unable to create renderer: {:?}", e),
+    };
 
     // Attempt to load GLSL version 330 if it is supported
     let desired_glsl_version = glium::Version(glium::Api::Gl, 3, 3);
     let shader_name = "default";
-    let shader_program = match Shader::from_dbloader_with_version(&shader_name,
+    let shader_program: glium::program::Program = match Shader::from_dbloader_with_version(&shader_name,
                                                                   &shader_dbloader,
                                                                   &desired_glsl_version,
                                                                   &display) {
         Ok(p) => p,
         Err(e) => {
-            println!("Unable to load {:?}: {}", desired_glsl_version, e);
-            Shader::from_dbloader(&shader_name, &shader_dbloader, &display)
-        }
+            println!("Unable to load {:?}: {:?}. Trying different version.", desired_glsl_version, e);
+            match Shader::from_dbloader(&shader_name, &shader_dbloader, &display) {
+                Ok(p2) => p2,
+                Err(e2) => panic!("Unable to load shader: {:?}", e2),
+            }
+        },
     };
 
     // Show the window once the data is loaded
@@ -98,7 +104,10 @@ fn main() {
     let mouse_grab_margin: i32 = screen_center_y / 2;
 
     'running: loop {
-        renderer.render(&display, &shader_program, &camera);
+        match renderer.render(&display, &shader_program, &camera) {
+            Ok(_) => (),
+            Err(e) => panic!("{:?}", e),
+        };
 
         // Check for events
         for event in display.poll_events() {

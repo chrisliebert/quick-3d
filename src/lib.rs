@@ -80,7 +80,10 @@ pub fn obj2bin(wavefront_file: *const libc::c_char, binfile: *const libc::c_char
     database_file.push_str(&String::from(".db"));
     let sqlite_file = CString::new(database_file.clone()).unwrap();
     obj2sqlite(wavefront_file, sqlite_file.clone().into_raw());
-    let scene: Scene = DBLoader::new(&(sqlite_file.into_string().unwrap())).load_scene();
+    let scene: Scene = match DBLoader::new(&(sqlite_file.into_string().unwrap())).load_scene() {
+        Ok(s) => s,
+        Err(e) => panic!("Unable to load scene from SQLite: {:?}", e),
+    };
     match scene.to_binary_file(binfile_str.clone()) {
         Ok(()) => println!("Saved {}", binfile_str),
         Err(e) => panic!("Unable to save binary file {}: {:?}", binfile_str, e),
@@ -100,7 +103,10 @@ pub fn obj2compressed(wavefront_file: *const libc::c_char, binfile: *const libc:
     database_file.push_str(&String::from(".db"));
     let sqlite_file = CString::new(database_file.clone()).unwrap();
     obj2sqlite(wavefront_file, sqlite_file.clone().into_raw());
-    let scene: Scene = DBLoader::new(&(sqlite_file.into_string().unwrap())).load_scene();
+    let scene: Scene = match DBLoader::new(&(sqlite_file.into_string().unwrap())).load_scene() {
+        Ok(s) => s,
+        Err(e) => panic!("Unable to load scene from SQLite: {:?}", e),
+    };
     match scene.to_compressed_binary_file(binfile_str.clone()) {
         Ok(()) => println!("Saved {}", binfile_str),
         Err(e) => panic!("Unable to save compressed binary file {}: {:?}", binfile_str, e),
@@ -256,13 +262,13 @@ mod tests {
         camera = camera.move_backward(6.0);        
         
         let scene = load_test_scene();
-        let renderer = Renderer::new(&display, scene);
+        let renderer = Renderer::new(&display, scene).unwrap();
         
         let shader_dbloader = DBLoader::new("shaders.db");
         let shader_name = "default";
-        let shader_program = Shader::from_dbloader(&shader_name, &shader_dbloader, &display);
+        let shader_program = Shader::from_dbloader(&shader_name, &shader_dbloader, &display).unwrap();
         
-        renderer.render(&display, &shader_program, &camera);
+        renderer.render(&display, &shader_program, &camera).unwrap();
         
         thread::sleep(Duration::from_millis(100));
     }
@@ -302,13 +308,13 @@ mod tests {
         assert!(scene == scene_binary);
         drop(scene);
         
-        let renderer = Renderer::new(&display, scene_binary);
+        let renderer: Renderer = Renderer::new(&display, scene_binary).unwrap();
         
         let shader_dbloader = DBLoader::new("shaders.db");
         let shader_name = "default";
-        let shader_program = Shader::from_dbloader(&shader_name, &shader_dbloader, &display);
+        let shader_program = Shader::from_dbloader(&shader_name, &shader_dbloader, &display).unwrap();
         
-        renderer.render(&display, &shader_program, &camera);
+        renderer.render(&display, &shader_program, &camera).unwrap();
 
         thread::sleep(Duration::from_millis(100));
     }

@@ -5,12 +5,13 @@ extern crate libc;
 use std::ffi::CStr;
 use std::io::Error;
 use std::io::ErrorKind;
+use std::num::ParseIntError;
 
 use glium;
 use glium::backend::glutin_backend::GlutinFacade;
 use glium::{Program, Version};
 
-use dbloader::DBLoader;
+use dbloader::{DBLoader, DBLoaderError};
 
 /// A representation for a GPU program
 ///
@@ -24,11 +25,19 @@ pub struct Shader {
     pub fragment_source: String,
 }
 
+#[derive(Debug)]
+pub enum ShaderError {
+    IoError(Error),
+    ProgramChooserCreationError(glium::program::ProgramChooserCreationError),
+    InvalidGLSLVersionStringError(ParseIntError),
+    UnsupportedGLSLVersionError(Error),
+}
+
 impl Shader {
     /// Create a `glium::program::Program` object from a `DBLoader` that contains the shader and shader_version tables in SQLite
     ///
     #[allow(unused_assignments)]
-    pub fn from_dbloader(shader_name: &str, dbloader: &DBLoader, display: &GlutinFacade) -> glium::program::Program {
+    pub fn from_dbloader(shader_name: &str, dbloader: &DBLoader, display: &GlutinFacade) -> Result<glium::program::Program, ShaderError> {
         let supported_glsl_version: Version = display.get_supported_glsl_version();
         let api: glium::Api = supported_glsl_version.0;
         let major_version : u8 = supported_glsl_version.1;
@@ -50,46 +59,52 @@ impl Shader {
         
         let glsl_version_number: u32 = match glsl_version_string.parse() {
             Ok(s) => s,
-            Err(e) =>  {
-                // This is not likely to happen
-                panic!("Unable to parse supported glsl version string: {}", e);
-            },
+            Err(e) => return Err(ShaderError::InvalidGLSLVersionStringError(e)),
         };
         
         println!("Using glsl version {}", &glsl_version_string);
     
-        let shader: Shader = dbloader.load_shader(shader_name, &glsl_version_string);
+        let shader: Shader = match dbloader.load_shader(shader_name, &glsl_version_string) {
+            Ok(s) => s,
+            Err(DBLoaderError::DBError(e)) => {
+                let description = format!("{:?}", e);
+                return Err(ShaderError::IoError(Error::new(ErrorKind::InvalidData, description)));
+            },
+            Err(e) => {
+                let description = format!("{:?}", e);
+                return Err(ShaderError::IoError(Error::new(ErrorKind::InvalidData, description)));
+            },
+        };
     
-        let program: Program;
-        
-        if use_gles {
-            program = program!(display,
-                glsl_version_number es => {
-                    vertex: &shader.vertex_source,
-                    fragment: &shader.fragment_source,
-                },
-            )
-            .unwrap();
-        } else {
-            program = program!(display,
-                glsl_version_number => {
-                    vertex: &shader.vertex_source,
-                    fragment: &shader.fragment_source,
-                },
-            )
-            .unwrap();
-        }
+        let program: Program = match use_gles {
+            true => try!(
+                program!(display,
+                    glsl_version_number es => {
+                        vertex: &shader.vertex_source,
+                        fragment: &shader.fragment_source,
+                    }
+                ).map_err(ShaderError::ProgramChooserCreationError)
+            ),
+            false => try!(
+                program!(display,
+                    glsl_version_number => {
+                        vertex: &shader.vertex_source,
+                        fragment: &shader.fragment_source,
+                    }
+                ).map_err(ShaderError::ProgramChooserCreationError)
+            ),
+        };
             
         // Shader compilation no longer required
         display.release_shader_compiler();
-        return program;
+        return Ok(program);
     }
     
     /// Create a `glium::program::Program` object from a `DBLoader` that has a specific shader version
     ///
-    pub fn from_dbloader_with_version(shader_name: &str, dbloader: &DBLoader, glsl_version: &Version, display: &GlutinFacade) -> Result<glium::program::Program, Error> {
+    pub fn from_dbloader_with_version(shader_name: &str, dbloader: &DBLoader, glsl_version: &Version, display: &GlutinFacade) -> Result<glium::program::Program, ShaderError> {
         if !display.is_glsl_version_supported(&glsl_version) {
-            return Err(Error::new(ErrorKind::InvalidData, "Unsupported GLSL version"));
+            return Err(ShaderError::UnsupportedGLSLVersionError(Error::new(ErrorKind::InvalidData, "Unsupported GLSL version")));
         }
         
         let api: glium::Api = glsl_version.0;
@@ -120,30 +135,36 @@ impl Shader {
         
         println!("Using glsl version {}", &glsl_version_string);
     
-        let shader: Shader = dbloader.load_shader(shader_name, &glsl_version_string);
+        let shader: Shader = match dbloader.load_shader(shader_name, &glsl_version_string) {
+            Ok(s) => s,
+            Err(DBLoaderError::DBError(e)) => {
+                let description = format!("{:?}", e);
+                return Err(ShaderError::IoError(Error::new(ErrorKind::InvalidData, description)));
+            },
+            Err(e) => {
+                let description = format!("{:?}", e);
+                return Err(ShaderError::IoError(Error::new(ErrorKind::InvalidData, description)));
+            },
+        };
     
-        let program;
-        
-        if _use_gles {
-            program = program!(display,
-                glsl_version_number es => {
-                    vertex: &shader.vertex_source,
-                    fragment: &shader.fragment_source,
-                },
-            )
-        } else {
-            program = program!(display,
-                glsl_version_number => {
-                    vertex: &shader.vertex_source,
-                    fragment: &shader.fragment_source,
-                },
-            )
-        }
-        
-        match program {
-            Ok(p) => Ok(p),
-            Err(e) => Err(Error::new(ErrorKind::InvalidData, e)),
-        }
+        Ok(match _use_gles {
+            true => try!(
+                program!(display,
+                    glsl_version_number es => {
+                        vertex: &shader.vertex_source,
+                        fragment: &shader.fragment_source,
+                    }
+                ).map_err(ShaderError::ProgramChooserCreationError)
+            ),
+            false => try!(
+                program!(display,
+                    glsl_version_number => {
+                        vertex: &shader.vertex_source,
+                        fragment: &shader.fragment_source,
+                    }
+                ).map_err(ShaderError::ProgramChooserCreationError)
+            ),
+        })
     }
 }
 
@@ -164,7 +185,7 @@ pub extern "C" fn get_shader_from_dbloader(shader_name_cstr: *const libc::c_char
                                             -> Box<glium::program::Program> {
     unsafe {
         let shader_name: String = CStr::from_ptr(shader_name_cstr).to_string_lossy().into_owned();
-        let shader_program = Shader::from_dbloader(&shader_name, dbloader, display);
+        let shader_program = Shader::from_dbloader(&shader_name, dbloader, display).unwrap();
         return Box::new(shader_program);
     }
 }

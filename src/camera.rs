@@ -55,21 +55,21 @@ impl Camera {
     /// Rotate a `Camera` in a relative direction perpendicular to the focal point.
     ///
     pub fn aim(&self, x: f64, y: f64) -> Camera {
-    	
-    	
+        
+        
         let factor: f64 = 0.01;
         let horizontal: f64 = self.pitch + x * factor;
         let vertical: f64 = self.yaw + y * factor;
 
         let direction: Vector3<f32> = Vector3::new(
-	        (vertical.cos() * horizontal.sin()) as f32,
-	        vertical.sin() as f32,
-	        (vertical.cos() * horizontal.cos()) as f32);
+            (vertical.cos() * horizontal.sin()) as f32,
+            vertical.sin() as f32,
+            (vertical.cos() * horizontal.cos()) as f32);
 
         let right: Vector3<f32> = Vector3::new(
-	        (horizontal - FRAC_PI_2).sin() as f32,
-	        0.0f32,
-	        (horizontal - FRAC_PI_2).cos() as f32);
+            (horizontal - FRAC_PI_2).sin() as f32,
+            0.0f32,
+            (horizontal - FRAC_PI_2).cos() as f32);
 
         let up: Vector3<f32> = nalgebra::cross(&right, &direction);
         let position: Vector3<f32> = Vector3::new(self.position[0], self.position[1], self.position[2]);

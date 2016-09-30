@@ -40,7 +40,7 @@ pub struct Material {
     pub diffuse: [f32; 3],
     pub diffuse_texname: String,
 }
-	
+    
 /// `Vertex8f32` - The default implementation of a vertex which is buffered to
 /// the graphics processing unit.
 ///
