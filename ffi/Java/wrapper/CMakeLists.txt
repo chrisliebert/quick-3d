@@ -34,7 +34,7 @@ ENDIF(MSVC)
 
 SWIG_LINK_LIBRARIES(quick3dwrapper ${QUICK3D_LIBRARY} ${JNI_LIBRARIES} ${JAVA_JVM_LIBRARY})
 
-# Use C instead of CXX
+# Use C++ instead of C
 SET_TARGET_PROPERTIES(quick3dwrapper PROPERTIES LINKER_LANGUAGE CXX)
 
 # This will copy quick3dwrapper.[dll/so] to the parent directory and is used in build.rs
