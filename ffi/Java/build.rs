@@ -44,8 +44,8 @@ fn copy_runtime_files() -> std::io::Result<()> {
 	for entry in try!(fs::read_dir("build")) {
 		let path = entry.unwrap().path();
 		if !path.is_dir() {
-			let filename = path.file_name().unwrap().to_str().unwrap();
-			try!(fs::copy(path.clone(), Path::new(filename)));
+			let filename = String::from("src/main/java/") + path.file_name().unwrap().to_str().unwrap();
+			try!(fs::copy(path.clone(), Path::new(&filename)));
 		}
 	}
 	Ok(())

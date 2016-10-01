@@ -1,0 +1,31 @@
+// Copyright (C) 2016 Chris Liebert
+
+apply plugin: 'java'
+sourceCompatibility = 1.7
+version = '0.1.2'
+
+// Check if we are running on Windows
+def isWindows = System.properties['os.name'].toLowerCase().contains('windows')
+
+// Ensure the Rust and Swig libraries have been built
+if( 
+    (isWindows && file('quick3dwrapper.dll').exists())
+    &&
+    (!isWindows && file('quick3dwrapper.so').exists())
+    &&
+    file('src/main/java/quick3dwrapper.java').exists()
+    && 
+    file('src/main/java/quick3dwrapperJNI.java').exists()
+    && 
+    file('src/main/java/SWIGTYPE_p_void.java.java').exists()
+) {
+    throw new GradleException('quick3dwrapper shared library not found, make sure to run `cargo build`')
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Quick3D Java Wrapper',
+                   'Implementation-Version': version,
+                   'Main-Class': 'Example'
+    }
+}

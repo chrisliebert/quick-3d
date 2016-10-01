@@ -34,9 +34,7 @@ script:
   - cd ../Java
   - cargo build
   - cargo test
-  - export LD_LIBRARY_PATH=`pwd`
-  - javac *.java
   - cd ../Python
   - cargo build
   - cargo test
-  - export LD_LIBRARY_PATH=`pwd`
+ 
