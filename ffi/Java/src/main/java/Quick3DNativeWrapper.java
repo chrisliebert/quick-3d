@@ -1,3 +1,5 @@
+// Copyright (C) 2016 Chris Liebert
+
 public abstract class Quick3DNativeWrapper {
 	static {
 		try {
