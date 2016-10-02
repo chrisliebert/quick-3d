@@ -98,6 +98,64 @@ pub struct Input {
     pub mouse_right: bool,
 }
 
+impl Input {
+    pub fn with_quit() -> Input {
+        Input {
+            key_1: false,
+            key_2: false,
+            key_3: false,
+            key_4: false,
+            key_5: false,
+            key_6: false,
+            key_7: false,
+            key_8: false,
+            key_9: false,
+            key_0: false,
+            a: false,
+            b: false,
+            c: false,
+            d: false,
+            e: false,
+            f: false,
+            g: false,
+            h: false,
+            i: false,
+            j: false,
+            k: false,
+            l: false,
+            m: false,
+            n: false,
+            o: false,
+            p: false,
+            q: false,
+            r: false,
+            s: false,
+            t: false,
+            u: false,
+            v: false,
+            w: false,
+            x: false,
+            y: false,
+            z: false,
+            up: false,
+            left: false,
+            right: false,
+            down: false,
+            space: false,
+            escape: false,
+            closed: true,
+            
+            // Mouse
+            mouse_dx: 0,
+            mouse_dy: 0,
+            mouse_x: 0,
+            mouse_y: 0,
+            mouse_left: false,
+            mouse_right: false,
+        }
+    }
+}
+
 /// `extern ConsoleInput create_console_reader();`
 ///
 #[no_mangle]
@@ -226,12 +284,14 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Box<Input> {
     static mut space: bool = false;
     static mut escape: bool = false;
     
-    
     // Get the screen width and height in pixels
     let pixel_dimensions: (u32, u32) = match display.get_window() {
-        Some(window) => window.get_inner_size_pixels().unwrap(),
+        Some(window) => match window.get_inner_size_pixels() {
+            Some(_p) => _p,
+            None => return Box::new(Input::with_quit()),
+        },
         None => {
-            panic!("Error retrieving window when querying display size.");
+            return Box::new(Input::with_quit());
         }
     };
     let screen_width: u32 = pixel_dimensions.0;
@@ -521,15 +581,23 @@ pub unsafe extern "C" fn poll_event(display: &GlutinFacade) -> Box<Input> {
                 mouse_last_y = my;
                 if left_button_pressed {
                     if mx + mouse_grab_margin >= screen_width as i32 || mx <= mouse_grab_margin {
-                        let _ =
-                            display.get_window().unwrap().set_cursor_position(screen_center_x, my);
-                            _mouse_dx = 0;
-                            mouse_last_x = screen_center_x;
+                        match display.get_window() {
+                            Some(_w) => {
+                                let _ = _w.set_cursor_position(screen_center_x, my);
+                                _mouse_dx = 0;
+                                mouse_last_x = screen_center_x;
+                            },
+                            None => return Box::new(Input::with_quit()),
+                        }
                     } else if my + mouse_grab_margin >= screen_height as i32 || my <= mouse_grab_margin {
-                        let _ =
-                            display.get_window().unwrap().set_cursor_position(mx, screen_center_y);
-                            _mouse_dy = 0;
-                            mouse_last_y = screen_center_y;
+                        match display.get_window() {
+                            Some(_w) => {
+                                let _ = _w.set_cursor_position(mx, screen_center_y);
+                                _mouse_dy = 0;
+                                mouse_last_y = screen_center_y;
+                            },
+                            None => return Box::new(Input::with_quit()),
+                        }
                     }
                 } 
             }
