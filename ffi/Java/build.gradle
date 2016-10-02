@@ -22,6 +22,14 @@ if(
     throw new GradleException('quick3dwrapper shared library not found, make sure to run `cargo build`')
 }
 
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
 jar {
     manifest {
         attributes 'Implementation-Title': 'Quick3D Java Wrapper',

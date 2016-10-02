@@ -4,7 +4,7 @@ public class WindowInput extends Quick3DNativeWrapper {
 	Input data;
 	
 	WindowInput(Display display) {
-		data = quick3dwrapper.poll_event(display.data);
+		data = quick3dwrapper.poll_event(display.getPointer());
 	}
 	
 	public void finalize() {
