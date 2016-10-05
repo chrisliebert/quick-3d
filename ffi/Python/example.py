@@ -59,12 +59,12 @@ def main():
                 result = eval(console_command)
                 print("Expression returned " + str(result))
             except:
-	        try:
-	            #Expression failed to evaluate
-	            #try to execute the command as a statement instead
-	            exec(console_command)
-	        except:
-	            print("Invalid command: " + console_command)
+                try:
+                    #Expression failed to evaluate
+                    #try to execute the command as a statement instead
+                    exec(console_command)
+                except:
+                    print("Invalid command: " + console_command)
         q3d.free_event(event)
     #clean up
     destroy(display, camera, renderer, shader)
