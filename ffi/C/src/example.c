@@ -14,10 +14,11 @@ Display* new_display() {
 int main(int argc, char** argv) {
 	Display* display = new_display();
 	bool running = true;
+	int ESCAPE = 1;
 	while(running) {
-		Input* input = poll_event(display);
-		running = !input->closed && !input->escape;
-		free_event(input);
+		EventBuffer events = get_events(display);
+		running = !display_closed(events) && !key_pressed(events, ESCAPE);
+		free_events(events);
 	}
 	free_display(display);
 	return 0;

@@ -2,7 +2,7 @@
 # This software is available under the "MIT License" see LICENSE
 [package]
 name = "quick3d"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["chrisliebert <liebert@pdx.edu>"]
 keywords = ["3D", "Glium", "OpenGL", "graphics"]
 description = "A 3D rendering framework written in Rust."
@@ -27,7 +27,7 @@ cmake = "0.1"
 default = []
 
 # obj2sqlite/scenebuilder uses stdc++ and sqlite
-sqlite = []
+sqlite = ["rusqlite"]
 
 [lib]
 name = "quick3d"
@@ -41,7 +41,7 @@ path = "src/example.rs"
 [dependencies]
 glium = "*"
 nalgebra = "0.9.*"
-rusqlite = "0.7.3"
+rusqlite = { version = "0.7.3", optional = true}
 time = "0.1.35"
 image = "0.10.3"
 libc = "0.2.15"

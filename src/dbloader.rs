@@ -1,27 +1,26 @@
 // Copyright(C) 2016 Chris Liebert
 
-extern crate rusqlite;
 extern crate time;
 extern crate libc;
 
-use self::rusqlite::Connection;
-use nalgebra::{Eye, Matrix4};
+#[cfg(feature = "sqlite")]
+extern crate rusqlite;
 
-use std::cell::RefCell;
+#[cfg(feature = "sqlite")]
 use std::ffi::CStr;
+#[cfg(feature = "sqlite")]
 use std::io::Error;
-use std::io::ErrorKind;
-use std::path::Path;
-
-use common::{ImageBlob, Material, Mesh, Vertex8f32};
+#[cfg(feature = "sqlite")]
 use scene::Scene;
-use shader::Shader;
-
-/// A struct representing an SQLite database loader
+#[cfg(feature = "sqlite")]use shader::Shader;
+#[cfg(feature = "sqlite")]use std::path::Path;
+#[cfg(feature = "sqlite")]
+use self::rusqlite::Connection;/// A struct representing an SQLite database loader
 pub struct DBLoader {
     filename: String,
 }
 
+#[cfg(feature = "sqlite")]
 #[derive(Debug)]
 pub enum DBLoaderError {
     IoError(Error),
@@ -44,9 +43,13 @@ pub struct SceneNodeTableRow {
     pub center_z: f64,
 }
 
+#[cfg(feature = "sqlite")]
 impl DBLoader {
     /// Create a new DBLoader object
     pub fn new(filename: &str) -> Result<DBLoader, DBLoaderError> {
+        use std::io::Error;
+        use std::io::ErrorKind;
+        use std::path::Path;
         if !Path::new(filename.clone()).exists() {
             return Err(DBLoaderError::IoError(Error::new(ErrorKind::NotFound, format!("Unable to load {}", filename) )));
         }
@@ -55,6 +58,12 @@ impl DBLoader {
 
     /// Load the contents of an SQLite datbase into a `Scene` data structure.
     pub fn load_scene(&self) -> Result<Scene, DBLoaderError> {
+        use self::rusqlite::Connection;
+        use nalgebra::{Eye, Matrix4};
+        use std::cell::RefCell;
+        use std::path::Path;
+        use common::{ImageBlob, Material, Mesh, Vertex8f32};
+        use scene::Scene;
         let conn = try!(
             Connection::open(Path::new(&self.filename))
                 .map_err(DBLoaderError::DBError)
@@ -239,14 +248,24 @@ impl DBLoader {
 
 /// `extern void free_db_loader(DBLoader dbloader);`
 ///
+#[cfg(feature = "sqlite")]
 #[no_mangle]
 pub extern "C" fn free_db_loader(ptr: *mut DBLoader) {
     let box_ptr: Box<DBLoader> = unsafe { Box::from_raw(ptr) };
     drop(box_ptr)
 }
 
+/// `extern void free_db_loader(DBLoader dbloader);`
+///
+#[cfg(not(feature = "sqlite"))]
+#[no_mangle]
+pub extern "C" fn free_db_loader(_ptr: *mut libc::c_void) {
+	panic!("The SQLite feature is not enabled");
+}
+
 /// `extern DBLoader create_db_loader(const char* filename);`
 ///
+#[cfg(feature = "sqlite")]
 #[no_mangle]
 pub extern "C" fn create_db_loader(filename_cstr: *const libc::c_char) -> Box<DBLoader> {
     unsafe {
@@ -255,4 +274,12 @@ pub extern "C" fn create_db_loader(filename_cstr: *const libc::c_char) -> Box<DB
         println!("Loaded {}", &filename);
         Box::new(dbloader)
     }
+}
+
+/// `extern DBLoader create_db_loader(const char* filename);`
+///
+#[cfg(not(feature = "sqlite"))]
+#[no_mangle]
+pub extern "C" fn create_db_loader(_filename_cstr: *const libc::c_char) -> Box<libc::c_void> {
+    panic!("The SQLite feature is not enabled");
 }

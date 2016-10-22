@@ -4,6 +4,9 @@ apply plugin: 'java'
 sourceCompatibility = 1.7
 version = '0.1.2'
 
+apply plugin: 'application'
+mainClassName = "ShaderDebuggerFrame"
+
 // Check if we are running on Windows
 def isWindows = System.properties['os.name'].toLowerCase().contains('windows')
 
@@ -34,6 +37,6 @@ jar {
     manifest {
         attributes 'Implementation-Title': 'Quick3D Java Wrapper',
                    'Implementation-Version': version,
-                   'Main-Class': 'Example'
+                   'Main-Class': 'ShaderDebuggerFrame'
     }
 }

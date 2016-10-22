@@ -352,3 +352,63 @@ function Shader.create(self, name, db_filename, display)
   return shader
 end
 
+function Shader.default(self, display)
+  local shader = {}
+  setmetatable(shader, Shader)
+  self.struct = wrapper.shader_default(display.struct)
+  return shader
+end
+
+-- Shader object wrapper
+EventBuffer = {}
+EventBuffer.__index = EventBuffer
+
+function EventBuffer.get(self, display)
+  local events = {}
+  setmetatable(events, EventBuffer)
+  self.struct = wrapper.get_events(display.struct)
+  return events
+end
+
+function EventBuffer.free(self)
+  wrapper.free_events(self.struct)
+end
+
+function EventBuffer.display_closed(self)
+  return wrapper.display_closed(self.struct)
+end
+
+function EventBuffer.empty(self)
+  return wrapper.events_empty(self.struct)
+end
+
+function EventBuffer.print(self)
+  wrapper.print_events(self.struct)
+end
+
+function EventBuffer.key_pressed(self, keycode)
+  return wrapper.key_pressed(self.struct, keycode)
+end
+
+function EventBuffer.mouse_moved(self, keycode)
+  local mouse = wrapper.mouse_moved(self.struct)
+  local x, y = mouse.x, mouse.y
+  wrapper.free_mouse(mouse)
+  return x, y
+end
+
+function EventBuffer.mouse_pressed_left(self, keycode)
+  return wrapper.mouse_pressed_left(self.struct)
+end
+
+function EventBuffer.mouse_pressed_right(self, keycode)
+  return wrapper.mouse_pressed_right(self.struct)
+end
+
+function EventBuffer.mouse_released_left(self, keycode)
+  return wrapper.mouse_released_left(self.struct)
+end
+
+function EventBuffer.mouse_released_right(self, keycode)
+  return wrapper.mouse_released_right(self.struct)
+end

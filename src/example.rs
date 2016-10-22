@@ -13,7 +13,6 @@ use std::io::Error;
 
 use quick3d::camera::Camera;
 use quick3d::common::Mesh;
-use quick3d::dbloader::DBLoader;
 use quick3d::renderer;
 use quick3d::shader::Shader;
 use quick3d::scene::Scene;
@@ -22,7 +21,6 @@ fn main() {
     let screen_width = 600;
     let screen_height = 400;
 
-    let shader_dbloader: DBLoader = DBLoader::new("shaders.db").unwrap();
     let bin_filename = String::from("test.bin.gz");
     let scene: Scene = match Scene::from_compressed_binary_file(bin_filename.clone()) {
         Ok(s) => s,
@@ -48,20 +46,10 @@ fn main() {
         Err(e) => panic!("Unable to create renderer: {:?}", e),
     };
 
-    // Attempt to load GLSL version 330 if it is supported
-    let desired_glsl_version = glium::Version(glium::Api::Gl, 3, 3);
-    let shader_name = "default";
-    let shader_program: glium::program::Program = match Shader::from_dbloader_with_version(&shader_name,
-                                                                  &shader_dbloader,
-                                                                  &desired_glsl_version,
-                                                                  &display) {
+    let shader_program: glium::program::Program = match Shader::default(&display) {
         Ok(p) => p,
         Err(e) => {
-            println!("Unable to load {:?}: {:?}. Trying different version.", desired_glsl_version, e);
-            match Shader::from_dbloader(&shader_name, &shader_dbloader, &display) {
-                Ok(p2) => p2,
-                Err(e2) => panic!("Unable to load shader: {:?}", e2),
-            }
+            panic!("Unable to load default shader {:?}", e);
         },
     };
 
@@ -75,7 +63,6 @@ fn main() {
             panic!("Error retrieving window");
         }
     };
-
 
     // The torus will be movable in the scene if it is found
     let torus: Result<&Mesh, Error> = renderer.get_mesh("Torus");
@@ -102,14 +89,13 @@ fn main() {
     let screen_center_y: i32 = (screen_height / 2) as i32;
 
     let mouse_grab_margin: i32 = screen_center_y / 2;
-
+        
     'running: loop {
         match renderer.render(&display, &shader_program, &camera) {
             Ok(_) => (),
             Err(e) => panic!("{:?}", e),
         };
-
-        // Check for events
+       
         for event in display.poll_events() {
             match event {
                 Event::Closed => break 'running,
@@ -186,7 +172,7 @@ fn main() {
                 _ => (),
             }
         }
-
+        
         camera = camera.move_forward(_camera_forward_speed * 0.01);
 
         // Move the torus (if found) based on changes from keyboard input

@@ -23,13 +23,15 @@ extern crate nalgebra;
 extern crate libc;
 
 use std::ffi::CStr;
-use std::ffi::CString;
 
 use glium::glutin;
 use glium::DisplayBuild;
 use glium::backend::glutin_backend::GlutinFacade;
 
+#[cfg(feature = "sqlite")]
 use dbloader::DBLoader;
+
+#[cfg(feature = "sqlite")]
 use scene::Scene;
 
 #[cfg(feature = "sqlite")]
@@ -64,16 +66,17 @@ pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const lib
 pub fn obj2sqlite(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
     let filename1: String = unsafe{ CStr::from_ptr(wavefront_file).to_string_lossy().into_owned() };
     let filename2: String = unsafe{ CStr::from_ptr(database_file).to_string_lossy().into_owned() };
-    panic!("Unable to convert {} to {}, the obj2sqlite feature is not enabled.", filename1, filename2);
+    panic!("Unable to convert {} to {}, the SQLite feature is not enabled.", filename1, filename2);
 }
 
 /// `extern void obj2bin(const char* wavefront, const char* database);`
 ///
 /// This will print an error if the sqlite feature is disabled
 ///
-
+#[cfg(feature = "sqlite")]
 #[no_mangle]
 pub fn obj2bin(wavefront_file: *const libc::c_char, binfile: *const libc::c_char) {
+    use std::ffi::CString;
     let filename: String = unsafe{ CStr::from_ptr(wavefront_file.clone()).to_string_lossy().into_owned() };
     let binfile_str: String = unsafe{ CStr::from_ptr(binfile.clone()).to_string_lossy().into_owned() };
     let mut database_file: String = filename.clone();
@@ -90,14 +93,28 @@ pub fn obj2bin(wavefront_file: *const libc::c_char, binfile: *const libc::c_char
     };
 }
 
+/// `extern void obj2bin(const char* wavefront, const char* database);`
+///
+/// When the sqlite feature is disabled, the method is still availible 
+/// so that the FFI wrappers will still build without modification the user
+/// is notified that the feature is disabled.
+#[cfg(not(feature = "sqlite"))]
+#[no_mangle]
+pub fn obj2bin(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
+    let filename1: String = unsafe{ CStr::from_ptr(wavefront_file).to_string_lossy().into_owned() };
+    let filename2: String = unsafe{ CStr::from_ptr(database_file).to_string_lossy().into_owned() };
+    panic!("Unable to convert {} to {}, the SQLite feature is not enabled.", filename1, filename2);
+}
+
 /// `extern void obj2compressed(const char* wavefront, const char* database);`
 ///
 /// This will print an error if the obj2sqlite feature is disabled
 ///
-
+#[cfg(feature = "sqlite")]
 #[no_mangle]
 pub fn obj2compressed(wavefront_file: *const libc::c_char, binfile: *const libc::c_char) {
-    let filename: String = unsafe{ CStr::from_ptr(wavefront_file.clone()).to_string_lossy().into_owned() };
+    use std::ffi::CString;
+	let filename: String = unsafe{ CStr::from_ptr(wavefront_file.clone()).to_string_lossy().into_owned() };
     let binfile_str: String = unsafe{ CStr::from_ptr(binfile.clone()).to_string_lossy().into_owned() };
     let mut database_file: String = filename.clone();
     database_file.push_str(&String::from(".db"));
@@ -111,6 +128,19 @@ pub fn obj2compressed(wavefront_file: *const libc::c_char, binfile: *const libc:
         Ok(()) => println!("Saved {}", binfile_str),
         Err(e) => panic!("Unable to save compressed binary file {}: {:?}", binfile_str, e),
     };
+}
+
+/// `extern void obj2compressed(const char* wavefront, const char* database);`
+///
+/// When the sqlite feature is disabled, the method is still availible 
+/// so that the FFI wrappers will still build without modification the user
+/// is notified that the feature is disabled.
+#[cfg(not(feature = "sqlite"))]
+#[no_mangle]
+pub fn obj2compressed(wavefront_file: *const libc::c_char, database_file: *const libc::c_char) {
+    let filename1: String = unsafe{ CStr::from_ptr(wavefront_file).to_string_lossy().into_owned() };
+    let filename2: String = unsafe{ CStr::from_ptr(database_file).to_string_lossy().into_owned() };
+    panic!("Unable to convert {} to {}, the SQLite feature is not enabled.", filename1, filename2);
 }
 
 /// `extern Display create_display(int screen_width, int screen_height, const char* title);`
@@ -127,11 +157,34 @@ pub extern "C" fn create_display(screen_width: libc::int32_t,
     unsafe {
         window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
         let display: GlutinFacade = glutin::WindowBuilder::new()
-            //.resizable()
-            //.with_vsync()
             .with_gl_debug_flag(true)
             .with_title(window_title)
             .with_visibility(true)
+            .with_dimensions(w, h)
+            .build_glium()
+            .unwrap();
+        return Box::new(display);
+    }
+}
+
+/// `extern Display create_hidden_display(int screen_width, int screen_height, const char* title);`
+///
+#[no_mangle]
+pub extern "C" fn create_hidden_display(screen_width: libc::int32_t,
+                                 screen_height: libc::int32_t,
+                                 title: *const libc::c_char)
+                                 -> Box<GlutinFacade> {
+    let w: u32 = screen_width as u32;
+    let h: u32 = screen_height as u32;
+    let window_title: String;
+
+    unsafe {
+
+        window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
+        let display: GlutinFacade = glutin::WindowBuilder::new()
+            .with_gl_debug_flag(true)
+            .with_title(window_title)
+            .with_visibility(false)
             .with_dimensions(w, h)
             .build_glium()
             .unwrap();
@@ -199,10 +252,6 @@ mod tests {
     use glium::glutin;
     use glium::backend::glutin_backend::GlutinFacade;
     use glium::DisplayBuild;
-    use dbloader::DBLoader;
-    use camera::Camera;
-    use renderer::Renderer;
-    use shader::Shader;
     use scene::Scene;
     
     fn create_test_display() -> GlutinFacade {
@@ -241,8 +290,13 @@ mod tests {
         thread::sleep(Duration::from_millis(100));
     }
     
+	#[cfg(feature = "sqlite")]
     #[test]
     fn renderer() {
+    	use dbloader::DBLoader;
+		use camera::Camera;
+		use renderer::Renderer;
+		use shader::Shader;
         // Opens a window for 100 miliseconds and draws the contents of test.db
         let display = create_test_display();
         let window = match display.get_window() {
@@ -272,9 +326,14 @@ mod tests {
         thread::sleep(Duration::from_millis(100));
     }
 
+	#[cfg(feature = "sqlite")]
     #[test]
     fn test_compressed_binary_scene() {
-        // Opens a window for 100 miliseconds and draws the contents of test.db
+    	use dbloader::DBLoader;
+		use camera::Camera;
+		use renderer::Renderer;
+		use shader::Shader;
+        // Opens a window for 100 miliseconds and draws the contents of test.bin
         let display = create_test_display();
         let window = match display.get_window() {
             Some(w) => {
