@@ -37,7 +37,7 @@ camera:move_backward(6)
 
 scene_file = "../../test.bin.gz"
 renderer = Renderer:create_from_compressed_binary(scene_file, display)
-shader = Shader:create("default", "../../shaders.db", display)
+shader = Shader:default(display)
 
 renderer:render(shader, camera, display)
 quick3d.thread_sleep(100)

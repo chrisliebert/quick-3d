@@ -1,9 +1,9 @@
 -- Copyright (C) 2016 Chris Liebert
 
--- Look for lua modules in the current directory
+-- Look for Lua modules in the current directory
 package.path = package.path .. ";./?.lua"
 
--- Include and initialise the Quick3D LUA API
+-- Include and initialize the Quick3D LUA API
 require "quick3d"
 
 local target_build = "debug"
@@ -87,7 +87,7 @@ end
 
 renderer = create_renderer()
 
-shader = Shader:create("default", "../../shaders.db", display)
+shader = Shader:default(display)
 
 function quit()
   quick3d.free_shader(shader.struct)
@@ -103,67 +103,70 @@ if quit_after_start then quit() end
 console = quick3d.create_console_reader()
 
 camera_speed = 0.01
-mouse_factor = 0.01
-
-function demo()
-  -- Make the camera move in a circle, user can abort by pressing space
-  for i=1000,10000 do 
-    if i < 1040 then camera:move_right(0.001) end
-    camera:move_forward(i * 0.0001) camera:aim(i * 0.001, 0)
-    renderer:render(shader, camera, display)
-    quick3d.thread_sleep(10)
-    local input = quick3d.poll_event(display.struct)    
-    if input.space then
-      return
-    end
-   end
-end
+mouse_factor = 0.1
 
 display:show()
 local console_command = ""
+local mouse_x, mouse_y = 0, 0
+local mouse_last_x, mouse_last_y = 0, 0
+local mouse_dx, mouse_dy = 0, 0
+local mouse_left_pressed = false
 while not quick3d.console_is_closed(console) do
   renderer:render(shader, camera, display)
-  local input = quick3d.poll_event(display.struct)
-  if input.mouse_left and not (input.mouse_dx == 0 and input.mouse_dy == 0) then
-    camera:aim(input.mouse_dx * mouse_factor, input.mouse_dy * mouse_factor)
+  local events = EventBuffer:get(display)
+  
+  -- Debug event queue
+  -- if not events:empty() then events:print() end
+  
+  if events:display_closed() then
+    events:free()
+    quit()
+    break
   end
-  -- Read from console buffer
+
+
+  if events:key_pressed(quick3d.ESCAPE) then display:hide() break end
+  if events:key_pressed(quick3d.W) then camera:move_forward(camera_speed) end
+  if events:key_pressed(quick3d.S) then camera:move_backward(camera_speed) end
+  if events:key_pressed(quick3d.A) then camera:move_left(camera_speed) end
+  if events:key_pressed(quick3d.D) then camera:move_right(camera_speed) end
+  mouse_x, mouse_y = events:mouse_moved()
+  if mouse_x == 0 then
+    mouse_dx = 0
+  else
+    mouse_dx = mouse_x - mouse_last_x
+    mouse_last_x = mouse_x
+  end
+  if mouse_y == 0 then
+    mouse_dy = 0  
+  else
+    mouse_dy = mouse_y - mouse_last_y
+    mouse_last_y = mouse_y
+  end
+     
+  if events:mouse_pressed_left() then
+    mouse_left_pressed = true
+  end
+  
+  if events:mouse_released_left() then
+    mouse_left_pressed = false
+  end
+  
+  if mouse_left_pressed and not (mouse_dx == 0 or mouse_dy == 0) then
+    camera:aim(mouse_dx * mouse_factor, mouse_dy * mouse_factor)
+  end
+  
+   -- Read from console buffer
   console_command = quick3d_read_console_buffer(console)
-  if string.len(console_command) > 0 then	
+  if string.len(console_command) > 0 then 
     local success, errormsg = pcall(eval, console_command)
     if not success then
       print ("Failed to execute command: " .. console_command)
       print("Error: " .. errormsg)
     end
   end
-
-  if input.w or input.up then
-    camera:move_forward(camera_speed)
-  end
-
-  if input.a or input.left then
-    camera:move_left(camera_speed)
-  end
-
-  if input.d or input.right then
-    camera:move_right(camera_speed)
-  end
   
-  if input.s or input.down then
-    camera:move_backward(camera_speed)
-  end
-
-  if input.escape then
-    display:hide()
-  end
-
-  if input.closed then
-    quick3d.free_event(input)
-    quit()
-    break
-  end
-  
-  quick3d.free_event(input)
+  events:free()
 end
 
 quick3d.wait_console_quit(console)

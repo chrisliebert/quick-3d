@@ -13,7 +13,10 @@ use std::io::ErrorKind;
 use camera::Camera;
 use common;
 use common::{Mesh,Vertex8f32};
+
+#[cfg(feature = "sqlite")]
 use dbloader::DBLoader;
+
 use frustum::Frustum;
 use scene::Scene;
 
@@ -172,6 +175,7 @@ impl Renderer {
 
 /// `extern Renderer create_renderer_from_db_loader(DBLoader loader, Display display);`
 ///
+#[cfg(feature = "sqlite")]
 #[no_mangle]
 pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
                                                  display: &GlutinFacade)
@@ -187,6 +191,15 @@ pub extern "C" fn create_renderer_from_db_loader(dbloader: &DBLoader,
     Box::new(renderer)
 }
 
+/// `extern Renderer create_renderer_from_db_loader(DBLoader loader, Display display);`
+///
+#[cfg(not(feature = "sqlite"))]
+#[no_mangle]
+pub extern "C" fn create_renderer_from_db_loader(_dbloader: *const libc::c_void,
+                                                 _display: &GlutinFacade)
+                                                 -> Box<Renderer> {
+    panic!("The SQLite feature is not enabled");
+}
                                                 
 /// `extern Renderer create_renderer_from_compressed_binary(const char* filename, Display display);`
 ///

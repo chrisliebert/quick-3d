@@ -15,9 +15,7 @@ def init():
     camera = q3d.create_camera(screen_width, screen_height)
     camera = q3d.camera_move_backward(camera, 6)
     renderer = q3d.create_renderer_from_compressed_binary("../../test.bin.gz", display)
-    shaderloader = q3d.create_db_loader("../../shaders.db")
-    shader = q3d.get_shader_from_dbloader("default", shaderloader, display)
-    q3d.free_db_loader(shaderloader)
+    shader = q3d.shader_default(display)
     console_reader = q3d.create_console_reader()
     return display, camera, renderer, shader, console_reader
 
@@ -28,44 +26,43 @@ def destroy(display, camera, renderer, shader):
     q3d.free_shader(shader)
     
 def main():
-    move_speed = 0.01
-    rotate_speed = 0.1
+    move_speed = 0.08
+    rotate_speed = 0.3
     
     display, camera, renderer, shader, console_reader = init()
     running = True
     while not q3d.console_is_closed(console_reader):
         q3d.render(renderer, shader, camera, display)
-        event = q3d.poll_event(display)
-        if event.closed:
+        events = q3d.get_events(display)
+        if q3d.display_closed(events):
             break
-        if event.escape:
+        if q3d.key_pressed(events, q3d.ESCAPE):
             q3d.window_hide(display)
-        if event.w:
+        if q3d.key_pressed(events, q3d.W):
             camera = q3d.camera_move_forward(camera, move_speed)
-        if event.s:
+        if q3d.key_pressed(events, q3d.S):
             camera = q3d.camera_move_backward(camera, move_speed)
-        if event.a:
+        if q3d.key_pressed(events, q3d.A):
             camera = q3d.camera_move_left(camera, move_speed)
-        if event.d:
+        if q3d.key_pressed(events, q3d.D):
             camera = q3d.camera_move_right(camera, move_speed)
-        if event.left:
+        if q3d.key_pressed(events, q3d.LEFT):
             camera = q3d.camera_aim(camera, rotate_speed, 0)
-        if event.right:
-            camera = q3d.camera_aim(camera, -rotate_speed, 0)
-        
+        if q3d.key_pressed(events, q3d.RIGHT):
+            camera = q3d.camera_aim(camera, -rotate_speed, 0)		
+        q3d.free_events(events)
         console_command = q3d.read_console_buffer(console_reader)
         if len(console_command) > 0:
             try:
                 result = eval(console_command)
                 print("Expression returned " + str(result))
             except:
-	        try:
-	            #Expression failed to evaluate
-	            #try to execute the command as a statement instead
-	            exec(console_command)
-	        except:
-	            print("Invalid command: " + console_command)
-        q3d.free_event(event)
+		        try:
+		            #Expression failed to evaluate
+		            #try to execute the command as a statement instead
+		            exec(console_command)
+		        except:
+		            print("Invalid command: " + console_command)
     #clean up
     destroy(display, camera, renderer, shader)
 

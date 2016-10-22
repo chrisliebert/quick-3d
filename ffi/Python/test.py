@@ -9,9 +9,7 @@ def init():
     camera = q3d.create_camera(screen_width, screen_height)
     camera = q3d.camera_move_backward(camera, 6)
     renderer = q3d.create_renderer_from_compressed_binary("../../test.bin.gz", display)
-    shaderloader = q3d.create_db_loader("../../shaders.db")
-    shader = q3d.get_shader_from_dbloader("default", shaderloader, display)
-    q3d.free_db_loader(shaderloader)
+    shader = q3d.shader_default(display)
     return display, camera, renderer, shader
 
 def destroy(display, camera, renderer, shader):
