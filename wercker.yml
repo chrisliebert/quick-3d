@@ -68,7 +68,7 @@ build:
     - script:
         name: test-quick3d
         code: |
-            cargo test --verbose --features sqlite
+            cargo test --verbose
     - script:
         name: test-ffi-c
         code: |
