@@ -41,7 +41,6 @@ build:
         code: |
             cd ffi/CSharp
             cargo build
-#            mcs *.cs
             cd ../..
     - script:
         name: build-ffi-java
