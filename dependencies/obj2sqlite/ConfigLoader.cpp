@@ -54,7 +54,6 @@ ConfigLoader::ConfigLoader(const char* _filename) {
 		}
 	}
 
-	std::cout << "Loaded " << filePath << std::endl;
 	std::string line;
 	while (std::getline(fileStream, line))
 	{
@@ -63,6 +62,7 @@ ConfigLoader::ConfigLoader(const char* _filename) {
 		parseLine(line, vars);
 	}
 	fileStream.close();
+	std::cout << "Loaded " << filePath << std::endl;
 }
 
 ConfigLoader::~ConfigLoader() {

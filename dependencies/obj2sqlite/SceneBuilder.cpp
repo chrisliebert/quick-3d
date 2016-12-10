@@ -43,7 +43,7 @@ std::vector<unsigned char> readFile(const char* filename)
 	std::ifstream file(filename, std::ios::binary);
 	if(!file.is_open())
 	{
-		cerr << "Unable to open " << filename << endl;
+		std::cerr << "Unable to open " << filename << std::endl;
 	}
 
 	// read the data:
@@ -64,283 +64,277 @@ bool hasEnding (std::string const &fullString, std::string const &ending)
 	}
 }
 
-void SceneBuilder::addTexture(const char* textureFileName, unsigned& textureId)
+void SceneBuilder::addTexture(const char* textureFileName)
 {
-	std::map<std::string,int>::const_iterator it = textures.find(textureFileName);
+	std::set<std::string>::const_iterator it = textures.find(textureFileName);
 
 	if(it == textures.end())
 	{
-		textures[textureFileName] = 0;
+		textures.insert(std::string(textureFileName));
 	}
 }
 
-void SceneBuilder::addWavefront(const char* fileName, glm::mat4 matrix)
+void calcNormal(float N[3], float v0[3], float v1[3], float v2[3]) {
+  float v10[3];
+  v10[0] = v1[0] - v0[0];
+  v10[1] = v1[1] - v0[1];
+  v10[2] = v1[2] - v0[2];
+
+  float v20[3];
+  v20[0] = v2[0] - v0[0];
+  v20[1] = v2[1] - v0[1];
+  v20[2] = v2[2] - v0[2];
+
+  N[0] = v20[1] * v10[2] - v20[2] * v10[1];
+  N[1] = v20[2] * v10[0] - v20[0] * v10[2];
+  N[2] = v20[0] * v10[1] - v20[1] * v10[0];
+
+  float len2 = N[0] * N[0] + N[1] * N[1] + N[2] * N[2];
+  if (len2 > 0.0f) {
+    float len = sqrtf(len2);
+
+    N[0] /= len;
+    N[1] /= len;
+  }
+}
+
+// Cross-platform directory separator
+#ifdef _MSC_VER
+    #define DIRECTORY_PATH_SEPARATOR "\\"
+#else
+    #define DIRECTORY_PATH_SEPARATOR "/"
+#endif
+
+void replaceSubStr(string& source, string& it, string& with)
 {
+    int pos ;
+    do
+    {
+        pos = source.find(it);
+        if (pos!=-1)  source.replace(pos, it.length(), with);
+    }
+    while (pos!=-1);
+}
+
+void replaceSubStr(string& source, const char* it, const char* with) {
+	std::string its(it);
+	std::string withs(with);
+	replaceSubStr(source, its, withs);
+}
+
+bool SceneBuilder::addWavefront(const char* fileName, glm::mat4 matrix) {
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials;
-	std::string modelDirectory(cfg->getVar("model.directory"));
-	modelDirectory += DIRECTORY_SEPARATOR;
-	std::string fileNameStr(modelDirectory);
-	fileNameStr += fileName;
+	std::vector<tinyobj::material_t> materialList;
+	std::stringstream modelDirectory, fileNamePath;
+	modelDirectory << cfg->getVar("model.directory");
+	modelDirectory << DIRECTORY_PATH_SEPARATOR;
+	fileNamePath << modelDirectory.str();
+	fileNamePath << fileName;
 	std::string err;
-	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, fileNameStr.c_str(), modelDirectory.c_str(), true);
-	if (!err.empty())
-	{
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materialList, &err,
+			fileNamePath.str().c_str(), modelDirectory.str().c_str(), true);
+	if (!err.empty()) {
 		std::cerr << err << std::endl;
-		return;
+		return false;
 	}
 
+	// load diffuse textures
+	for (size_t mi = 0; mi < materialList.size(); mi++) {
+		tinyobj::material_t* mp = &materialList[mi];
 
-	for (size_t i = 0; i<materials.size(); i++)
-	{
+		if (mp->diffuse_texname.length() > 0) {
+			// Check for paths that are not valid (unix support for paths with \ or \\ instead of /
+#ifndef _MSC_VER
+			replaceSubStr(mp->diffuse_texname, "\\\\", "/");
+			replaceSubStr(mp->diffuse_texname, "\\", "/");
+#endif
+			addTexture(mp->diffuse_texname.c_str());
+		}
+
 		Material m;
-		memcpy((void*)& m.ambient, (void*)& materials[i].ambient[0], sizeof(float) * 3);
-		memcpy((void*)& m.diffuse, (void*)& materials[i].diffuse[0], sizeof(float) * 3);
-		memcpy((void*)& m.emission, (void*)& materials[i].emission[0], sizeof(float) * 3);
-		memcpy((void*)& m.specular, (void*)& materials[i].specular[0], sizeof(float) * 3);
-		memcpy((void*)& m.transmittance, (void*)&materials[i].transmittance[0], sizeof(float) * 3);
-		memcpy((void*)& m.illum, (void*)& materials[i].illum, sizeof(int));
-		memcpy((void*)& m.ior, (void*)& materials[i].ior, sizeof(float));
-		memcpy((void*)& m.shininess, (void*)& materials[i].shininess, sizeof(float));
-		memcpy((void*)& m.dissolve, (void*)& materials[i].dissolve, sizeof(float));
-		strcpy(m.name, materials[i].name.c_str());
-		strcpy(m.ambientTexName, materials[i].ambient_texname.c_str());
-		strcpy(m.diffuseTexName, materials[i].diffuse_texname.c_str());
-		strcpy(m.normalTexName, materials[i].specular_highlight_texname.c_str());
-		strcpy(m.specularTexName, materials[i].specular_texname.c_str());
+		memcpy((void*)& m.ambient, (void*)& mp->ambient[0], sizeof(float) * 3);
+		memcpy((void*)& m.diffuse, (void*)&  mp->diffuse[0], sizeof(float) * 3);
+		memcpy((void*)& m.emission, (void*)& mp->emission[0], sizeof(float) * 3);
+		memcpy((void*)& m.specular, (void*)& mp->specular[0], sizeof(float) * 3);
+		memcpy((void*)& m.transmittance, (void*)&mp->transmittance[0], sizeof(float) * 3);
+		memcpy((void*)& m.illum, (void*)& mp->illum, sizeof(int));
+		memcpy((void*)& m.ior, (void*)& mp->ior, sizeof(float));
+		memcpy((void*)& m.shininess, (void*)& mp->shininess, sizeof(float));
+		memcpy((void*)& m.dissolve, (void*)& mp->dissolve, sizeof(float));
+		strncpy(m.name, mp->name.c_str(), MAX_MATERIAL_NAME_LENGTH);
+		strncpy(m.ambientTexName, mp->ambient_texname.c_str(), MAX_MATERIAL_NAME_LENGTH);
+		strncpy(m.diffuseTexName, mp->diffuse_texname.c_str(), MAX_MATERIAL_NAME_LENGTH);
+		strncpy(m.normalTexName, mp->specular_highlight_texname.c_str(), MAX_MATERIAL_NAME_LENGTH);
+		strncpy(m.specularTexName, mp->specular_texname.c_str(), MAX_MATERIAL_NAME_LENGTH);
 		addMaterial(&m);
 	}
 
+	// Load data
+	for (size_t s = 0; s < shapes.size(); s++) {
+		SceneNode o;
+		o.center[0] = 0.f;
+		o.center[1] = 0.f;
+		o.center[2] = 0.f;
 
-	for (size_t i = 0; i < shapes.size(); i++)
-	{
-		std::vector<Vertex> mVertexData;
+		for (size_t f = 0; f < shapes[s].mesh.indices.size() / 3; f++) {
+			tinyobj::index_t idx0 = shapes[s].mesh.indices[3 * f + 0];
+			tinyobj::index_t idx1 = shapes[s].mesh.indices[3 * f + 1];
+			tinyobj::index_t idx2 = shapes[s].mesh.indices[3 * f + 2];
 
-		unsigned int materialId, lastMaterialId;
-		materialId = lastMaterialId = 0;
-		if (shapes[i].mesh.material_ids.size() > 0)
-		{
-			materialId = lastMaterialId = shapes[i].mesh.material_ids[0];
+			int currentMaterialId = shapes[s].mesh.material_ids[f];
+
+			if ((currentMaterialId < 0)
+					|| (currentMaterialId
+							>= static_cast<int>(materialList.size()))) {
+				// Invaid material ID. Use default material.
+				currentMaterialId = materialList.size(); // Default material is added to the last item in `materialList`.
+				std::cerr << "Invalid material index: " << currentMaterialId << " reverting to default material." << std::endl;
+			}
+
+			float diffuse[3];
+			for (size_t i = 0; i < 3; i++) {
+				diffuse[i] = materialList[currentMaterialId].diffuse[i];
+			}
+			float tc[3][2];
+			if (attrib.texcoords.size() > 0) {
+				assert(attrib.texcoords.size() > 2 * idx0.texcoord_index + 1);
+				assert(attrib.texcoords.size() > 2 * idx1.texcoord_index + 1);
+				assert(attrib.texcoords.size() > 2 * idx2.texcoord_index + 1);
+				tc[0][0] = attrib.texcoords[2 * idx0.texcoord_index];
+				tc[0][1] = 1.0f - attrib.texcoords[2 * idx0.texcoord_index + 1];
+				tc[1][0] = attrib.texcoords[2 * idx1.texcoord_index];
+				tc[1][1] = 1.0f - attrib.texcoords[2 * idx1.texcoord_index + 1];
+				tc[2][0] = attrib.texcoords[2 * idx2.texcoord_index];
+				tc[2][1] = 1.0f - attrib.texcoords[2 * idx2.texcoord_index + 1];
+			} else {
+				std::cerr << "Texture coordinates are not defined" << std::endl;
+				return false;
+			}
+
+			float v[3][3];
+			for (int k = 0; k < 3; k++) {
+				int f0 = idx0.vertex_index;
+				int f1 = idx1.vertex_index;
+				int f2 = idx2.vertex_index;
+				assert(f0 >= 0);
+				assert(f1 >= 0);
+				assert(f2 >= 0);
+
+				v[0][k] = attrib.vertices[3 * f0 + k];
+				v[1][k] = attrib.vertices[3 * f1 + k];
+				v[2][k] = attrib.vertices[3 * f2 + k];
+
+				// local object center mean calculation (stage 1)
+				o.center[0] += v[0][k];
+				o.center[1] += v[1][k];
+				o.center[2] += v[2][k];
+			}
+
+			float n[3][3];
+			if (attrib.normals.size() > 0) {
+				int f0 = idx0.normal_index;
+				int f1 = idx1.normal_index;
+				int f2 = idx2.normal_index;
+				assert(f0 >= 0);
+				assert(f1 >= 0);
+				assert(f2 >= 0);
+				for (int k = 0; k < 3; k++) {
+					n[0][k] = attrib.normals[3 * f0 + k];
+					n[1][k] = attrib.normals[3 * f1 + k];
+					n[2][k] = attrib.normals[3 * f2 + k];
+				}
+			} else {
+				// compute geometric normal
+				calcNormal(n[0], v[0], v[1], v[2]);
+				n[1][0] = n[0][0];
+				n[1][1] = n[0][1];
+				n[1][2] = n[0][2];
+				n[2][0] = n[0][0];
+				n[2][1] = n[0][1];
+				n[2][2] = n[0][2];
+			}
+
+			for (int k = 0; k < 3; k++) {
+				Vertex vert;
+				vert.position[0] = v[k][0];
+				vert.position[1] = v[k][1];
+				vert.position[2] = v[k][2];
+				vert.normal[0] = n[k][0];
+				vert.normal[1] = n[k][1];
+				vert.normal[2] = n[k][2];
+				vert.textureCoordinate[0] = tc[k][0];
+				vert.textureCoordinate[1] = tc[k][1];
+				o.vertexData.push_back(vert);
+				//indices.push_back((unsigned) indices.size());
+			}
 		}
 
-		for (size_t j = 0; j <shapes[i].mesh.indices.size(); j++)
-		{
-			if ((j % 3) == 0)
-			{
+		if(o.vertexData.size() == 0) {
+			// Ignore scene nodes that don't have geometry
+			std::cerr << "Warning, scene node " << shapes[s].name << " does not containing geometry, ommiting." << std::endl;
+			continue;
+		}
 
-				lastMaterialId = materialId;
-				materialId = shapes[i].mesh.material_ids[j / 3];
+		o.name = shapes[s].name;
 
-				if (materialId != lastMaterialId)
-				{
-					SceneNode sceneNode;
-					sceneNode.name = shapes[i].name.c_str();
-					sceneNode.material = materials[lastMaterialId].name.c_str();
-					sceneNode.vertexDataSize = mVertexData.size();
-					sceneNode.vertexData = new Vertex[sceneNode.vertexDataSize];
-					memcpy((void*)sceneNode.vertexData, (void*)mVertexData.data(), sizeof(Vertex) * sceneNode.vertexDataSize);
-					sceneNode.startPosition = startPosition;
-					startPosition += (unsigned)sceneNode.vertexDataSize;
-					sceneNode.endPosition = (unsigned)(sceneNode.startPosition + sceneNode.vertexDataSize);
-					sceneNode.primativeMode = 6;//GL_TRIANGLES;
-					sceneNode.diffuseTextureId = 0;
-					sceneNode.modelViewMatrix = matrix;
-					sceneNode.radius = 0.f;
-					addSceneNode(&sceneNode);
-					mVertexData.clear();
-				}
-			}
+		// 2nd stage of mean calculation
+		o.center[0] /= (float) shapes.size();
+		o.center[1] /= (float) shapes.size();
+		o.center[2] /= (float) shapes.size();
 
-			Vertex v;
+		o.radius = 0.f;
+		// Radius calculation
 
-			memcpy((void*)& v.vertex, (void*)& attrib.vertices[shapes[i].mesh.indices[j].vertex_index * 3], sizeof(float) * 3);
-
-			if ((shapes[i].mesh.indices[j].normal_index * 3) >= attrib.normals.size())
-			{
-				//std::cout << "Calculating normal " << std::endl;
-
-				// Points of the triangle
-				glm::vec3 pointA;
-				glm::vec3 pointB;
-				glm::vec3 pointC;
-
-				int triangleIndex = i % 3;
-				if (triangleIndex == 0)
-				{
-					pointA = glm::vec3(v.vertex[0], v.vertex[1], v.vertex[2]);
-					pointB = glm::vec3(
-							attrib.vertices[3 + shapes[i].mesh.indices[j].vertex_index * 3],
-							attrib.vertices[4 + shapes[i].mesh.indices[j].vertex_index * 3],
-							attrib.vertices[5 + shapes[i].mesh.indices[j].vertex_index * 3]
-					);
-					pointC = glm::vec3(
-							attrib.vertices[6 + shapes[i].mesh.indices[j].vertex_index * 3],
-							attrib.vertices[7 + shapes[i].mesh.indices[j].vertex_index * 3],
-							attrib.vertices[8 + shapes[i].mesh.indices[j].vertex_index * 3]
-					);
-					// Calculate normal
-					glm::vec3 nu = pointB - pointA;
-					glm::vec3 nv = pointC - pointA;
-					v.normal[0] = (nu.y * nv.z) - (nu.z * nv.y);
-					v.normal[1] = (nu.z * nv.x) - (nu.x * nv.z);
-					v.normal[2] = (nu.x * nv.y) - (nu.y * nv.x);
-				}
-				else if (triangleIndex == 1)
-				{
-					v.normal[0] = attrib.vertices[shapes[i].mesh.indices[j].normal_index * 3 - 3];
-					v.normal[1] = attrib.vertices[shapes[i].mesh.indices[j].normal_index * 3 - 2];
-					v.normal[2] = attrib.vertices[shapes[i].mesh.indices[j].normal_index * 3 - 1];
-				}
-				else if (triangleIndex == 2)
-				{
-					v.normal[0] = attrib.vertices[shapes[i].mesh.indices[j].vertex_index * 3 - 6];
-					v.normal[1] = attrib.vertices[shapes[i].mesh.indices[j].vertex_index * 3 - 5];
-					v.normal[2] = attrib.vertices[shapes[i].mesh.indices[j].vertex_index * 3 - 4];
-				}
-			}
-			else
-			{
-				memcpy((void*)& v.normal, (void*)& attrib.normals[(shapes[i].mesh.indices[j].normal_index * 3)], sizeof(float) * 3);
-			}
-
-			if ((shapes[i].mesh.indices[j].texcoord_index * 2) >= attrib.texcoords.size())
-			{
-				std::cerr << "Unable to put texcoord in " << shapes[i].name << std::endl;
-				// fill with 0 
-				v.textureCoordinate[0] = 0.f;
-				v.textureCoordinate[1] = 0.f;
-			}
-			else
-			{
-				tinyobj::mesh_t* m = &shapes[i].mesh;
-				v.textureCoordinate[0] = attrib.texcoords[(int)m->indices[j].texcoord_index * 2];
-				v.textureCoordinate[1] = 1 - attrib.texcoords[(int)m->indices[j].texcoord_index * 2 + 1]; // Account for wavefront to opengl coordinate system conversion
-			}
-
-
-			mVertexData.push_back(v);
-			if (j == shapes[i].mesh.indices.size() - 1)
-			{
-				SceneNode sceneNode;
-				sceneNode.name = shapes[i].name.c_str();
-				sceneNode.material = materials[materialId].name.c_str();
-				sceneNode.vertexDataSize = mVertexData.size();
-				sceneNode.vertexData = new Vertex[sceneNode.vertexDataSize];
-				memcpy((void*)sceneNode.vertexData, (void*)mVertexData.data(), sizeof(Vertex) * sceneNode.vertexDataSize);
-				sceneNode.startPosition = startPosition;
-				sceneNode.endPosition = (unsigned)(sceneNode.startPosition + sceneNode.vertexDataSize);
-				startPosition += (unsigned)sceneNode.vertexDataSize;
-				sceneNode.primativeMode = 6;//GL_TRIANGLES;
-				sceneNode.diffuseTextureId = 0;
-				sceneNode.modelViewMatrix = matrix;
-				addSceneNode(&sceneNode);
+		for(size_t i=0; i<o.vertexData.size(); i++) {
+			float x = o.vertexData.at(i).position[0];
+			float y = o.vertexData.at(i).position[1];
+			float z = o.vertexData.at(i).position[2];
+			float nx = x - o.center[0];
+			float ny = y - o.center[1];
+			float nz = z - o.center[2];
+			float r2 = sqrtf(nx*nx + ny*ny + nz*nz);
+			if(r2 > o.radius) {
+				o.radius = r2;
 			}
 		}
+
+		if (o.radius <= 0.f) {
+			//std::cerr << "Warning, calculated bounding radius " << o.radius
+			//		<< " for " << o.name << " using 0.1f instead" << std::endl;
+			o.radius = 0.1f;
+		}
+
+
+		// OpenGL viewer does not support texturing with per-face material.
+		if (shapes[s].mesh.material_ids.size() > 0
+				&& shapes[s].mesh.material_ids.size() > s) {
+			// Base case
+			o.materialId = shapes[s].mesh.material_ids[s] + 1;
+		} else {
+			o.materialId = materialList.size(); // = ID for default material.
+		}
+
+		o.startPosition = startPosition;
+		startPosition += o.vertexData.size();
+		o.endPosition = o.startPosition + o.vertexData.size();
+		sceneNodes.push_back(o);
 	}
-}
 
-void SceneBuilder::buildScene()
-{
+
 	if(sceneNodes.size() == 0)
 	{
-		std::cerr << " unable to build database" << std::endl;
-		exit(-3);
+		std::cerr << "Error: No scene nodes defined in " << fileName << std::endl;
+		return false;
 	}
 
-
-	for(size_t i=0; i<sceneNodes.size(); i++)
-	{
-		for(size_t j=0; j<sceneNodes[i].vertexDataSize; j++)
-		{
-			Vertex v;
-			memcpy((void*) &v, (void*) &sceneNodes[i].vertexData[j], sizeof(Vertex));
-			vertexData.push_back(v);
-			indices.push_back((unsigned) indices.size());
-		}
-	}
-
-	for(size_t i=0; i <sceneNodes.size(); i++)
-	{
-		if(materials.find(sceneNodes[i].material) == materials.end()  )
-		{
-			std::cerr << "Material " << sceneNodes[i].material << " was not loaded" << std::endl;
-		}
-		else
-		{
-			if(strlen(materials[sceneNodes[i].material.c_str()].diffuseTexName) > 0)
-			{
-
-				/* Check for paths that are not valid (unix support for paths with \ instead of / */
-#ifndef _WIN32
-
-				for(unsigned j=0; j<strlen(materials[sceneNodes[i].material.c_str()].diffuseTexName); j++)
-				{
-					if(materials[sceneNodes[i].material.c_str()].diffuseTexName[j] == '\\')
-					{
-						materials[sceneNodes[i].material.c_str()].diffuseTexName[j] = '/';
-					}
-				}
-#endif
-
-				addTexture(materials[sceneNodes[i].material.c_str()].diffuseTexName, sceneNodes[i].diffuseTextureId);
-			}
-		}
-	}
-
-	//Calculate Bounding Sphere radius
-	for(int i=0; i<sceneNodes.size(); i++)
-	{
-		float center_x = 0.f, center_y = 0.f, center_z = 0.f;
-		float r = 0.f;
-
-		size_t vertexDataSize = sceneNodes[i].vertexDataSize;
-		//Calculate local origin
-		for(int j=0; j<vertexDataSize; j++)
-		{
-			center_x += sceneNodes[i].vertexData[j].vertex[0];
-			center_y += sceneNodes[i].vertexData[j].vertex[1];
-			center_z += sceneNodes[i].vertexData[j].vertex[2];
-		}
-
-		center_x /= (float)vertexDataSize;
-		center_y /= (float)vertexDataSize;
-		center_z /= (float)vertexDataSize;
-
-		sceneNodes[i].center_x = center_x;
-		sceneNodes[i].center_y = center_y;
-		sceneNodes[i].center_z = center_z;
-
-		for(int j=0; j<sceneNodes[i].vertexDataSize; j++)
-		{
-			float x = sceneNodes[i].vertexData[j].vertex[0];
-			float y = sceneNodes[i].vertexData[j].vertex[1];
-			float z = sceneNodes[i].vertexData[j].vertex[2];
-
-			double nx = x - center_x;
-			double ny = y - center_y;
-			double nz = z - center_z;
-
-			float r2 = (float) sqrt(nx*nx + ny*ny + nz*nz);
-
-			if(r2 > r)
-			{
-				r = r2;
-			}
-		}
-		if(r == 0)
-		{
-			std::cerr << "Warning, bounding sphere radius = 0 for " << sceneNodes[i].name << std::endl;
-			r = 0.1f;
-		}
-		sceneNodes[i].radius = r;
-	}
+	return true;
 }
 
 string intToStr(int i)
 {
 	char buffer[33];
-	snprintf(buffer, sizeof(buffer), "%i", i);
+	snprintf(buffer, 33, "%i", i);
 	string s(buffer);
 	return s;
 }
@@ -348,7 +342,7 @@ string intToStr(int i)
 string fToStr(float& f)
 {
 	char buffer[33];
-	snprintf(buffer, sizeof(buffer), "%f", f);
+	snprintf(buffer, 33, "%f", f);
 	return string(buffer);
 }
 
@@ -423,41 +417,42 @@ void SceneBuilder::saveToDB(const char* dbFile)
 	//rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK)
 	{
-		cerr << "SQL Error: " << sqlite3_errmsg(db) << endl;
-	}
-
-	for(size_t i=0; i<vertexData.size(); i++)
-	{
-		string vertexInsertSQL = "INSERT INTO vertex(px, py, pz, nx, ny, nz, tu, tv) VALUES (";
-		vertexInsertSQL += fToStr(vertexData.at(i).vertex[0]);
-		vertexInsertSQL += ",";
-		vertexInsertSQL += fToStr(vertexData.at(i).vertex[1]);
-		vertexInsertSQL += ",";
-		vertexInsertSQL += fToStr(vertexData.at(i).vertex[2]);
-		vertexInsertSQL += ",";
-		vertexInsertSQL += fToStr(vertexData.at(i).normal[0]);
-		vertexInsertSQL += ",";
-		vertexInsertSQL += fToStr(vertexData.at(i).normal[1]);
-		vertexInsertSQL += ",";
-		vertexInsertSQL += fToStr(vertexData.at(i).normal[2]);
-		vertexInsertSQL += ",";
-		vertexInsertSQL += fToStr(vertexData.at(i).textureCoordinate[0]);
-		vertexInsertSQL += ",";
-		vertexInsertSQL += fToStr(vertexData.at(i).textureCoordinate[1]);
-		vertexInsertSQL += ");";
-		rc = sqlite3_exec(db, vertexInsertSQL.c_str(), 0, 0, &error_msg);
-		if (rc != SQLITE_OK)
-		{
-			cerr << "SQL Error: " << sqlite3_errmsg(db) << endl;
-		}
+		cerr << "SQL Scheme Creation Error: " << sqlite3_errmsg(db) << endl;
 	}
 
 	for(size_t i=0; i<sceneNodes.size(); i++)
 	{
+		for(size_t j=0; j<sceneNodes.at(i).vertexData.size(); j++)
+		{
+			// Add each vertex in the scene node
+			string vertexInsertSQL = "INSERT INTO vertex(px, py, pz, nx, ny, nz, tu, tv) VALUES (";
+			vertexInsertSQL += fToStr(sceneNodes.at(i).vertexData.at(j).position[0]);
+			vertexInsertSQL += ",";
+			vertexInsertSQL += fToStr(sceneNodes.at(i).vertexData.at(j).position[1]);
+			vertexInsertSQL += ",";
+			vertexInsertSQL += fToStr(sceneNodes.at(i).vertexData.at(j).position[2]);
+			vertexInsertSQL += ",";
+			vertexInsertSQL += fToStr(sceneNodes.at(i).vertexData.at(j).normal[0]);
+			vertexInsertSQL += ",";
+			vertexInsertSQL += fToStr(sceneNodes.at(i).vertexData.at(j).normal[1]);
+			vertexInsertSQL += ",";
+			vertexInsertSQL += fToStr(sceneNodes.at(i).vertexData.at(j).normal[2]);
+			vertexInsertSQL += ",";
+			vertexInsertSQL += fToStr(sceneNodes.at(i).vertexData.at(j).textureCoordinate[0]);
+			vertexInsertSQL += ",";
+			vertexInsertSQL += fToStr(sceneNodes.at(i).vertexData.at(j).textureCoordinate[1]);
+			vertexInsertSQL += ");";
+			rc = sqlite3_exec(db, vertexInsertSQL.c_str(), 0, 0, &error_msg);
+			if (rc != SQLITE_OK)
+			{
+				cerr << "SQL Vertex Data Error: " << sqlite3_errmsg(db) << endl;
+			}
+		}
+
 		string sceneNodeInsertSQL = "INSERT INTO scene_node(name, material_id, start_position, end_position, radius, center_x, center_y, center_z) VALUES (";
 		sceneNodeInsertSQL += "'" + sceneNodes.at(i).name + "'";
 		sceneNodeInsertSQL += ",";
-		sceneNodeInsertSQL += intToStr(getMaterialId(sceneNodes.at(i).material));
+		sceneNodeInsertSQL += intToStr(sceneNodes.at(i).materialId);
 		sceneNodeInsertSQL += ",";
 		sceneNodeInsertSQL += intToStr(sceneNodes.at(i).startPosition);
 		sceneNodeInsertSQL += ",";
@@ -465,16 +460,16 @@ void SceneBuilder::saveToDB(const char* dbFile)
 		sceneNodeInsertSQL += ",";
 		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).radius);
 		sceneNodeInsertSQL += ",";
-		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).center_x);
+		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).center[0]);
 		sceneNodeInsertSQL += ",";
-		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).center_y);
+		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).center[1]);
 		sceneNodeInsertSQL += ",";
-		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).center_z);
+		sceneNodeInsertSQL += fToStr(sceneNodes.at(i).center[2]);
 		sceneNodeInsertSQL += ");";
 		rc = sqlite3_exec(db, sceneNodeInsertSQL.c_str(), 0, 0, &error_msg);
 		if (rc != SQLITE_OK)
 		{
-			cerr << "SQL Error: " << sqlite3_errmsg(db) << endl;
+			cerr << "SQL Scene Node Error: " << sqlite3_errmsg(db) << endl;
 		}
 	}
 
@@ -538,12 +533,12 @@ void SceneBuilder::saveToDB(const char* dbFile)
 		rc = sqlite3_exec(db, materialInsertSQL.c_str(), 0, 0, &error_msg);
 		if (rc != SQLITE_OK)
 		{
-			cerr << "SQL Error: " << sqlite3_errmsg(db) << endl;
+			cerr << "SQL Material Error: " << sqlite3_errmsg(db) << endl;
 		}
 	}
 
 	// Insert textures
-	for (std::map<string,int>::iterator it=textures.begin(); it!=textures.end(); ++it)
+	for (std::set<string>::iterator it=textures.begin(); it!=textures.end(); ++it)
 	{
 		string textureInsertSQL = "INSERT INTO texture(name, image) VALUES (?,?);";
 
@@ -557,11 +552,12 @@ void SceneBuilder::saveToDB(const char* dbFile)
 
 		string fileName(cfg->getVar("texture.directory").c_str());
 		fileName += DIRECTORY_SEPARATOR;
-		fileName += it->first;
+		fileName += *it;
 		std::vector<unsigned char> imgContents = readFile(fileName.c_str());
 		const unsigned char *zBlob = imgContents.data();
 		int nBlob = (int) imgContents.size();
-		sqlite3_bind_text(stmt, 1, it->first.c_str(), -1, SQLITE_STATIC);
+		std::string itstr = *it;
+		sqlite3_bind_text(stmt, 1, itstr.c_str(), -1, SQLITE_STATIC);
 		sqlite3_bind_blob(stmt, 2, zBlob, nBlob, SQLITE_STATIC);
 
 		rc = sqlite3_step(stmt);
@@ -593,7 +589,7 @@ void SceneBuilder::saveToDB(const char* dbFile)
 	rc = sqlite3_exec(db, "COMMIT;", 0, 0, &error_msg);
 	if (rc != SQLITE_OK)
 	{
-		cerr << "SQL Error: " << sqlite3_errmsg(db) << endl;
+		cerr << "SQL Texture Error: " << sqlite3_errmsg(db) << endl;
 	}
 
 	cout << "Done writing database" << endl;
@@ -601,7 +597,10 @@ void SceneBuilder::saveToDB(const char* dbFile)
 
 void wavefrontToSQLite(const char* wavefront, const char* database) {
 	SceneBuilder sceneBuilder;
-	sceneBuilder.addWavefront(wavefront, glm::translate(glm::mat4(1.f), glm::vec3(0.0, 0.0, 0.0)));
-	sceneBuilder.buildScene();
-	sceneBuilder.saveToDB(database);
+	bool success = sceneBuilder.addWavefront(wavefront, glm::translate(glm::mat4(1.f), glm::vec3(0.0, 0.0, 0.0)));
+	if(success) {
+		sceneBuilder.saveToDB(database);
+	} else {
+		std::cerr << "Unable to add wavefront " << wavefront << std::endl;
+	}
 }

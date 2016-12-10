@@ -6,10 +6,11 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <stdlib.h>
-#include <stdio.h>
+#include <set>
+#include <cstdlib>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -21,27 +22,28 @@
 #include "ConfigLoader.h"
 #include "tiny_obj_loader.h"
 
-// MSVC uses strcpy_s instead of strcpy
 #ifdef _MSC_VER
-#define strcpy(A, B) strcpy_s(A, B)
+#define strncpy(A,B,C) strncpy_s(A,B,C)
 #endif
+
+#define MAX_MATERIAL_NAME_LENGTH 128
 
 using std::cout;
 using std::cerr;
 using std::endl;
 using std::string;
 
-typedef struct
+typedef struct Vertex
 {
-    float vertex[3];
+    float position[3];
     float normal[3];
     float textureCoordinate[2];
 } Vertex;
 
-typedef struct
+typedef struct Material
 {
     // Material name
-    char name[64];
+    char name[MAX_MATERIAL_NAME_LENGTH];
     float ambient[3];
     float diffuse[3];
     float specular[3];
@@ -53,29 +55,23 @@ typedef struct
     // illumination model (see http://www.fileformat.info/format/material/)
     int illum;
     //Texture file names
-    char ambientTexName[64];
-    char diffuseTexName[64];
-    char specularTexName[64];
-    char normalTexName[64];
+    char ambientTexName[MAX_MATERIAL_NAME_LENGTH];
+    char diffuseTexName[MAX_MATERIAL_NAME_LENGTH];
+    char specularTexName[MAX_MATERIAL_NAME_LENGTH];
+    char normalTexName[MAX_MATERIAL_NAME_LENGTH];
 } Material;
 
 
 typedef struct SceneNode
 {
     std::string name;
-    std::string material;
-    Vertex* vertexData;
-    size_t vertexDataSize;
+    int materialId;
+    std::vector<Vertex> vertexData;
     glm::mat4 modelViewMatrix;
     unsigned startPosition;
     unsigned endPosition;
-    int primativeMode;
-    unsigned ambientTextureId;
-    unsigned diffuseTextureId;
-    unsigned normalTextureId;
-    unsigned specularTextureId;
-    float radius;
-    float center_x, center_y, center_z; // position of center
+    float radius;		// max distance from object center
+    float center[3];	// position of object center
 } SceneNode;
 
 
@@ -86,19 +82,15 @@ public:
     ~SceneBuilder();
     void addMaterial(Material*);
     void addSceneNode(SceneNode*);
-    void addTexture(const char*, unsigned&);
-    void addWavefront(const char*, glm::mat4);
-    void buildScene();
+    void addTexture(const char*);
+    bool addWavefront(const char*, glm::mat4);
     void saveToDB(const char*);
     int getMaterialId(string&);
 private:
     unsigned startPosition;
-    glm::mat4 modelViewProjectionMatrix;
-    std::vector<Vertex> vertexData;
     std::vector<SceneNode> sceneNodes;
-    std::vector<unsigned> indices;
     std::map<string, Material> materials;
-    std::map<std::string, int> textures;
+    std::set<std::string> textures;
     ConfigLoader* cfg;
 };
 
