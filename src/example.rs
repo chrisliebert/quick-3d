@@ -17,15 +17,79 @@ use quick3d::renderer;
 use quick3d::shader::Shader;
 use quick3d::scene::Scene;
 
+fn load_scene_no_sqlite(filename: String) -> Scene {
+    let scene: Scene = match filename.ends_with(".bin.gz") {
+        true => {
+            match Scene::from_compressed_binary_file(filename.clone()) {
+                Ok(s) => s,
+                Err(e) => panic!("Unable to load {}: {:?}", filename, e),
+            }
+        },
+        false => {
+            match filename.ends_with(".bin") {
+                true => {
+                    match Scene::from_binary_file(filename.clone()) {
+                        Ok(s) => s,
+                        Err(e) => panic!("Unable to load {}: {:?}", filename, e),
+                    }
+                },
+                false => {
+                    panic!("Error: {} must end in .bin or .bin.gz. If the sqlite feature is enabled, .db is also supported.", filename);  
+                },
+            }
+        },
+    };
+    
+    scene
+}
+
+#[cfg(feature = "sqlite")]
+fn load_scene(filename: String) -> Scene {
+    
+    // If there is an filename argument ending in ".db", and the sqlite feature is enabled, use .db file
+    let scene: Scene = match filename.ends_with(".db") {
+        true => {
+            use quick3d::dbloader::DBLoader;
+        
+            let db: DBLoader = match DBLoader::new(&filename){
+                Ok(d) => d,
+                Err(e) => panic!("Error: {:?}", e),
+            };
+            match db.load_scene() {
+                Ok(s) => s,
+                Err(e) => panic!("Unable to load {:?}: {:?}", filename, e),
+            }
+        },
+        false => {
+            load_scene_no_sqlite(filename)
+        },
+    };
+    
+    scene
+}
+
+#[cfg(not(feature = "sqlite"))]
+fn load_scene(filename: String) -> Scene {
+    load_scene_no_sqlite(filename)
+}
+
 fn main() {
     let screen_width = 600;
     let screen_height = 400;
 
-    let bin_filename = String::from("test.bin.gz");
-    let scene: Scene = match Scene::from_compressed_binary_file(bin_filename.clone()) {
-        Ok(s) => s,
-        Err(e) => panic!("Unable to load {}: {:?}", bin_filename, e),
-    };
+    use std::env;
+    let mut filename = String::from("test.bin.gz");
+       
+    // Prints each argument on a separate line
+    let mut i = 0;
+    for argument in env::args() {
+        if i == 1 {
+            filename = argument;
+        }
+        i += 1;
+    }
+    
+    let scene: Scene = load_scene(filename);
 
     let display = glutin::WindowBuilder::new()
         //.resizable()
