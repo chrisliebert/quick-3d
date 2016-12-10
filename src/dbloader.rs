@@ -92,6 +92,10 @@ impl DBLoader {
         for vertex in vertex_iter {
             vertices.push(try!(vertex.map_err(DBLoaderError::DBError)));
         }
+        
+        if vertices.len() == 0 {
+            panic!("No vertices defined in database");
+        }
 
         // Load materials
         let mut material_stmt = try!(
