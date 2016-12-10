@@ -49,7 +49,7 @@ def main():
         if q3d.key_pressed(events, q3d.LEFT):
             camera = q3d.camera_aim(camera, rotate_speed, 0)
         if q3d.key_pressed(events, q3d.RIGHT):
-            camera = q3d.camera_aim(camera, -rotate_speed, 0)		
+            camera = q3d.camera_aim(camera, -rotate_speed, 0)
         q3d.free_events(events)
         console_command = q3d.read_console_buffer(console_reader)
         if len(console_command) > 0:
@@ -57,12 +57,12 @@ def main():
                 result = eval(console_command)
                 print("Expression returned " + str(result))
             except:
-		        try:
-		            #Expression failed to evaluate
-		            #try to execute the command as a statement instead
-		            exec(console_command)
-		        except:
-		            print("Invalid command: " + console_command)
+                try:
+                    #Expression failed to evaluate
+                    #try to execute the command as a statement instead
+                    exec(console_command)
+                except:
+                    print("Invalid command: " + console_command)
     #clean up
     destroy(display, camera, renderer, shader)
 

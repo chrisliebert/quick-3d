@@ -21,7 +21,7 @@ def destroy(display, camera, renderer, shader):
 def main():
     display, camera, renderer, shader = init()
     q3d.render(renderer, shader, camera, display)
-	# Sleep 100 ms
+    # Sleep 100 ms
     q3d.thread_sleep(100)
     # Clean up
     destroy(display, camera, renderer, shader)
