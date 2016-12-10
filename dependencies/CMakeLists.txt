@@ -28,6 +28,7 @@ ENDIF(MSVC)
 
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/tinyobjloader)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/obj2sqlite)
 
 ADD_LIBRARY(tinyobjloader STATIC
 	tinyobjloader/tiny_obj_loader.cc
@@ -36,14 +37,14 @@ ADD_LIBRARY(tinyobjloader STATIC
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/obj2sqlite)
 
-ADD_LIBRARY(scenebuilder
+ADD_LIBRARY(scenebuilder STATIC
 	obj2sqlite/ConfigLoader.cpp
 	obj2sqlite/ConfigLoader.h
 	obj2sqlite/SceneBuilder.cpp
 	obj2sqlite/SceneBuilder.h
 )
 
-ADD_EXECUTABLE(obj2sqlite
+ADD_EXECUTABLE(obj2db
 	obj2sqlite/obj2sqlite.cpp
 )
 
@@ -53,12 +54,9 @@ LINK_DIRECTORIES(${SQLITE3_LIBRARY_DIRS})
 ADD_DEFINITIONS(${SQLITE3_DEFINITIONS})
 
 TARGET_LINK_LIBRARIES(scenebuilder tinyobjloader ${SQLITE3_LIBRARIES})
-TARGET_LINK_LIBRARIES(obj2sqlite scenebuilder)
+TARGET_LINK_LIBRARIES(obj2db scenebuilder)
 
-INSTALL(TARGETS ${SQLITE3_LIBRARY} tinyobjloader scenebuilder DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
-
-# Install obj2sqlite binary to parent directory
-INSTALL(TARGETS obj2sqlite DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/..)
+INSTALL(TARGETS ${SQLITE3_LIBRARY} obj2db tinyobjloader scenebuilder DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Install stdc++.lib on MSVC
 IF(MSVC)
