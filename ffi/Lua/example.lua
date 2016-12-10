@@ -10,7 +10,8 @@ local target_build = "debug"
 local use_luajitffi = (type(jit) == 'table')
 
 local quit_after_start = false
-
+local sqlite3 = false
+local sqlite_file = ""
 -- Parse program arguments
 local i = 1
 while arg[i] do
@@ -24,6 +25,10 @@ while arg[i] do
     end
     -- Initialize Quick3D
     quick3d_clean(target_build)
+  elseif arg[i] == "sqlite" then
+    print("Enabling SQLite")
+    sqlite3 = true
+	sqlite_file = arg[i + 1]
   elseif arg[i] == "release" then
     if use_luajitffi then
       target_build = "release"
@@ -40,10 +45,10 @@ end
 local quick3d = nil
 
 if use_luajitffi then
-  quick3d = quick3d_init_luajitffi(target_build)
+  quick3d = quick3d_init_luajitffi(target_build, sqlite3)
 else
 -- Initialize Quick3D
-  quick3d = quick3d_init(target_build)
+  quick3d = quick3d_init(target_build, sqlite3)
 end
 
 screen_width = 800

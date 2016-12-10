@@ -12,9 +12,10 @@ function isWindows()
 end
 
 -- Generate the wrapper source and compile the shared libarary
-function build_wrapper(target_build)
+function build_wrapper(target_build, sqlite3)
   -- Generate quick3d_wrapper.c -> quick3dwrapper
   local make_cmd = "cargo build"
+  if sqlite3 then make_cmd = "cargo build --features sqlite" end
   if target_build == "release" then make_cmd = make_cmd .. " --release" end
   local make_result = os.execute(make_cmd)
   if not make_result == 0 then
@@ -62,7 +63,7 @@ function quick3d_relaunch_with_exported_unix_lib_path()
 end
 
 -- Load the shared library
-function quick3d_init(target_build)
+function quick3d_init(target_build, sqlite3)
   if pcall(require_shared_library) then
     print "Loaded shared library"
   else
@@ -80,7 +81,7 @@ function quick3d_init(target_build)
 
     -- Unable to load shared libraries, try to build the wrapper
     print ("Building " .. target_build .. " shared libraries")
-    build_wrapper(target_build)
+    build_wrapper(target_build, sqlite3)
     -- try to load the shared library again
     if not pcall(require_shared_library) then
       print "Unable to load quick3dwrapper shared libraries"
@@ -98,7 +99,7 @@ function get_quick3d_target_path(target)
   end
 end
 
-function quick3d_init_luajitffi(target_build)
+function quick3d_init_luajitffi(target_build, sqlite3)
   if ffi == nil then ffi = require("ffi") end
   print("Using " .. target_build .. " " .. jit.version .. " FFI module")
 
@@ -117,6 +118,7 @@ function quick3d_init_luajitffi(target_build)
   success, wrapper = pcall(ffi.load, quick3d_shared_lib_path)
   if not success then
     local cargo_cmd = "cargo build"
+	if sqlite3 then cargo_cmd = "cargo build --features sqlite" end
     if target_build == "release" then
   	  cargo_cmd = cargo_cmd .. " --release"
     end
