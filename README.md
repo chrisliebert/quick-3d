@@ -7,7 +7,7 @@ The goal of Quick3D is to replace the need for C++ in hardware-accelerated 3D gr
 
 | Feature     | Status | Description   |
 | :------- | :----: | :---- |
-| Load 3D objects from binary files. | SQLite databases are supported as feature (disabled by default) and used as an intermediate representation | Graphics data is loaded from processed sources (obj2sqlite is a tool that can be used to generate databases from wavefront .obj files. Once a scene is loaded it can be serialized to a binary file with optional compression.) |
+| Load 3D objects from binary files. | SQLite databases are supported as feature (disabled by default) and used as an intermediate representation | Graphics data is loaded from processed sources (obj2db is a tool that can be used to generate databases from wavefront .obj files. Once a scene is loaded it can be serialized to a binary file with optional compression.) |
 | Update and Render Geometry | Supported |  *Currently the ability to update OpenGL uniforms is only available in Rust |
 | Diffuse Texture Maps | Supported | Diffuse texture maps are loaded from image blobs stored in SQLite or serialized binaries |
 | Multiple Hardware Profiles | Supported | Multiple GLSL hardware profiles to support different shader versions on multiple platforms. Different versions of the shader programs are stored in the SQLite database.|
@@ -18,7 +18,7 @@ The goal of Quick3D is to replace the need for C++ in hardware-accelerated 3D gr
 | Example for Android | *Nice to have | A basic example for android |
 
 
-Often applications will need to access large amounts of information that is subject to change. This issue is often addressed by leveraging existing database systems that have been optimized and tested extensively. SQLite is a lightwieght database system that will store arbirary amounts of data in a single file for convenience. Rusqlite is a Rust API that is used to read SQLite databases that can be produced from Wavefront .obj files using a C++ tool called obj2sqlite which is included and built automatically as of v0.1.4.
+Often applications will need to access large amounts of information that is subject to change. This issue is often addressed by leveraging existing database systems that have been optimized and tested extensively. SQLite is a lightwieght database system that will store arbirary amounts of data in a single file for convenience. Rusqlite is a Rust API that is used to read SQLite databases that can be produced from Wavefront .obj files using a C++ tool called obj2db which is included and built automatically as of v0.1.4.
 
 With Quick3D, it is possible to leverage GPU technology in a way that is likely to run on a wide range of devices while maintaining code readability. There is considerable room for optimization in the Quick3D library and future versions have the potential to improve performance of applications written using version 0.1.
 
@@ -44,6 +44,22 @@ Quick3D can be built for Windows using the MSVC ABI.
 **Building the Rust Library**
 
 `cargo build`
+
+**Linking with SQLite**
+`cargo build --features sqlite`
+
+When the sqlite feature is enabled, some additional functionality is included which is required to import data from .obj files.
+Note: To build the sqlite features with the MSVC ABI, it is important to download the SQLite source from https://sqlite.org/ and create a blank C++ empty project in MSVC, add sqlite3.c and sqlite3.h, rename the project 'sqlite3', open properties and change Configuration Type from Application (.exe) to Static library (.lib) for all configurations.
+Make sure pkg-config.exe is in PATH (it can be download from https://sourceforge.net/projects/pkgconfiglite/), and the PKG_CONFIG_PATH is set to a directory containing the following file, sqlite3.pc:
+`
+Name: sqlite3
+Description: Portable database
+Version: 3
+Libs: -LC:/dev/sqlite-amalgamation-3150200 -lsqlite3
+Cflags: -IC:/dev/sqlite-amalgamation-3150200
+`
+In this example, "C:\dev\sqlite-amalgamation-3150200" points to the path of the extracted archive containing the SQLite3 source code. 
+It may also be nessisary to place copy of sqlite3.lib in the dependencies folder and set SQLITE3_LIB_DIR prior to building with cargo.
 
 **Running the Rust Example**
 
