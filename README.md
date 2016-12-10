@@ -51,13 +51,13 @@ Quick3D can be built for Windows using the MSVC ABI.
 When the sqlite feature is enabled, some additional functionality is included which is required to import data from .obj files.
 Note: To build the sqlite features with the MSVC ABI, it is important to download the SQLite source from https://sqlite.org/ and create a blank C++ empty project in MSVC, add sqlite3.c and sqlite3.h, rename the project 'sqlite3', open properties and change Configuration Type from Application (.exe) to Static library (.lib) for all configurations.
 Make sure pkg-config.exe is in PATH (it can be download from https://sourceforge.net/projects/pkgconfiglite/), and the PKG_CONFIG_PATH is set to a directory containing the following file, sqlite3.pc:
-`
+```
 Name: sqlite3
 Description: Portable database
 Version: 3
 Libs: -LC:/dev/sqlite-amalgamation-3150200 -lsqlite3
 Cflags: -IC:/dev/sqlite-amalgamation-3150200
-`
+```
 In this example, "C:\dev\sqlite-amalgamation-3150200" points to the path of the extracted archive containing the SQLite3 source code. 
 It may also be nessisary to place copy of sqlite3.lib in the dependencies folder and set SQLITE3_LIB_DIR prior to building with cargo.
 
