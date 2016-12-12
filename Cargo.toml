@@ -34,7 +34,7 @@ name = "quick3d"
 path = "src/lib.rs"
 crate-type = ["dylib", "staticlib", "rlib"]
 
-[[bin]]
+[[example]]
 name = "example"
 path = "src/example.rs"
 
