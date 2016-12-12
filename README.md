@@ -63,7 +63,11 @@ It may also be nessisary to place copy of sqlite3.lib in the dependencies folder
 
 **Running the Rust Example**
 
-`cargo run`
+`cargo run --example example`
+or
+`cargo run --example example test.bin.gz`
+or
+`cargo run --features sqlite --example example test.db`
 
 **Building the LUA Library**
 

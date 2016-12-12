@@ -7,6 +7,7 @@ extern crate quick3d;
 use glium::glutin;
 use glium::glutin::{ElementState, Event, MouseButton, VirtualKeyCode};
 use glium::DisplayBuild;
+use glium::backend::glutin_backend::GlutinFacade;
 
 use nalgebra::Matrix4;
 use std::io::Error;
@@ -73,6 +74,46 @@ fn load_scene(filename: String) -> Scene {
     load_scene_no_sqlite(filename)
 }
 
+#[cfg(feature = "sqlite")]
+fn load_shader(display: &GlutinFacade) -> glium::program::Program {
+    use quick3d::dbloader::DBLoader;
+    // sqlite enabled, load shaders.db
+    let shader_dbloader: DBLoader = match DBLoader::new("shaders.db") {
+        Ok(d) => {
+            println!("Loaded shaders.db");
+            d
+        },
+        Err(e) => panic!("Unable to load shader databse: {:?}", e),
+    };
+    // Attempt to load GLSL version 330 if it is supported
+    let desired_glsl_version = glium::Version(glium::Api::Gl, 3, 3);
+    let shader_name = "default";
+    match Shader::from_dbloader_with_version(&shader_name,
+                                               &shader_dbloader,
+                                               &desired_glsl_version,
+                                               &display) {
+        Ok(p) => p,
+        Err(e) => {
+            println!("Unable to load {:?}: {:?}", desired_glsl_version, e);
+            match Shader::from_dbloader(&shader_name, &shader_dbloader, &display) {
+                Ok(s) => s,
+                Err(e2) => panic!("Unable to load shader: {:?}", e2),
+            }
+        }
+    }
+}
+
+#[cfg(not(feature = "sqlite"))]
+fn load_shader(display: &GlutinFacade) -> glium::program::Program {
+    // sqlite disabled, use built-in shader
+    match Shader::default(display) {
+        Ok(p) => p,
+        Err(e) => {
+            panic!("Unable to load default shader {:?}", e);
+        },
+    }
+}
+
 fn main() {
     let screen_width = 600;
     let screen_height = 400;
@@ -91,9 +132,7 @@ fn main() {
     
     let scene: Scene = load_scene(filename);
 
-    let display = glutin::WindowBuilder::new()
-        //.resizable()
-        //.with_vsync()
+    let display: GlutinFacade = glutin::WindowBuilder::new()
         .with_depth_buffer(24)
         .with_title("Rust Window")
         .with_gl_debug_flag(true)
@@ -109,13 +148,8 @@ fn main() {
         Ok(r) => r,
         Err(e) => panic!("Unable to create renderer: {:?}", e),
     };
-
-    let shader_program: glium::program::Program = match Shader::default(&display) {
-        Ok(p) => p,
-        Err(e) => {
-            panic!("Unable to load default shader {:?}", e);
-        },
-    };
+  
+    let shader_program: glium::program::Program = load_shader(&display);
 
     // Show the window once the data is loaded
     let window = match display.get_window() {
@@ -254,4 +288,5 @@ fn main() {
             Err(_) => {}
         }
     }
+    
 }
