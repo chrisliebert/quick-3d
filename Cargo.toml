@@ -7,11 +7,15 @@ authors = ["chrisliebert <liebert@pdx.edu>"]
 keywords = ["3D", "Glium", "OpenGL", "graphics"]
 description = "A 3D rendering framework written in Rust."
 include = [
+	"src/camera.rs",
 	"src/common.rs",
+	"src/dbloader.rs",
 	"src/lib.rs",
-	"src/loader.rs",
+	"src/frustum.rs",
+	"src/input.rs",
+	"src/scene.rs",
+	"src/shader.rs",
 	"src/renderer.rs",
-	"src/example.rs",
 	"Cargo.toml",
 ]
 readme = "README.md"
@@ -40,11 +44,11 @@ path = "src/example.rs"
 
 [dependencies]
 glium = "*"
-nalgebra = "0.9.*"
+nalgebra = "0.10.1"
 rusqlite = { version = "0.7.3", optional = true}
 time = "0.1.35"
-image = "0.10.3"
-libc = "0.2.15"
+image = "0.10.4"
+libc = "0.2.18"
 rustc-serialize = "*"
 bincode = "*"
 flate2 = "*"
