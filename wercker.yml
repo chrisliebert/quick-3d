@@ -10,7 +10,7 @@ box: debian
 build:
   steps:
     - install-packages:
-        packages: xvfb curl file build-essential cmake swig liblua5.1-dev lua5.1 python-all-dev openjdk-7-jdk gradle libxrender1 libxtst6 libxi6 libxi-dev
+        packages: xvfb curl file build-essential cmake swig liblua5.1-dev lua5.1 python-all-dev openjdk-7-jdk wget unzip libxrender1 libxtst6 libxi6 libxi-dev
     - script:
         name: Enable virtual display
         code: |-
@@ -89,8 +89,10 @@ build:
             export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-amd64
             cargo test
             export LD_LIBRARY_PATH=LD_LIBRARY_PATH:`pwd`
+            wget https://services.gradle.org/distributions/gradle-3.3-bin.zip
+            unzip gradle-3.3-bin.zip
+            gradle-3.3/bin/gradle test
 #            sudo update-alternatives --set java $(update-alternatives --list java|grep java-7)
-            gradle test
 #            javac *.java
 #            # java Quick3DTests # Disabled because wercker is unable to load libmawt.so
 #            cd ../..
