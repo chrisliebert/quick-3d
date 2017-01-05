@@ -52,7 +52,7 @@ fn copy_runtime_files() -> std::io::Result<()> {
 }
 
 fn main() {
-	let debug = bool::from_str(&env::var("DEBUG").unwrap()).unwrap();
+	let debug = bool::from_str(&env::var("DEBUG").expect("Unable to get DEBUG env")).expect("Unable to parse DEBUG env");
 	
 	// Clean quick3d to ensure copy commands don't fail
 	let clean_cmd_status = match debug {
@@ -62,7 +62,7 @@ fn main() {
 			.arg("quick3d")
 			.current_dir("../../")
 			.output()
-			.unwrap(),
+			.expect("Unable to build quick3d static library"),
 		false => Command::new("cargo")
 			.arg("clean")
 			.arg("-p")
@@ -70,7 +70,7 @@ fn main() {
 			.arg("--release")
 			.current_dir("../../")
 			.output()
-			.unwrap(),
+			.expect("Unable to build quick3d static library"),
 	}.status;
 	assert!(clean_cmd_status.success());
 	
@@ -80,24 +80,24 @@ fn main() {
 				.arg("build")
 				.current_dir("../../")
 				.output()
-				.unwrap(),
+				.expect("Unable to build debug quick3d static library"),
 		false => Command::new("cargo")
 				.arg("build")
 				.arg("--release")
 				.current_dir("../../")
 				.output()
-				.unwrap(),
+				.expect("Unable to build quick3d static library"),
 	};
 		
 	assert!(build_cmd_output.status.success());
 	
-	copy_quick3d_shared_library_files(debug).unwrap();
-	copy_swig_interface_file().unwrap();
+	copy_quick3d_shared_library_files(debug).expect("Unable to copy shared libraries");
+	copy_swig_interface_file().expect("Unable to copy swig interface file");
 
 	// cmake build for language wrappers
 	let dst = cmake::Config::new("wrapper").build();
 	println!("cargo:rustc-link-search=wrapper");
 	println!("cargo:rustc-link-search=native={}", dst.display());
 	
-	copy_runtime_files().unwrap();
+	copy_runtime_files().expect("Unable to copy runtime files");
 }

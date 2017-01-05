@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # Copyright (C) 2016 Chris Liebert
 
-import quick3dwrapper as q3d
+try:
+    import quick3dwrapper as q3d
+except:
+    import os
+    os.system("cargo build")
+    import quick3dwrapper as q3d
 
 def init():
     screen_width, screen_height = 640, 480

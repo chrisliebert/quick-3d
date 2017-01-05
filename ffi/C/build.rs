@@ -36,19 +36,28 @@ fn copy_swig_interface_file() -> std::io::Result<()> {
 }
 
 fn main() {
-	let debug = bool::from_str(&env::var("DEBUG").unwrap()).unwrap();
+	let debug = bool::from_str(&env::var("DEBUG").expect("Unable to get DEBUG env")).expect("Unable to parse DEBUG env");
 	// build Quick3D
-	let build_cmd_output = Command::new("cargo")
-		.arg("build")
-		.current_dir("../../")
-		.output()
-		.unwrap();
-	
+	let build_cmd_output = match debug {
+		true => Command::new("cargo")
+				.arg("build")
+				.arg("--verbose")
+				.current_dir("../../")
+				.output()
+				.expect("Unable to build debug quick3d static library"),
+		false => Command::new("cargo")
+				.arg("build")
+				.arg("--verbose")
+				.arg("--release")
+				.current_dir("../../")
+				.output()
+				.expect("Unable to build quick3d static library"),
+	};
 	// Ensure cargo succeeded
 	assert!(build_cmd_output.status.success());
 	
-	copy_quick3d_shared_library_files(debug).unwrap();
-	copy_swig_interface_file().unwrap();
+	copy_quick3d_shared_library_files(debug).expect("Unable to copy shared libraries");
+	copy_swig_interface_file().expect("Unable to copy swig interface file");
 
 	// cmake build
 	let dst = cmake::Config::new("src").build();
