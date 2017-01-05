@@ -40,7 +40,7 @@ crate-type = ["dylib", "staticlib", "rlib"]
 
 [[example]]
 name = "example"
-path = "src/example.rs"
+path = "examples/basic.rs"
 
 [dependencies]
 glium = "*"
