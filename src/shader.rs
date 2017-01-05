@@ -44,30 +44,28 @@ impl Shader {
     ///
     pub fn default(display: &GlutinFacade) -> Result<glium::program::Program, ShaderError> {
         Shader::from_source(r#"
-#version 150
- 
- // Input data
- in vec3 position;
- in vec3 normal;
- in vec2 texcoord;
+#version 110
+
+// Input data
+vec3 position;
+vec3 normal;
+vec2 texcoord;
 
 // Uniforms
 uniform mat4 projection;
 uniform mat4 modelview;
-
 uniform mat4 model;
-
 uniform vec3 light_position_worldspace;
 
 // Output data
-out vec3 out_position;
-out vec3 out_normal;
-out vec2 out_texcoord;
-out vec3 camera_direction;
-out vec3 light_direction;
-out vec3 light_position;
+vec3 out_position;
+vec3 out_normal;
+vec2 out_texcoord;
+vec3 camera_direction;
+vec3 light_direction;
+vec3 light_position;
 
-void main() {
+ void main() {
 	mat4 mvp = projection * modelview * model;
 	out_position = (mvp * vec4(position, 1.0)).xyz;
 	camera_direction = normalize(vec3(0, 0, 0) - out_position);
@@ -76,22 +74,19 @@ void main() {
 	gl_Position = mvp * vec4(position, 1.0);
 	out_normal = ( mvp * vec4(normal, 0)).xyz;
 	out_texcoord = texcoord;
-}
-
+ }
      "#, r#"
-
-#version 150
-precision mediump float;
+#version 110
 
 // Interpolated values from the vertex shaders
-in vec3 out_position;
-in vec3 out_normal;
-in vec2 out_texcoord;
-in vec3 camera_direction;
-in vec3 light_direction;
+vec3 out_position;
+vec3 out_normal;
+vec2 out_texcoord;
+vec3 camera_direction;
+vec3 light_direction;
 
 // Ouput data
-out vec3 color;
+vec3 color;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D diffuse_texture;
@@ -103,10 +98,11 @@ uniform vec3 light_position;
 
 void main(){
 	vec3 light_color = vec3(1,1,1);
-	float light_power = 3.8f;
+	float light_power = 3.8;
 
 	// Material properties
-	vec3 diffuseColor = vec3(0.3, 0.3, 0.3) * ( diffuse + texture(diffuse_texture, out_texcoord).rgb );
+	vec4 diffuseColor4 = vec4(0.3, 0.3, 0.3, 1.0) * ( vec4(diffuse, 1.0) + texture2D(diffuse_texture, out_texcoord));
+	vec3 diffuseColor =  vec3( diffuseColor4[0], diffuseColor4[1], diffuseColor4[2]);
 	
 	vec3 ambientColor = ambient + vec3(0.3, 0.3, 0.3) * diffuseColor;
 	vec3 specularColor = specular;
@@ -130,7 +126,6 @@ void main(){
 		// Specular : reflective highlight, like a mirror
 		specularColor * light_color * light_power * pow(cosAlpha, 5.0) / (distance * distance);
 }
-
 "#,
 		&display)
     }
