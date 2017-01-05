@@ -152,17 +152,18 @@ pub extern "C" fn create_display(screen_width: libc::int32_t,
                                  -> Box<GlutinFacade> {
     let w: u32 = screen_width as u32;
     let h: u32 = screen_height as u32;
-    let window_title: String;
+    //let window_title: String;
 
     unsafe {
-        window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
+        //window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
         let display: GlutinFacade = glutin::WindowBuilder::new()
-            .with_gl_debug_flag(true)
-            .with_title(window_title)
+            //.with_gl_debug_flag(true)
+            //.with_title(window_title)
             .with_visibility(true)
-            .with_dimensions(w, h)
-            .build_glium()
-            .unwrap();
+            //.with_dimensions(w, h)
+            .with_multitouch()
+						.build_glium_unchecked()
+            .expect("Unable to create display");
         return Box::new(display);
     }
 }
@@ -187,7 +188,7 @@ pub extern "C" fn create_hidden_display(screen_width: libc::int32_t,
             .with_visibility(false)
             .with_dimensions(w, h)
             .build_glium()
-            .unwrap();
+            .expect("Unable to create display");
         return Box::new(display);
     }
 }
