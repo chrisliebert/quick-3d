@@ -57,25 +57,25 @@ build:
             export LUA_INCLUDE_DIR=/usr/include/lua5.1
             export LUA_LIBRARY=/usr/lib/x86_64-linux-gnu/liblua5.1.a
             export LUA_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblua5.1.a
-            cargo build
+            cargo test --verbose
             cd ../..
     - script:
         name: build-ffi-python
         code: |
             cd ffi/Python
-            cargo build
+            cargo test
             cd ../..
-#    - script:
-#        name: test-quick3d
-#        code: |
-#            cargo test --verbose
-#    - script:
-#        name: test-ffi-c
-#        code: |
-#            cd ffi/C
-#            cargo test
-#            ./c_test
-#            cd ../..
+    - script:
+        name: test-quick3d
+        code: |
+            cargo test
+    - script:
+        name: test-ffi-c
+        code: |
+            cd ffi/C
+            cargo test
+            ./c_test
+            cd ../..
 #    - script:
 #        name: test-ffi-csharp
 #        code: |
@@ -93,22 +93,22 @@ build:
 #            javac *.java
 #            # java Quick3DTests # Disabled because wercker is unable to load libmawt.so
 #            cd ../..
-#    - script:
-#        name: test-ffi-lua
-#        code: |
-#            cd ffi/Lua
-#            cargo test
-#            export LD_LIBRARY_PATH=`pwd`
-#            lua5.1 test.lua
-#            cd ../..
-#    - script:
-#        name: test-ffi-python
-#        code: |
-#            cd ffi/Python
-#            cargo test
-#            export LD_LIBRARY_PATH=`pwd`
-#            python test.py
-#            cd ../..
+    - script:
+        name: test-ffi-lua
+        code: |
+            cd ffi/Lua
+            cargo build
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`
+            lua5.1 test.lua
+            cd ../..
+    - script:
+        name: test-ffi-python
+        code: |
+            cd ffi/Python
+            cargo build
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`
+            python test.py
+            cd ../..
     - script:
         name: cleanup
         code: |
