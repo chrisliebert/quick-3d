@@ -44,12 +44,12 @@ impl Shader {
     ///
     pub fn default(display: &GlutinFacade) -> Result<glium::program::Program, ShaderError> {
         Shader::from_source(r#"
-#version 110
-
-// Input data
-vec3 position;
-vec3 normal;
-vec2 texcoord;
+#version 130
+ 
+ // Input data
+ in vec3 position;
+ in vec3 normal;
+ in vec2 texcoord;
 
 // Uniforms
 uniform mat4 projection;
@@ -58,12 +58,12 @@ uniform mat4 model;
 uniform vec3 light_position_worldspace;
 
 // Output data
-vec3 out_position;
-vec3 out_normal;
-vec2 out_texcoord;
-vec3 camera_direction;
-vec3 light_direction;
-vec3 light_position;
+out vec3 out_position;
+out vec3 out_normal;
+out vec2 out_texcoord;
+out vec3 camera_direction;
+out vec3 light_direction;
+out vec3 light_position;
 
  void main() {
 	mat4 mvp = projection * modelview * model;
@@ -76,21 +76,21 @@ vec3 light_position;
 	out_texcoord = texcoord;
  }
      "#, r#"
-#version 110
+#version 130
+precision mediump float;
 
 // Interpolated values from the vertex shaders
-vec3 out_position;
-vec3 out_normal;
-vec2 out_texcoord;
-vec3 camera_direction;
-vec3 light_direction;
+in vec3 out_position;
+in vec3 out_normal;
+in vec2 out_texcoord;
+in vec3 camera_direction;
+in vec3 light_direction;
 
 // Ouput data
-vec3 color;
+out vec3 color;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D diffuse_texture;
-
 uniform vec3 ambient;
 uniform vec3 diffuse;
 uniform vec3 specular;
@@ -98,12 +98,11 @@ uniform vec3 light_position;
 
 void main(){
 	vec3 light_color = vec3(1,1,1);
-	float light_power = 3.8;
+	float light_power = 3.8f;
 
 	// Material properties
-	vec4 diffuseColor4 = vec4(0.3, 0.3, 0.3, 1.0) * ( vec4(diffuse, 1.0) + texture2D(diffuse_texture, out_texcoord));
-	vec3 diffuseColor =  vec3( diffuseColor4[0], diffuseColor4[1], diffuseColor4[2]);
-	
+	vec3 diffuseColor = vec3(0.3, 0.3, 0.3) * ( diffuse + texture(diffuse_texture, out_texcoord).rgb );
+
 	vec3 ambientColor = ambient + vec3(0.3, 0.3, 0.3) * diffuseColor;
 	vec3 specularColor = specular;
 
@@ -194,8 +193,6 @@ void main(){
             ),
         };
             
-        // Shader compilation no longer required
-        display.release_shader_compiler();
         return Ok(program);
     }
     
@@ -332,7 +329,7 @@ pub extern "C" fn get_shader_from_dbloader(shader_name_cstr: *const libc::c_char
                                             -> Box<glium::program::Program> {
     unsafe {
         let shader_name: String = CStr::from_ptr(shader_name_cstr).to_string_lossy().into_owned();
-        let shader_program = Shader::from_dbloader(&shader_name, dbloader, display).unwrap();
+        let shader_program = Shader::from_dbloader(&shader_name, dbloader, display).expect("Unable to load shader from database");
         return Box::new(shader_program);
     }
 }
