@@ -150,7 +150,9 @@ fn main() {
     };
   
     let shader_program: glium::program::Program = load_shader(&display);
-
+    // Shader compilation no longer required
+    display.release_shader_compiler();
+          
     // Show the window once the data is loaded
     let window = match display.get_window() {
         Some(x) => {

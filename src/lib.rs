@@ -8,8 +8,10 @@ extern crate glium;
 extern crate rustc_serialize;
 extern crate bincode;
 extern crate flate2;
+extern crate nalgebra;
+extern crate libc;
+extern crate frustum_query;
 
-pub mod frustum;
 pub mod common;
 pub mod dbloader;
 pub mod input;
@@ -18,9 +20,6 @@ pub mod scene;
 pub mod shader;
 #[macro_use]
 pub mod renderer;
-
-extern crate nalgebra;
-extern crate libc;
 
 use std::ffi::CStr;
 
@@ -81,9 +80,11 @@ pub fn obj2bin(wavefront_file: *const libc::c_char, binfile: *const libc::c_char
     let binfile_str: String = unsafe{ CStr::from_ptr(binfile.clone()).to_string_lossy().into_owned() };
     let mut database_file: String = filename.clone();
     database_file.push_str(&String::from(".db"));
-    let sqlite_file = CString::new(database_file.clone()).unwrap();
+    let sqlite_file = CString::new(database_file.clone()).expect("unable to parse file name");
     obj2sqlite(wavefront_file, sqlite_file.clone().into_raw());
-    let scene: Scene = match DBLoader::new(&(sqlite_file.into_string().unwrap())).unwrap().load_scene() {
+    let scene: Scene = match DBLoader::new(&(sqlite_file.into_string()
+        .expect("Unable to parse file name")))
+        .expect("Unable to create database loader").load_scene() {
         Ok(s) => s,
         Err(e) => panic!("Unable to load scene from SQLite: {:?}", e),
     };
@@ -118,9 +119,11 @@ pub fn obj2compressed(wavefront_file: *const libc::c_char, binfile: *const libc:
     let binfile_str: String = unsafe{ CStr::from_ptr(binfile.clone()).to_string_lossy().into_owned() };
     let mut database_file: String = filename.clone();
     database_file.push_str(&String::from(".db"));
-    let sqlite_file = CString::new(database_file.clone()).unwrap();
+    let sqlite_file = CString::new(database_file.clone()).expect("unable to parse file name");
     obj2sqlite(wavefront_file, sqlite_file.clone().into_raw());
-    let scene: Scene = match DBLoader::new(&(sqlite_file.into_string().unwrap())).unwrap().load_scene() {
+    let scene: Scene = match DBLoader::new(&(sqlite_file.into_string()
+        .expect("Unable to parse file name")))
+        .expect("Unable to create database loader").load_scene() {
         Ok(s) => s,
         Err(e) => panic!("Unable to load scene from SQLite: {:?}", e),
     };
@@ -152,15 +155,15 @@ pub extern "C" fn create_display(screen_width: libc::int32_t,
                                  -> Box<GlutinFacade> {
     let w: u32 = screen_width as u32;
     let h: u32 = screen_height as u32;
-    //let window_title: String;
+    let window_title: String;
 
     unsafe {
-        //window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
+        window_title = CStr::from_ptr(title).to_string_lossy().into_owned();
         let display: GlutinFacade = glutin::WindowBuilder::new()
-            //.with_gl_debug_flag(true)
-            //.with_title(window_title)
+            .with_gl_debug_flag(true)
+            .with_title(window_title)
             .with_visibility(true)
-            //.with_dimensions(w, h)
+            .with_dimensions(w, h)
             .with_multitouch()
 						.build_glium_unchecked()
             .expect("Unable to create display");
@@ -260,12 +263,12 @@ mod tests {
             .with_visibility(false)
             .with_gl_debug_flag(true)
             .build_glium()
-            .unwrap();
+            .expect("Unable to create test display");
         return display;
     }
 
     fn load_test_scene() -> Scene {
-        Scene::from_compressed_binary_file(String::from("test.bin.gz")).unwrap()
+        Scene::from_compressed_binary_file(String::from("test.bin.gz")).expect("Unable to load compressed binary file")
     }
 
     #[test]
@@ -309,20 +312,20 @@ mod tests {
             }
         };
         window.show();
-        let window_size = window.get_inner_size().unwrap();
+        let window_size = window.get_inner_size().expect("Unable to get window size");
         let screen_width = window_size.0;
         let screen_height = window_size.1;
         let mut camera = Camera::new(screen_width as f32, screen_height as f32);
         camera = camera.move_backward(6.0);        
         
         let scene = load_test_scene();
-        let renderer = Renderer::new(&display, scene).unwrap();
+        let renderer = Renderer::new(&display, scene).expect("Unable to create renderer");
         
-        let shader_dbloader = DBLoader::new("shaders.db").unwrap();
+        let shader_dbloader = DBLoader::new("shaders.db").expect("Unable to load shaders database");
         let shader_name = "default";
-        let shader_program = Shader::from_dbloader(&shader_name, &shader_dbloader, &display).unwrap();
+        let shader_program = Shader::from_dbloader(&shader_name, &shader_dbloader, &display).expect("Unable to load shader");
         
-        renderer.render(&display, &shader_program, &camera).unwrap();
+        renderer.render(&display, &shader_program, &camera).expect("Unable to render frame");
         
         thread::sleep(Duration::from_millis(100));
     }
@@ -345,7 +348,7 @@ mod tests {
             }
         };
         window.show();
-        let window_size = window.get_inner_size().unwrap();
+        let window_size = window.get_inner_size().expect("Unable to get window size");
         let screen_width = window_size.0;
         let screen_height = window_size.1;
         let mut camera = Camera::new(screen_width as f32, screen_height as f32);
@@ -367,13 +370,13 @@ mod tests {
         assert!(scene == scene_binary);
         drop(scene);
         
-        let renderer: Renderer = Renderer::new(&display, scene_binary).unwrap();
+        let renderer: Renderer = Renderer::new(&display, scene_binary).expect("Unable to create renderer");
         
-        let shader_dbloader = DBLoader::new("shaders.db").unwrap();
+        let shader_dbloader = DBLoader::new("shaders.db").expect("Unable to load shader database");
         let shader_name = "default";
-        let shader_program = Shader::from_dbloader(&shader_name, &shader_dbloader, &display).unwrap();
+        let shader_program = Shader::from_dbloader(&shader_name, &shader_dbloader, &display).expect("Unable to load shader");
         
-        renderer.render(&display, &shader_program, &camera).unwrap();
+        renderer.render(&display, &shader_program, &camera).expect("Unable to render frame");
 
         thread::sleep(Duration::from_millis(100));
     }

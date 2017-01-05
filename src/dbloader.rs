@@ -274,7 +274,7 @@ pub extern "C" fn free_db_loader(_ptr: *mut libc::c_void) {
 pub extern "C" fn create_db_loader(filename_cstr: *const libc::c_char) -> Box<DBLoader> {
     unsafe {
         let filename: String = CStr::from_ptr(filename_cstr).to_string_lossy().into_owned();
-        let dbloader: DBLoader = DBLoader::new(&filename).unwrap();
+        let dbloader: DBLoader = DBLoader::new(&filename).expect("Unable to create database loader");
         println!("Loaded {}", &filename);
         Box::new(dbloader)
     }

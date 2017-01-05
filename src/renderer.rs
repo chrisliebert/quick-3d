@@ -17,7 +17,7 @@ use common::{Mesh,Vertex8f32};
 #[cfg(feature = "sqlite")]
 use dbloader::DBLoader;
 
-use frustum::Frustum;
+use frustum_query::frustum::Frustum;
 use scene::Scene;
 
 use glium::backend::glutin_backend::GlutinFacade;
@@ -109,7 +109,7 @@ impl Renderer {
     ///
     pub fn render(&self, display: &GlutinFacade, program: &glium::program::Program, camera: &Camera) -> Result<(), RendererError> {
         
-        let frustum: Frustum = Frustum::create_from_2d_array(
+        let frustum: Frustum = Frustum::from_modelview_and_projection_2d(
             &camera.modelview_matrix,
             &camera.projection_matrix,
         );

@@ -421,7 +421,7 @@ pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
     {
         // Initialize the finished value
         let finished = finished_arc.clone();
-        let mut finished_lock = finished.lock().unwrap();
+        let mut finished_lock = finished.lock().expect("Unable to aquire lock for console reader");
         *finished_lock = false;
     }
     
@@ -436,7 +436,7 @@ pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
                         .replace("\n", " ");
                     if 1 == buffer.len() { break 'console };
                     let arc = buffer_arc.clone();
-                    let mut writer = arc.lock().unwrap();
+                    let mut writer = arc.lock().expect("Unable to aquire console buffer write lock");
                     let mut new_string: String = (*writer).clone();
                     new_string.push_str(&buffer);
                     *writer = new_string;
@@ -447,7 +447,7 @@ pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
         }
         println!("Console closed");
         let finished = finished_arc.clone();
-        let mut finished_lock = finished.lock().unwrap();
+        let mut finished_lock = finished.lock().expect("Unable to aquire console buffer lock");
         *finished_lock = true;
         return 0;
     });
@@ -461,7 +461,7 @@ pub extern "C" fn create_console_reader() -> Box<ConsoleInput> {
 #[no_mangle]
 pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
     let arc = console.finished.clone();
-    let mutex = arc.lock().unwrap();
+    let mutex = arc.lock().expect("Unable to aquire console input lock");
     mutex.clone()
 }
 
@@ -471,7 +471,7 @@ pub extern "C" fn console_is_closed(console: &ConsoleInput) -> bool {
 pub extern "C" fn read_console_buffer(console: &ConsoleInput) -> *mut libc::c_char {
     let retval: String;
     let arc = console.buffer.clone();
-    let mut mutex = arc.lock().unwrap();
+    let mut mutex = arc.lock().expect("Unable to aquire console input lock");
     retval = (*mutex).clone();
     *mutex = String::new();
     match CString::new(retval) {

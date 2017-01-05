@@ -11,7 +11,6 @@ include = [
 	"src/common.rs",
 	"src/dbloader.rs",
 	"src/lib.rs",
-	"src/frustum.rs",
 	"src/input.rs",
 	"src/scene.rs",
 	"src/shader.rs",
@@ -52,3 +51,4 @@ libc = "0.2.18"
 rustc-serialize = "*"
 bincode = "*"
 flate2 = "*"
+frustum_query = "*"
