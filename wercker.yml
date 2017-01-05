@@ -88,10 +88,10 @@ build:
             cd ffi/Java
             export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-amd64
             cargo test
-            export LD_LIBRARY_PATH=LD_LIBRARY_PATH:`pwd`
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`
             wget https://services.gradle.org/distributions/gradle-3.3-bin.zip
             unzip gradle-3.3-bin.zip
-            gradle-3.3/bin/gradle test
+            gradle-3.3/bin/gradle test --stacktrace
 #            sudo update-alternatives --set java $(update-alternatives --list java|grep java-7)
 #            javac *.java
 #            # java Quick3DTests # Disabled because wercker is unable to load libmawt.so
