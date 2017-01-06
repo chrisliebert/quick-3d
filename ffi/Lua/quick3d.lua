@@ -118,9 +118,12 @@ function quick3d_init_luajitffi(target_build, sqlite3)
   success, wrapper = pcall(ffi.load, quick3d_shared_lib_path)
   if not success then
     local cargo_cmd = "cargo build"
-	if sqlite3 then cargo_cmd = "cargo build --features sqlite" end
+    
+    if sqlite3 then
+      cargo_cmd = "cargo build --features sqlite" 
+    end
     if target_build == "release" then
-  	  cargo_cmd = cargo_cmd .. " --release"
+      cargo_cmd = cargo_cmd .. " --release"
     end
     local make_cmd = "cd ../.. && cargo clean -p quick3d && " .. cargo_cmd .. " && cd ffi/Lua"
     print(make_cmd)
@@ -128,11 +131,10 @@ function quick3d_init_luajitffi(target_build, sqlite3)
       error("Unable to execute " .. make_cmd)
     end
     
-	wrapper = ffi.load(quick3d_shared_lib_path)
     success, wrapper = pcall(ffi.load, quick3d_shared_lib_path)
-	if not success then
-	  error("Unable to load LuaJIT FFI module")
-	end
+    if not success then
+      error("Unable to load LuaJIT FFI module")
+    end
   end
   print("Loaded " .. quick3d_shared_lib_path)
   return wrapper
@@ -159,11 +161,11 @@ function quick3d_clean(target_build)
   local quick3d_filename = append_shared_lib_ext("quick3d")
   -- filenames contains a list of files that will attempt to be deleted
   local filenames = {
-  	quick3d_filename,
-  	append_shared_lib_ext("quick3dwrapper"),
-  	append_shared_lib_ext("wrapper/quick3d"),
-  	"wrapper/quick3d.i",
-	"wrapper/quick3d.h"
+    quick3d_filename,
+    append_shared_lib_ext("quick3dwrapper"),
+    append_shared_lib_ext("wrapper/quick3d"),
+    "wrapper/quick3d.i",
+  "wrapper/quick3d.h"
   }
   
   if isWindows() then
