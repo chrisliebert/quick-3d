@@ -92,7 +92,7 @@ As of Lua example v0.1.3, to build the optimized release version of the shared l
 
 **A Note about Shared Libraries**
 
-If you are using Uinux, it is likely that your operating system does not know where to find the shared libraries.
+If you are using Unix, it is likely that your operating system does not know where to find the shared libraries.
 This can be resolved by updating the LD_LIBRARY_PATH environment variable: `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.` The operating system will now search the current directory when attempting to load shared libraries. After building the debug library with `cargo build` it is recommended that you create a symlink to target/debug/libquick3d.so, i.e `ln -s target/debug/libquick3d.so .` The Quick3D Lua example will automatically attempt to relaunch with the updated LD_LIBRARY_PATH as of v0.1.2.
 On Windows, quick3d.dll is copied to the current directory if it is not found when running Quick3D from LUA which is already configured to be in the search path for shared libraries.
 
